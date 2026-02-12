@@ -3,6 +3,7 @@ services:
     image: postgres:15
     ports: ["5432:5432"]
     environment:
+      POSTGRES_USER: postgres
       POSTGRES_DB: food_delivery
       POSTGRES_PASSWORD: admin_password
   mongodb:
