@@ -1,14 +1,18 @@
-require('dotenv').config();
-const express = require('express');
-const connectMongo = require('./config/mongodb');
-const redisClient = require('./config/redis');
-const neo4jDriver = require('./config/neo4j');
-const pgPool = require('./config/postgres');
-const cors = require('cors');
+import 'dotenv/config';
+import express from 'express';
+import morgan from 'morgan';
+import logger from './configs/logger.js';
+import cors from 'cors';
+import connectMongo from './configs/mongodb.js';
+import redisClient from './configs/redis.js';
+import neo4jDriver from './configs/neo4j.js';
+import pgPool from './configs/postgres.js';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(morgan('dev'));
+app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
 
 connectMongo();
 redisClient.connect().then(() => console.log('✅ Redis Connected'));
@@ -48,6 +52,7 @@ app.get('/api/test', async (req, res) => {
     await neo4jDriver.verifyConnectivity();
     testStatus.databases.neo4j = 'Connected';
 
+    logger.info("Kiểm tra hệ thống thành công");
     res.json(testStatus);
   } catch (error) {
     res.status(500).json({
@@ -59,5 +64,5 @@ app.get('/api/test', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  logger.info(`Server is running on port ${PORT}`);
 });
