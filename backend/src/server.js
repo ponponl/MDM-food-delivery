@@ -1,12 +1,13 @@
 import 'dotenv/config';
 import express from 'express';
 import morgan from 'morgan';
-import logger from './configs/logger.js';
+import mongoose from 'mongoose';
+import logger from './config/logger.js';
 import cors from 'cors';
-import connectMongo from './configs/mongodb.js';
-import redisClient from './configs/redis.js';
-import neo4jDriver from './configs/neo4j.js';
-import pgPool from './configs/postgres.js';
+import connectMongo from './config/mongodb.js';
+import redisClient from './config/redis.js';
+import neo4jDriver from './config/neo4j.js';
+import pgPool from './config/postgres.js';
 
 const app = express();
 app.use(cors());
@@ -15,7 +16,8 @@ app.use(morgan('dev'));
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
 
 connectMongo();
-redisClient.connect().then(() => console.log('✅ Redis Connected'));
+redisClient.connect().then(() => console.log('\nRedis Connected'));
+pgPool.connect().then(() => console.log('PostgreSQL Connected'));
 
 // Import các Module chức năng 
 // app.use('/api/orders', require('./modules/orders/routes'));
@@ -30,29 +32,44 @@ app.get('/api/test', async (req, res) => {
     databases: {
       mongodb: 'Checking...',
       postgres: 'Checking...',
-      redis: 'Checking...',
-      neo4j: 'Checking...'
+      redis: 'Checking...'
+      // neo4j: 'Checking...'
     }
   };
 
   try {
     // 1. Kiểm tra MongoDB (Mongoose)
-    const mongoose = require('mongoose');
-    testStatus.databases.mongodb = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';
+    try {
+      testStatus.databases.mongodb = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected';
+    } catch (err) {
+      testStatus.databases.mongodb = `Error: ${err.message}`;
+    }
 
     // 2. Kiểm tra PostgreSQL
-    await pgPool.query('SELECT 1');
-    testStatus.databases.postgres = 'Connected';
+    try {
+      await pgPool.query('SELECT 1');
+      testStatus.databases.postgres = 'Connected';
+    } catch (err) {
+      testStatus.databases.postgres = `Error: ${err.message}`;
+    }
 
     // 3. Kiểm tra Redis
-    const pingResponse = await redisClient.ping();
-    testStatus.databases.redis = pingResponse === 'PONG' ? 'Connected' : 'Error';
+    try {
+      const pingResponse = await redisClient.ping();
+      testStatus.databases.redis = pingResponse === 'PONG' ? 'Connected' : 'Error';
+    } catch (err) {
+      testStatus.databases.redis = `Error: ${err.message}`;
+    }
 
     // 4. Kiểm tra Neo4j
-    await neo4jDriver.verifyConnectivity();
-    testStatus.databases.neo4j = 'Connected';
+    // try {
+    //   await neo4jDriver.verifyConnectivity();
+    //   testStatus.databases.neo4j = 'Connected';
+    // } catch (err) {
+    //   testStatus.databases.neo4j = `Error: ${err.message}`;
+    // }
 
-    logger.info("Kiểm tra hệ thống thành công");
+    logger.info("Kiểm tra hệ thống hoàn tất");
     res.json(testStatus);
   } catch (error) {
     res.status(500).json({
