@@ -1,0 +1,33 @@
+.categoryTag {
+    display : inline-flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #eee;
+    border-radius: 50px;
+    justify-content: center;
+    padding: 10px 15px 10px 15px;
+    color: black;
+    margin: 5px;
+}
+
+.categoryTag:hover {
+    background-color: orange;
+    color: white;
+    cursor: pointer;
+}
+
+.categoryTag:active {
+    background-color: #FF6B35;
+    color: white;
+}
+
+.categoryText {
+    line-height: 1;
+}
+
+.categoryIcon {
+    width: 18px;
+    height: 18px;
+    margin-right: 4px;
+    align-items: center;
+}

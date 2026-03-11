@@ -1,0 +1,31 @@
+.sidebar {
+    background-color: #FFFDFB;
+    border: 0;
+    padding: 0;
+    min-width: 13vw;
+    height: 100vh;
+    border-right: 1px solid rgb(223, 220, 220);
+}
+
+.sidebarItem {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    height: 40px;
+    margin: 10px;
+    font-weight: bold;
+}
+
+.sidebarItem:hover {
+    background-color: #eee;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.sidebarItem:active {
+    background-color: rgb(255, 235, 213);
+    color: #FF6B35;
+    border-radius: 5px;
+    cursor: pointer;
+}
