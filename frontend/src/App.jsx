@@ -1,12 +1,15 @@
 import Homepage from './modules/home/Homepage.jsx'
-import MenuPage from './modules/menu/menuPage.jsx'
+import CategorizedPage from './modules/menu/CategorizedPage.jsx'
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './App.css'
 
 function App() {
   return (
     <>
-      {/* <Homepage /> */}
-      <MenuPage />
+      <Routes>
+        <Route path="/home" element={<Homepage />}/>
+        <Route path="/category/:categoryName" element={<CategorizedPage />}/>
+      </Routes>      
     </>
   )
 }

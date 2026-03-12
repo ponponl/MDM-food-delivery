@@ -3,6 +3,7 @@ import { useState } from 'react';
 import styles from './Homepage.module.css';
 import homeBanner from '../../assets/home-banner.png';
 import Header from '../../components/Header';
+import MenuPage from './MenuPage';
 
 const CARDS = [
     {
@@ -34,9 +35,9 @@ const STATS = [
     { number: '7M+',   label: 'Delivery drivers' },
 ];
 
-export default function Homepage() {
+function HomeWithoutAddress() {
     const [address, setAddress] = useState('');
-    
+
     const handleSubmit = (e) => {
         e.preventDefault();
         console.log('Submitted address:', address);
@@ -96,4 +97,15 @@ export default function Homepage() {
             </footer>
         </div>
     );
+}
+
+export default function Homepage (){
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [hasAdrress, setHasAddress] = useState(true);
+
+    return (
+        <div>
+            {hasAdrress ? <MenuPage /> : <HomeWithoutAddress />}
+        </div>
+    )
 }
