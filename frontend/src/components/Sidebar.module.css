@@ -23,7 +23,7 @@
     cursor: pointer;
 }
 
-.sidebarItem:active {
+.IsActive{
     background-color: rgb(255, 235, 213);
     color: #FF6B35;
     border-radius: 5px;

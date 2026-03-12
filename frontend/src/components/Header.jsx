@@ -1,11 +1,12 @@
 
 import styles from './Header.module.css';
-import { Search, Bell, ShoppingCart, ChevronDown, MapPin } from 'lucide-react';
+import { Search, Bell, ShoppingCart, ChevronDown, MapPin, User } from 'lucide-react';
 import {useState} from 'react';
 
 export default function Header() {
   const [hasAdrress, setHasAddress] = useState(true);
   const [cartItemCount, setCartItemCount] = useState(0);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   return (
     <div className={styles.header}>
@@ -27,8 +28,14 @@ export default function Header() {
           </div>
         }
         <div className={styles.authButton}>
-            <button className={styles.bthSignUp}>Sign Up</button>
-            <button className={styles.bthSignIn}>Sign In</button>
+          {isLoggedIn ? 
+            (<>
+              <button className={styles.bthProfile}><User size={17}/><span style={{marginLeft: '5px', marginTop: '3px'}}>Profile</span></button>
+            </>) :
+            (<>
+              <button className={styles.bthSignUp}>Sign Up</button>
+              <button className={styles.bthSignIn}>Sign In</button>
+            </>)}
         </div>
     </div>
   );

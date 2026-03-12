@@ -99,7 +99,7 @@
 
 .cartIcon:hover {
     background-color: orange;
-    border: 0;
+    border: 2px solid orange;
     color: white;
     cursor: pointer;
 }
@@ -107,6 +107,7 @@
 .cartIcon:active {
     transform: scale(1.05);   
     background-color: orange;
+    border: 2px solid orange;
     color: white;
 }
 
@@ -118,6 +119,26 @@
     align-items: center;
     gap: 10px;
     height: 32px;
+}
+
+.bthProfile {
+    background-color: #FF3D00;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50px;
+    height: 32px;
+    border: 0;
+    padding: 0 10px;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.bthProfile:hover {
+    transform: scale(1.05);   
+    background-color: orange;
+    border: 0;
 }
 
 .bthSignUp, .bthSignIn {
