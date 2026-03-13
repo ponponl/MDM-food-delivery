@@ -1,16 +1,18 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import SystemTest from './components/SystemTest.jsx'
+import Homepage from './modules/home/Homepage.jsx'
+import CategorizedPage from './modules/menu/CategorizedPage.jsx'
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './App.css'
+import {AddressProvider} from './components/context/AddressContext.jsx'
 
 function App() {
   return (
     <>
-      <div className="App">
-            <h1>Hệ Thống Quản Lý Giao Đồ Ăn</h1>
-            <SystemTest />
-      </div>
+      <AddressProvider>
+        <Routes>
+          <Route path="/" element={<Homepage />}/>
+          <Route path="/category/:categoryName" element={<CategorizedPage />}/>
+        </Routes>    
+      </AddressProvider>  
     </>
   )
 }
