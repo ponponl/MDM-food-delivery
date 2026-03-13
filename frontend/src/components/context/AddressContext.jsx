@@ -1,0 +1,19 @@
+import { Children, createContext, useState } from 'react';
+
+export const AddressContext = createContext();
+
+export function AddressProvider({children}) {
+    const [address, setAddress] = useState('');
+
+    const updateAddress = (newAddress) => {
+        setAddress(newAddress);
+    };
+
+    return (
+        <>
+            <AddressContext.Provider value={{address, updateAddress}}>
+                {children}
+            </AddressContext.Provider>
+        </>
+    );
+}

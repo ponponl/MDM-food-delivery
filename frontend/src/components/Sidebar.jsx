@@ -4,7 +4,7 @@ import { House, Hamburger, EggFried, GlassWater, Wheat, LogOut, UserPlus, KeyRou
 import { useLocation, Link} from 'react-router-dom';
 
 const sidebar = [
-  {name: 'Home', icon: House, path: '/home'},
+  {name: 'Home', icon: House, path: '/'},
   {name: 'Fast Food', icon: Hamburger, path: '/category/FastFood'},
   {name: 'Healthy', icon: Wheat, path: '/category/Healthy'},
   {name: 'Breakfast', icon: EggFried, path: '/category/Breakfast'},

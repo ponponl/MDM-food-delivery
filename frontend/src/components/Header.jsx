@@ -2,16 +2,18 @@
 import styles from './Header.module.css';
 import { Search, Bell, ShoppingCart, ChevronDown, MapPin, User } from 'lucide-react';
 import {useState} from 'react';
+import { AddressContext } from './context/AddressContext';
+import { useContext } from 'react';
 
 export default function Header() {
-  const [hasAdrress, setHasAddress] = useState(true);
+  const {address} = useContext(AddressContext);
   const [cartItemCount, setCartItemCount] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(true);
 
   return (
     <div className={styles.header}>
         <div className={styles.logo}>FOODLY</div>
-        {hasAdrress &&
+        {address &&
           <div className={styles.withAddress}>
             <div className={styles.searchBar}> 
               <Search size={16} />
@@ -22,7 +24,7 @@ export default function Header() {
                 onChange={(e) => console.log('Search query:', e.target.value)}
               />
             </div>
-            <button className={styles.addressHolder}><MapPin size={17}/><span  style={{marginLeft: '5px', marginRight: '5px', marginTop: '2px'}}>123 Main St</span><ChevronDown size={17}/></button>
+            <button className={styles.addressHolder}><MapPin size={17}/><span  style={{marginLeft: '5px', marginRight: '5px', marginTop: '2px'}}>{address}</span><ChevronDown size={17}/></button>
             <button className={styles.notificationIcon}><Bell size={17} /></button>
             <button className={styles.cartIcon}><ShoppingCart size={17} /><span style={{marginTop: '3px'}}>{cartItemCount}</span></button>
           </div>

@@ -3,7 +3,10 @@ import { useState } from 'react';
 import styles from './Homepage.module.css';
 import homeBanner from '../../assets/home-banner.png';
 import Header from '../../components/Header';
+import {AddressContext} from '../../components/context/AddressContext.jsx';
 import MenuPage from './MenuPage';
+import { useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const CARDS = [
     {
@@ -37,9 +40,15 @@ const STATS = [
 
 function HomeWithoutAddress() {
     const [address, setAddress] = useState('');
+    const {updateAddress} = useContext(AddressContext);
+    const navigate = useNavigate();
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        if (address.trim() !== ''){
+            updateAddress(address);
+            navigate('/');
+        }
         console.log('Submitted address:', address);
     };
 
@@ -101,11 +110,11 @@ function HomeWithoutAddress() {
 
 export default function Homepage (){
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [hasAdrress, setHasAddress] = useState(true);
+    const {address} = useContext(AddressContext);
 
     return (
         <div>
-            {hasAdrress ? <MenuPage /> : <HomeWithoutAddress />}
+            {address ? <MenuPage /> : <HomeWithoutAddress />}
         </div>
     )
 }
