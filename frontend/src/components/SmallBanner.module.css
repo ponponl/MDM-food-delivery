@@ -1,0 +1,45 @@
+.smallBanner{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: 156px;
+    border-radius: 20px;
+    margin: 10px 0;
+    width: 40vw;
+}
+
+.textContent{
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    margin-left: 30px;
+}
+
+.imagePart{
+    flex: 1;
+    height: 100%; 
+    overflow: hidden;
+}
+
+.imageBanner{
+    width: 100%;
+    height: 100%;
+    object-fit: cover; 
+    display: block;
+    border-radius: 20px;
+    border: 0;
+}
+
+.bannerButton{
+    background-color: #FF3D00;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50px;
+    height: 32px;
+    width: 90px;
+    border: 0;
+    font-weight: bold;
+    margin: 10px 10px 0 0;
+}
