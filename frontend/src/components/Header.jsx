@@ -1,14 +1,27 @@
-
 import styles from './Header.module.css';
-import { Search, Bell, ShoppingCart, ChevronDown, MapPin, User } from 'lucide-react';
+import { Search, Bell, ShoppingCart, ChevronDown, MapPin, User, LogOut } from 'lucide-react';
 import {useState} from 'react';
 import { AddressContext } from './context/AddressContext';
 import { useContext } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { logout as logoutService } from '../services/authService';
+import { useNavigate } from 'react-router-dom';
 
 export default function Header() {
   const {address} = useContext(AddressContext);
   const [cartItemCount, setCartItemCount] = useState(0);
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const { user, logoutUser } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logoutService();
+      logoutUser();
+      navigate('/auth');
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   return (
     <div className={styles.header}>
@@ -30,13 +43,13 @@ export default function Header() {
           </div>
         }
         <div className={styles.authButton}>
-          {isLoggedIn ? 
+          {user ? 
             (<>
               <button className={styles.bthProfile}><User size={17}/><span style={{marginLeft: '5px', marginTop: '3px'}}>Profile</span></button>
+              <button className={styles.bthProfile} onClick={handleLogout}><LogOut size={17}/><span style={{marginLeft: '5px', marginTop: '3px'}}>Logout</span></button>
             </>) :
             (<>
-              <button className={styles.bthSignUp}>Sign Up</button>
-              <button className={styles.bthSignIn}>Sign In</button>
+              <button className={styles.bthSignIn} onClick={() => navigate('/auth')}>Sign In</button>
             </>)}
         </div>
     </div>
