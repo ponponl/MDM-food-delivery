@@ -1,10 +1,10 @@
 import styles from './Header.module.css';
 import { Search, Bell, ShoppingCart, ChevronDown, MapPin, User, LogOut } from 'lucide-react';
 import {useState} from 'react';
-import { AddressContext } from './context/AddressContext';
+import { AddressContext } from '../context/AddressContext';
 import { useContext } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { logout as logoutService } from '../services/authService';
+import { useAuth } from '../../context/AuthContext';
+import { logout as logoutService } from '../../services/authService';
 import { useNavigate } from 'react-router-dom';
 
 export default function Header() {

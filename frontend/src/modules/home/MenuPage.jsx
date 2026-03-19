@@ -1,15 +1,15 @@
 import {useState, useEffect} from 'react';
-import Header from '../../components/Header';
-import Sidebar from '../../components/Sidebar';
+import Header from '../../components/navigation/Header';
+import Sidebar from '../../components/navigation/Sidebar';
 import styles from './MenuPage.module.css';
 import { HamburgerIcon, PizzaIcon, OrangeIcon, PintGlassIcon } from "@phosphor-icons/react";
-import CategoryTag from '../../components/CategoryTag';
-import HomeCard from '../../components/HomeCard';
+import CategoryTag from '../../components/display/CategoryTag';
+import HomeCard from '../../components/display/HomeCard';
 import burger from '../../assets/burger.png';
 import pizzaImg from '../../assets/pizza.png';
 import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import SmallBanner from '../../components/SmallBanner';
+import SmallBanner from '../../components/decoration/SmallBanner';
 
 const categories = [
     { icon: <HamburgerIcon size={18}/>, category: "Burgers" },
