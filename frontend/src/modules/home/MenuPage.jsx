@@ -10,6 +10,7 @@ import pizzaImg from '../../assets/pizza.png';
 import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SmallBanner from '../../components/decoration/SmallBanner';
+import restaurantApi from '../../api/restaurantApi.js';
 
 const categories = [
     { icon: <HamburgerIcon size={18}/>, category: "Burgers" },
@@ -35,6 +36,22 @@ const fastest = [
 ];
 
 export default function MenuPage() {
+    const [restaurants, setRestaurants] = useState([]);
+
+    useEffect(() => {
+        const fetchRestaurant = async () => {
+            try{
+                const data = await restaurantApi.getAll();
+                setRestaurants(data);
+                console.log("restaurant data: ", data);
+            }catch (error){
+                console.log("Fail to fetch restaurant data", error);
+            }
+        };
+
+        fetchRestaurant();
+    }, [])
+
     return (
         <div style={{backgroundColor: '#FFFDFB'}}> 
             <Header />
@@ -63,9 +80,24 @@ export default function MenuPage() {
                             <Link to="/dashboard" className={styles.menuSeeAll}>See all <ChevronRight size={16} /></Link>
                         </div>
                         <div className={styles.menuCard}>
-                            {hotPicks.slice(0, 4).map((item, index) => (
-                                <HomeCard key={index} image={item.image} title={item.title} rating={item.rating} ratingQuantity={item.ratingQuantity} distance={item.distance} deliveryTime={item.deliveryTime} fee={item.fee} currency={item.currency} />
-                            ))}
+                            {restaurants.slice(0, 5).map((item, index) => {
+                                console.log("Dữ liệu của 1 nhà hàng:", item);
+                                const displayImage = (Array.isArray(item.images) && item.images.length > 0)
+                                ? item.images[0] 
+                                : burger;
+                                return(
+                                <HomeCard 
+                                    key={index} 
+                                    image={displayImage} 
+                                    title={item.name} 
+                                    rating={5} 
+                                    ratingQuantity={120} 
+                                    distance={5} 
+                                    deliveryTime={6} 
+                                    fee={15} 
+                                    currency={'$'} />
+                                )
+                            })}
                         </div>
                     </div>
                     <div className={styles.menuItems}>
@@ -74,9 +106,24 @@ export default function MenuPage() {
                             <Link to="/dashboard" className={styles.menuSeeAll}>See all <ChevronRight size={16} /></Link>
                         </div>
                         <div className={styles.menuCard}>
-                            {fastest.slice(0, 4).map((item, index) => (
-                                <HomeCard key={index} image={item.image} title={item.title} rating={item.rating} ratingQuantity={item.ratingQuantity} distance={item.distance} deliveryTime={item.deliveryTime} fee={item.fee} currency={item.currency} />
-                            ))}
+                            {restaurants.slice(0, 5).map((item, index) => {
+                                console.log("Dữ liệu của 1 nhà hàng:", item);
+                                const displayImage = (Array.isArray(item.images) && item.images.length > 0)
+                                ? item.images[0] 
+                                : burger;
+                                return(
+                                <HomeCard 
+                                    key={index} 
+                                    image={displayImage} 
+                                    title={item.name} 
+                                    rating={5} 
+                                    ratingQuantity={120} 
+                                    distance={5} 
+                                    deliveryTime={6} 
+                                    fee={15} 
+                                    currency={'$'} />
+                                )
+                            })}
                         </div>
                     </div>
                 </div>

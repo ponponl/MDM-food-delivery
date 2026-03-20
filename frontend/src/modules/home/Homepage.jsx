@@ -3,7 +3,7 @@ import { useState } from 'react';
 import styles from './Homepage.module.css';
 import homeBanner from '../../assets/home-banner.png';
 import Header from '../../components/navigation/Header';
-import {AddressContext} from '../../components/context/AddressContext.jsx';
+import {AddressContext} from '../../context/AddressContext.jsx';
 import MenuPage from './MenuPage';
 import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
