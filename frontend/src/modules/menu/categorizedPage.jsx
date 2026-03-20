@@ -1,8 +1,8 @@
 import {useState, useEffect} from 'react';
-import Header from '../../components/Header';
-import Sidebar from '../../components/Sidebar';
+import Header from '../../components/navigation/Header';
+import Sidebar from '../../components/navigation/Sidebar';
 import styles from './CategorizedPage.module.css';
-import HomeCard from '../../components/HomeCard';
+import HomeCard from '../../components/display/HomeCard';
 import burger from '../../assets/burger.png';
 import { useParams } from 'react-router-dom';
 

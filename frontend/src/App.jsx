@@ -2,7 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import Homepage from './modules/home/Homepage.jsx';
 import CategorizedPage from './modules/menu/CategorizedPage.jsx';
 import AuthPage from './modules/auth/AuthPage.jsx';
-import { AddressProvider } from './components/context/AddressContext.jsx';
+import { AddressProvider } from './context/AddressContext.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { Toaster } from 'react-hot-toast';
 import './App.css';

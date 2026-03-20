@@ -9,6 +9,7 @@ import redisClient from './config/redis.js';
 import neo4jDriver from './config/neo4j.js';
 import pgPool from './config/postgres.js';
 import userRoute from './routes/userRoute.js';
+import restaurantRoute from './routes/restaurantRoute.js';
 
 const app = express();
 app.use(cors());
@@ -17,6 +18,7 @@ app.use(morgan('dev'));
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
 
 app.use('/api/users', userRoute);
+app.use('/api/restaurants', restaurantRoute);
 
 connectMongo();
 redisClient.connect().then(() => console.log('\nRedis Connected'));

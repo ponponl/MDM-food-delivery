@@ -8,4 +8,8 @@ const pool = new Pool({
   },
 });
 
+pool.on('error', (err, client) => {
+  console.error('Lỗi Postgres:', err);
+});
+
 export default pool;

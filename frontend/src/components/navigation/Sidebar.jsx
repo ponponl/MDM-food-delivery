@@ -40,11 +40,8 @@ export default function Sidebar() {
           </div>
         ) : (
           <>
-            <Link to={'/signup'} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <li className={styles.sidebarItem}><UserPlus style={{ marginLeft: '30px' }} size={20}/><span style={{marginLeft: '8px', flex: 1}}>Sign Up</span></li>
-            </Link>
-            <Link to={'/signin'} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <li className={styles.sidebarItem}><KeyRound style={{ marginLeft: '30px' }} size={20}/><span style={{marginLeft: '8px', flex: 1}}>Sign In</span></li>
+            <Link to={'/auth'} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <li className={styles.sidebarItem}><UserPlus style={{ marginLeft: '30px' }} size={20}/><span style={{marginLeft: '8px', flex: 1}}>Sign In</span></li>
             </Link>
           </>
         )}

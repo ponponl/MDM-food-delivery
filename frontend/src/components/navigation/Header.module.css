@@ -153,21 +153,10 @@
     height: 32px;
 }
 
-.bthSignIn {
-    background-color: #eee;
-    color: black;
-    border: 0;
-}
-
-.bthSignUp:hover {
+.bthSignIn:hover {
     transform: scale(1.05);   
     background-color: orange;
     border: 2px solid orange;
-}
-
-.bthSignIn:hover {
-    transform: scale(1.05);   
-    background-color: rgb(213, 213, 213);
 }
 
 .addressHolder {
