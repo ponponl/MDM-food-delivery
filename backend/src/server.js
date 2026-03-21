@@ -21,8 +21,12 @@ app.use('/api/users', userRoute);
 app.use('/api/restaurants', restaurantRoute);
 
 connectMongo();
-redisClient.connect().then(() => console.log('\nRedis Connected'));
-pgPool.connect().then(() => console.log('PostgreSQL Connected'));
+redisClient.connect()
+  .then(() => console.log('\nRedis Connected'))
+  .catch(err => logger.error(`Redis connection error: ${err.message}`));
+pgPool.query('SELECT 1')
+  .then(() => console.log('PostgreSQL Connected'))
+  .catch(err => logger.error(`PostgreSQL connection error: ${err.message}`));
 
 // Import các Module chức năng 
 // app.use('/api/orders', require('./modules/orders/routes'));
