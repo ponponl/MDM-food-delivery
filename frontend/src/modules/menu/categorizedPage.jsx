@@ -39,7 +39,7 @@ export default function CategorizedPage() {
 
         const fetchMenus = async () => {
             try {
-                const restaurants = await restaurantApi.getAll();
+                const restaurants = await restaurantApi.getAll({ category: categoryName });
                 if (!isMounted) {
                     return;
                 }

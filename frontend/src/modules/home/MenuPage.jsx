@@ -26,13 +26,39 @@ const categories = [
 
 export default function MenuPage() {
     const [restaurants, setRestaurants] = useState([]);
+    const [burgerRestaurants, setBurgerRestaurants] = useState([]);
+    const [pizzaRestaurants, setPizzaRestaurants] = useState([]);
+    const [comRestaurants, setComRestaurants] = useState([]);
+    const [miPhoRestaurants, setMiPhoRestaurants] = useState([]);
+    const [banhMiRestaurants, setBanhMiRestaurants] = useState([]);
+    const [caPheRestaurants, setCaPheRestaurants] = useState([]);
+    const [traSuaRestaurants, setTraSuaRestaurants] = useState([]);
+    const [nuocEpRestaurants, setNuocEpRestaurants] = useState([]);
+    const [banhNgotRestaurants, setBanhNgotRestaurants] = useState([]);
 
     useEffect(() => {
         const fetchRestaurant = async () => {
             try{
-                const data = await restaurantApi.getAll();
-                setRestaurants(data);
-                console.log("Dữ liệu nhà hàng:", data);
+                const restaurants = await restaurantApi.getAll();
+                setRestaurants(restaurants ?? []);
+                const burger = await restaurantApi.getAll({ category: "burger" });
+                setBurgerRestaurants(burger);
+                const pizza = await restaurantApi.getAll({ category: "pizza" });
+                setPizzaRestaurants(pizza);
+                const com = await restaurantApi.getAll({ category: "com" });
+                setComRestaurants(com);
+                const miPho = await restaurantApi.getAll({ category: "mi-pho" });
+                setMiPhoRestaurants(miPho);
+                const banhMi = await restaurantApi.getAll({ category: "banh-mi" });
+                setBanhMiRestaurants(banhMi);
+                const caPhe = await restaurantApi.getAll({ category: "ca-phe" });
+                setCaPheRestaurants(caPhe);
+                const traSua = await restaurantApi.getAll({ category: "tra-sua" });
+                setTraSuaRestaurants(traSua);
+                const nuocEp = await restaurantApi.getAll({ category: "nuoc-ep" });
+                setNuocEpRestaurants(nuocEp);
+                const banhNgot = await restaurantApi.getAll({ category: "banh-ngot" });
+                setBanhNgotRestaurants(banhNgot);
             }catch (error){
                 console.log("Không thể tải dữ liệu nhà hàng", error);
             }
@@ -91,10 +117,10 @@ export default function MenuPage() {
                     <div className={styles.menuItems}>
                         <div className={styles.menuLabel}>
                             <h2 style={{marginBottom: '10px', marginTop: '10px'}}>Burger Ngon Bùng Nổ</h2>
-                            <Link to="/dashboard" className={styles.menuSeeAll}>Xem tất cả <ChevronRight size={16} /></Link>
+                            <Link to="/category/burger" className={styles.menuSeeAll}>Xem tất cả <ChevronRight size={16} /></Link>
                         </div>
                         <div className={styles.menuCard}>
-                            {restaurants.slice(0,10).map((item, index) => {
+                            {burgerRestaurants.slice(0,5).map((item, index) => {
                                 const displayImage = (Array.isArray(item.images) && item.images.length > 0)
                                 ? item.images[0] 
                                 : burger;
@@ -116,10 +142,185 @@ export default function MenuPage() {
                     <div className={styles.menuItems}>
                         <div className={styles.menuLabel}>
                             <h2 style={{marginBottom: '10px', marginTop: '10px'}}>Pizza To Chà Bá</h2>
-                            <Link to="/dashboard" className={styles.menuSeeAll}>Xem tất cả <ChevronRight size={16} /></Link>
+                            <Link to="/category/pizza" className={styles.menuSeeAll}>Xem tất cả <ChevronRight size={16} /></Link>
                         </div>
                         <div className={styles.menuCard}>
-                            {restaurants.slice(0,10).map((item, index) => {
+                            {pizzaRestaurants.slice(0,5).map((item, index) => {
+                                const displayImage = (Array.isArray(item.images) && item.images.length > 0)
+                                ? item.images[0] 
+                                : burger;
+                                return(
+                                <RestaurantCard 
+                                    key={index} 
+                                    image={displayImage} 
+                                    title={item.name} 
+                                    rating={5} 
+                                    ratingQuantity={120} 
+                                    distance={5} 
+                                    deliveryTime={6} 
+                                    fee={15} 
+                                    currency={'$'} />
+                                )
+                            })}
+                        </div>
+                    </div>
+                    <div className={styles.menuItems}>
+                        <div className={styles.menuLabel}>
+                            <h2 style={{marginBottom: '10px', marginTop: '10px'}}>Cơm Đủ Thứ Loại</h2>
+                            <Link to="/category/com" className={styles.menuSeeAll}>Xem tất cả <ChevronRight size={16} /></Link>
+                        </div>
+                        <div className={styles.menuCard}>
+                            {comRestaurants.slice(0,5).map((item, index) => {
+                                const displayImage = (Array.isArray(item.images) && item.images.length > 0)
+                                ? item.images[0] 
+                                : burger;
+                                return(
+                                <RestaurantCard 
+                                    key={index} 
+                                    image={displayImage} 
+                                    title={item.name} 
+                                    rating={5} 
+                                    ratingQuantity={120} 
+                                    distance={5} 
+                                    deliveryTime={6} 
+                                    fee={15} 
+                                    currency={'$'} />
+                                )
+                            })}
+                        </div>
+                    </div>
+                    <div className={styles.menuItems}>
+                        <div className={styles.menuLabel}>
+                            <h2 style={{marginBottom: '10px', marginTop: '10px'}}>Mì Phở Hủ Tiếu Thơm Ngon</h2>
+                            <Link to="/category/mi-pho" className={styles.menuSeeAll}>Xem tất cả <ChevronRight size={16} /></Link>
+                        </div>
+                        <div className={styles.menuCard}>
+                            {miPhoRestaurants.slice(0,5).map((item, index) => {
+                                const displayImage = (Array.isArray(item.images) && item.images.length > 0)
+                                ? item.images[0] 
+                                : burger;
+                                return(
+                                <RestaurantCard 
+                                    key={index} 
+                                    image={displayImage} 
+                                    title={item.name} 
+                                    rating={5} 
+                                    ratingQuantity={120} 
+                                    distance={5} 
+                                    deliveryTime={6} 
+                                    fee={15} 
+                                    currency={'$'} />
+                                )
+                            })}
+                        </div>
+                    </div>
+                    <div className={styles.menuItems}>
+                        <div className={styles.menuLabel}>
+                            <h2 style={{marginBottom: '10px', marginTop: '10px'}}>Bánh Mì Chắc Chưa Giòn Đâu</h2>
+                            <Link to="/category/banh-mi" className={styles.menuSeeAll}>Xem tất cả <ChevronRight size={16} /></Link>
+                        </div>
+                        <div className={styles.menuCard}>
+                            {banhMiRestaurants.slice(0,5).map((item, index) => {
+                                const displayImage = (Array.isArray(item.images) && item.images.length > 0)
+                                ? item.images[0] 
+                                : burger;
+                                return(
+                                <RestaurantCard 
+                                    key={index} 
+                                    image={displayImage} 
+                                    title={item.name} 
+                                    rating={5} 
+                                    ratingQuantity={120} 
+                                    distance={5} 
+                                    deliveryTime={6} 
+                                    fee={15} 
+                                    currency={'$'} />
+                                )
+                            })}
+                        </div>
+                    </div>
+                    <div className={styles.menuItems}>
+                        <div className={styles.menuLabel}>
+                            <h2 style={{marginBottom: '10px', marginTop: '10px'}}>Cà Phê Nhâm Nhi</h2>
+                            <Link to="/category/ca-phe" className={styles.menuSeeAll}>Xem tất cả <ChevronRight size={16} /></Link>
+                        </div>
+                        <div className={styles.menuCard}>
+                            {caPheRestaurants.slice(0,5).map((item, index) => {
+                                const displayImage = (Array.isArray(item.images) && item.images.length > 0)
+                                ? item.images[0] 
+                                : burger;
+                                return(
+                                <RestaurantCard 
+                                    key={index} 
+                                    image={displayImage} 
+                                    title={item.name} 
+                                    rating={5} 
+                                    ratingQuantity={120} 
+                                    distance={5} 
+                                    deliveryTime={6} 
+                                    fee={15} 
+                                    currency={'$'} />
+                                )
+                            })}
+                        </div>
+                    </div>
+                    <div className={styles.menuItems}>
+                        <div className={styles.menuLabel}>
+                            <h2 style={{marginBottom: '10px', marginTop: '10px'}}>Trà Sữa Giảm Cân</h2>
+                            <Link to="/category/tra-sua" className={styles.menuSeeAll}>Xem tất cả <ChevronRight size={16} /></Link>
+                        </div>
+                        <div className={styles.menuCard}>
+                            {traSuaRestaurants.slice(0,5).map((item, index) => {
+                                const displayImage = (Array.isArray(item.images) && item.images.length > 0)
+                                ? item.images[0] 
+                                : burger;
+                                return(
+                                <RestaurantCard 
+                                    key={index} 
+                                    image={displayImage} 
+                                    title={item.name} 
+                                    rating={5} 
+                                    ratingQuantity={120} 
+                                    distance={5} 
+                                    deliveryTime={6} 
+                                    fee={15} 
+                                    currency={'$'} />
+                                )
+                            })}
+                        </div>
+                    </div>
+                    <div className={styles.menuItems}>
+                        <div className={styles.menuLabel}>
+                            <h2 style={{marginBottom: '10px', marginTop: '10px'}}>Nước Ép Tươi Sạch</h2>
+                            <Link to="/category/nuoc-ep" className={styles.menuSeeAll}>Xem tất cả <ChevronRight size={16} /></Link>
+                        </div>
+                        <div className={styles.menuCard}>
+                            {nuocEpRestaurants.slice(0,5).map((item, index) => {
+                                const displayImage = (Array.isArray(item.images) && item.images.length > 0)
+                                ? item.images[0] 
+                                : burger;
+                                return(
+                                <RestaurantCard 
+                                    key={index} 
+                                    image={displayImage} 
+                                    title={item.name} 
+                                    rating={5} 
+                                    ratingQuantity={120} 
+                                    distance={5} 
+                                    deliveryTime={6} 
+                                    fee={15} 
+                                    currency={'$'} />
+                                )
+                            })}
+                        </div>
+                    </div>
+                    <div className={styles.menuItems}>
+                        <div className={styles.menuLabel}>
+                            <h2 style={{marginBottom: '10px', marginTop: '10px'}}>Bánh Ngọt Ngậy Tuyệt Đối</h2>
+                            <Link to="/category/banh-ngot" className={styles.menuSeeAll}>Xem tất cả <ChevronRight size={16} /></Link>
+                        </div>
+                        <div className={styles.menuCard}>
+                            {banhNgotRestaurants.slice(0,5).map((item, index) => {
                                 const displayImage = (Array.isArray(item.images) && item.images.length > 0)
                                 ? item.images[0] 
                                 : burger;
