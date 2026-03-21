@@ -8,12 +8,17 @@ import connectMongo from './config/mongodb.js';
 import redisClient from './config/redis.js';
 import neo4jDriver from './config/neo4j.js';
 import pgPool from './config/postgres.js';
+import userRoute from './routes/userRoute.js';
+import restaurantRoute from './routes/restaurantRoute.js';
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
+
+app.use('/api/users', userRoute);
+app.use('/api/restaurants', restaurantRoute);
 
 connectMongo();
 redisClient.connect().then(() => console.log('\nRedis Connected'));
@@ -22,6 +27,9 @@ pgPool.connect().then(() => console.log('PostgreSQL Connected'));
 // Import các Module chức năng 
 // app.use('/api/orders', require('./modules/orders/routes'));
 // app.use('/api/cart', require('./modules/cart/routes'));
+
+import { globalErrorHandler } from './middlewares/errorHandler.js';
+app.use(globalErrorHandler);
 
 const PORT = process.env.PORT || 3000;
 

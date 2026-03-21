@@ -2,9 +2,12 @@
     background-color: #FFFDFB;
     border: 0;
     padding: 0;
-    min-width: 13vw;
+    min-width: 180px;
     height: 100vh;
     border-right: 1px solid rgb(223, 220, 220);
+    position: fixed;
+    top: 64px;
+    z-index: 1000;
 }
 
 .sidebarItem {
