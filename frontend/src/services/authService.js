@@ -27,7 +27,7 @@ const register = async (userData) => {
         }
         return response.data;
     } catch (error) {
-        throw error.response?.data || new Error('Network Error');
+        throw error.response?.data || new Error('Lỗi mạng');
     }
 };
 
@@ -45,7 +45,7 @@ const login = async (credentials) => {
         }
         return response.data;
     } catch (error) {
-        throw error.response?.data || new Error('Network Error');
+        throw error.response?.data || new Error('Lỗi mạng');
     }
 };
 
@@ -54,7 +54,7 @@ const logout = async () => {
         const refreshToken = localStorage.getItem('refreshToken');
         await api.post('/users/logout', { refreshToken });
     } catch (error) {
-        console.error("Logout error", error);
+        console.error("Lỗi đăng xuất", error);
     } finally {
         localStorage.clear();
         window.location.href = '/auth';

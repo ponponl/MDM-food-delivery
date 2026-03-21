@@ -19,7 +19,7 @@ export default function Header() {
       logoutUser();
       navigate('/auth');
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error("Đăng xuất thất bại:", error);
     }
   };
 
@@ -33,8 +33,8 @@ export default function Header() {
               <input 
                 className={styles.searchInput}
                 type="text"
-                placeholder="Search for restaurants or dishes..."
-                onChange={(e) => console.log('Search query:', e.target.value)}
+                placeholder="Tìm nhà hàng hoặc món ăn..."
+                onChange={(e) => console.log('Từ khóa tìm kiếm:', e.target.value)}
               />
             </div>
             <button className={styles.addressHolder}><MapPin size={17}/><span  style={{marginLeft: '5px', marginRight: '5px', marginTop: '2px'}}>{address}</span><ChevronDown size={17}/></button>
@@ -45,11 +45,11 @@ export default function Header() {
         <div className={styles.authButton}>
           {user ? 
             (<>
-              <button className={styles.bthProfile}><User size={17}/><span style={{marginLeft: '5px', marginTop: '3px'}}>Profile</span></button>
-              <button className={styles.bthProfile} onClick={handleLogout}><LogOut size={17}/><span style={{marginLeft: '5px', marginTop: '3px'}}>Logout</span></button>
+              <button className={styles.bthProfile}><User size={17}/><span style={{marginLeft: '5px', marginTop: '3px'}}>Hồ sơ</span></button>
+              <button className={styles.bthProfile} onClick={handleLogout}><LogOut size={17}/><span style={{marginLeft: '5px', marginTop: '3px'}}>Đăng xuất</span></button>
             </>) :
             (<>
-              <button className={styles.bthSignIn} onClick={() => navigate('/auth')}>Sign In</button>
+              <button className={styles.bthSignIn} onClick={() => navigate('/auth')}>Đăng nhập</button>
             </>)}
         </div>
     </div>

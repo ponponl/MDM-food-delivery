@@ -12,12 +12,17 @@
 
 .sidebarItem {
     display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
     align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
     height: 40px;
     margin: 10px;
-    font-weight: bold;
+    padding: 0 16px 0 20px;
+    font-weight: 600;
+}
+
+.sidebarLabel {
+    flex: 1;
 }
 
 .sidebarItem:hover {

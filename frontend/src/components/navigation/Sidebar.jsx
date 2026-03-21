@@ -1,14 +1,20 @@
 import styles from './Sidebar.module.css';
 import { useState } from 'react';
-import { House, Hamburger, EggFried, GlassWater, Wheat, LogOut, UserPlus, KeyRound } from 'lucide-react';
+import { House, LogOut, UserPlus} from 'lucide-react';
+import { HamburgerIcon, PizzaIcon, BowlFoodIcon, BowlSteamIcon, CoffeeIcon, CakeIcon, PintGlassIcon, OrangeIcon, BreadIcon } from "@phosphor-icons/react";
 import { useLocation, Link} from 'react-router-dom';
 
 const sidebar = [
-  {name: 'Home', icon: House, path: '/'},
-  {name: 'Fast Food', icon: Hamburger, path: '/category/FastFood'},
-  {name: 'Healthy', icon: Wheat, path: '/category/Healthy'},
-  {name: 'Breakfast', icon: EggFried, path: '/category/Breakfast'},
-  {name: 'Drinks', icon: GlassWater, path: '/category/Drinks'},
+  {name: 'Trang chủ', icon: House, path: '/'},
+  {name: 'Burger', icon: HamburgerIcon, path: '/category/burger'},
+  {name: 'Pizza', icon: PizzaIcon, path: '/category/pizza'},
+  {name: 'Cơm', icon: BowlFoodIcon, path: '/category/com'},
+  {name: 'Mì & Phở', icon: BowlSteamIcon, path: '/category/mi-pho'},
+  {name: 'Bánh Mì', icon: BreadIcon, path: '/category/banh-mi'},
+  {name: 'Cà Phê', icon: CoffeeIcon, path: '/category/ca-phe'},
+  {name: 'Trà Sữa', icon: PintGlassIcon, path: '/category/tra-sua'},
+  {name: 'Nước Ép', icon: OrangeIcon, path: '/category/nuoc-ep'},
+  {name: 'Bánh Ngọt', icon: CakeIcon, path: '/category/banh-ngot'},
 ]
 
 export default function Sidebar() {
@@ -28,7 +34,8 @@ export default function Sidebar() {
                 to={item.path}
                 style={{ textDecoration: 'none', color: 'inherit' }}>
                   <li className={`${styles.sidebarItem} ${IsActive ? styles.IsActive : ''}`}>
-                    <Icon style={{ marginLeft: '30px' }} size={20}/><span style={{marginLeft: '8px', flex: 1}}>{item.name}</span>
+                    <Icon size={20} />
+                    <span className={styles.sidebarLabel}>{item.name}</span>
                   </li>
               </Link>
             )
@@ -36,12 +43,12 @@ export default function Sidebar() {
         <hr style={{ marginLeft: '20px', marginRight:'20px' }}/>
         {isLoggedIn ? (
           <div>
-            <li className={styles.sidebarItem}><LogOut style={{ marginLeft: '30px' }} size={20}/><span style={{marginLeft: '8px', flex: 1}}>Logout</span></li>
+            <li className={styles.sidebarItem}><LogOut size={20}/><span className={styles.sidebarLabel}>Đăng xuất</span></li>
           </div>
         ) : (
           <>
             <Link to={'/auth'} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <li className={styles.sidebarItem}><UserPlus style={{ marginLeft: '30px' }} size={20}/><span style={{marginLeft: '8px', flex: 1}}>Sign In</span></li>
+              <li className={styles.sidebarItem}><UserPlus size={20}/><span className={styles.sidebarLabel}>Đăng nhập</span></li>
             </Link>
           </>
         )}

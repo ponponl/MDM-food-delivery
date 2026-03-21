@@ -1,9 +1,17 @@
 import axiosClient from "./axiosClient";
 
 const restaurantApi = {
-    getAll: () => {
+    getAll: (params = {}) => {
         const url = '/restaurants';
-        return axiosClient.get(url);
+        return axiosClient.get(url, { params });
+    },
+    searchByName: (name) => {
+        const url = '/restaurants';
+        return axiosClient.get(url, { params: { name } });
+    },
+    searchByCategory: (category) => {
+        const url = '/restaurants';
+        return axiosClient.get(url, { params: { category } });
     }
 };
 
