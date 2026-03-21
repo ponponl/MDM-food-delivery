@@ -2,7 +2,7 @@ import {useState, useEffect} from 'react';
 import Header from '../../components/navigation/Header';
 import Sidebar from '../../components/navigation/Sidebar';
 import styles from './CategorizedPage.module.css';
-import HomeCard from '../../components/display/HomeCard';
+import RestaurantCard from '../../components/display/RestaurantCard';
 import burger from '../../assets/burger.png';
 import { useParams } from 'react-router-dom';
 import restaurantApi from '../../api/restaurantApi.js';
@@ -31,7 +31,7 @@ const CATEGORY_LABELS = {
 
 export default function CategorizedPage() {
     const [selected, setSelected] = useState('');
-    const [menuItems, setMenuItems] = useState([]);
+    const [restaurants, setRestaurants] = useState([]);
     const {categoryName} = useParams();
 
     useEffect(() => {
@@ -44,22 +44,10 @@ export default function CategorizedPage() {
                     return;
                 }
 
-                const items = (restaurants ?? []).flatMap((restaurant) =>
-                    (restaurant.menu ?? []).map((item) => ({
-                        ...item,
-                        restaurantName: restaurant.name
-                    }))
-                );
-
-                const normalizedCategory = normalize(categoryName);
-                const filteredItems = normalizedCategory
-                    ? items.filter((item) => normalize(item.category).includes(normalizedCategory))
-                    : items;
-
-                setMenuItems(filteredItems);
+                setRestaurants(restaurants ?? []);
             } catch (error) {
                 console.log('Không thể tải danh sách món ăn', error);
-                setMenuItems([]);
+                setRestaurants([]);
             }
         };
 
@@ -101,28 +89,23 @@ export default function CategorizedPage() {
                     </div>
                     <div className={styles.menuItems}>
                         <div className={styles.menuCard}>
-                            {menuItems.map((item, index) => {
+                            {restaurants.slice(0, 5).map((item, index) => {
+                                console.log("Dữ liệu của 1 nhà hàng:", item);
                                 const displayImage = (Array.isArray(item.images) && item.images.length > 0)
                                     ? item.images[0]
                                     : burger;
-                                const priceText = typeof item.price === 'number'
-                                    ? `${item.price.toLocaleString('en-US')} VND`
-                                    : 'Liên hệ';
-
-                                return (
-                                    <HomeCard
-                                        key={item.itemId ?? `${item.name}-${index}`}
-                                        image={displayImage}
-                                        title={item.name}
-                                        rating={5}
-                                        ratingQuantity={0}
-                                        distance={0}
-                                        deliveryTime={0}
-                                        fee={0}
-                                        currency={''}
-                                        feeText={priceText}
-                                    />
-                                );
+                                return(
+                                <RestaurantCard 
+                                    key={index} 
+                                    image={displayImage} 
+                                    title={item.name} 
+                                    rating={5} 
+                                    ratingQuantity={120} 
+                                    distance={5} 
+                                    deliveryTime={6} 
+                                    fee={15} 
+                                    currency={'$'} />
+                                )
                             })}
                         </div>
                     </div>

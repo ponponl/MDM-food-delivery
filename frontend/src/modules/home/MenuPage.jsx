@@ -4,7 +4,7 @@ import Sidebar from '../../components/navigation/Sidebar';
 import styles from './MenuPage.module.css';
 import { HamburgerIcon, PizzaIcon, BowlFoodIcon, BowlSteamIcon, CoffeeIcon, CakeIcon, PintGlassIcon, OrangeIcon, BreadIcon } from "@phosphor-icons/react";
 import CategoryTag from '../../components/display/CategoryTag';
-import HomeCard from '../../components/display/HomeCard';
+import RestaurantCard from '../../components/display/RestaurantCard';
 import burger from '../../assets/burger.png';
 import pizzaImg from '../../assets/pizza.png';
 import { ChevronRight } from 'lucide-react';
@@ -48,7 +48,7 @@ export default function MenuPage() {
                 <Sidebar />
                 <div className={styles.content}>
                     <div className={styles.category}>
-                        <h3 style={{marginBottom: '10px'}}>Chào mừng đến với Foodly!</h3>
+                        <h2 style={{marginBottom: '10px'}}>Chào mừng đến với Foodly!</h2>
                         {categories.map((category, index) => (
                             <Link
                                 key={index}
@@ -65,17 +65,16 @@ export default function MenuPage() {
                     </div>
                     <div className={styles.menuItems}>
                         <div className={styles.menuLabel}>
-                            <h3 style={{marginBottom: '10px', marginTop: '10px'}}>Gợi ý nổi bật</h3>
+                            <h2 style={{marginBottom: '10px', marginTop: '10px'}}>Nhà hàng nổi bật</h2>
                             <Link to="/dashboard" className={styles.menuSeeAll}>Xem tất cả <ChevronRight size={16} /></Link>
                         </div>
                         <div className={styles.menuCard}>
                             {restaurants.slice(0, 5).map((item, index) => {
-                                console.log("Dữ liệu của 1 nhà hàng:", item);
                                 const displayImage = (Array.isArray(item.images) && item.images.length > 0)
                                 ? item.images[0] 
                                 : burger;
                                 return(
-                                <HomeCard 
+                                <RestaurantCard 
                                     key={index} 
                                     image={displayImage} 
                                     title={item.name} 
@@ -91,17 +90,41 @@ export default function MenuPage() {
                     </div>
                     <div className={styles.menuItems}>
                         <div className={styles.menuLabel}>
-                            <h3 style={{marginBottom: '10px', marginTop: '10px'}}>Giao nhanh nhất</h3>
+                            <h2 style={{marginBottom: '10px', marginTop: '10px'}}>Burger Ngon Bùng Nổ</h2>
                             <Link to="/dashboard" className={styles.menuSeeAll}>Xem tất cả <ChevronRight size={16} /></Link>
                         </div>
                         <div className={styles.menuCard}>
-                            {restaurants.slice(0, 5).map((item, index) => {
-                                console.log("Dữ liệu của 1 nhà hàng:", item);
+                            {restaurants.slice(0,10).map((item, index) => {
                                 const displayImage = (Array.isArray(item.images) && item.images.length > 0)
                                 ? item.images[0] 
                                 : burger;
                                 return(
-                                <HomeCard 
+                                <RestaurantCard 
+                                    key={index} 
+                                    image={displayImage} 
+                                    title={item.name} 
+                                    rating={5} 
+                                    ratingQuantity={120} 
+                                    distance={5} 
+                                    deliveryTime={6} 
+                                    fee={15} 
+                                    currency={'$'} />
+                                )
+                            })}
+                        </div>
+                    </div>
+                    <div className={styles.menuItems}>
+                        <div className={styles.menuLabel}>
+                            <h2 style={{marginBottom: '10px', marginTop: '10px'}}>Pizza To Chà Bá</h2>
+                            <Link to="/dashboard" className={styles.menuSeeAll}>Xem tất cả <ChevronRight size={16} /></Link>
+                        </div>
+                        <div className={styles.menuCard}>
+                            {restaurants.slice(0,10).map((item, index) => {
+                                const displayImage = (Array.isArray(item.images) && item.images.length > 0)
+                                ? item.images[0] 
+                                : burger;
+                                return(
+                                <RestaurantCard 
                                     key={index} 
                                     image={displayImage} 
                                     title={item.name} 
