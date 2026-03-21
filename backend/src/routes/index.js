@@ -1,9 +1,10 @@
 import express from 'express';
 import userRoute from './userRoute.js';
+import restaurantRoute from './restaurantRoute.js';
 
 const router = express.Router();
 
-// Nếu ở đây bạn viết là '/users'
 router.use('/users', userRoute); 
+router.use('/restaurants', restaurantRoute);
 
 export default router;

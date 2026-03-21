@@ -6,17 +6,17 @@ const Footer = () => {
             <div className={styles.footerContent}>
                 <div className={styles.logo}>Foodly</div>
                 <div className={styles.links}>
-                    <span className={styles.linkItem}>Home</span>
-                    <span className={styles.linkItem}>Menu</span>
-                    <span className={styles.linkItem}>About</span>
-                    <span className={styles.linkItem}>Contact</span>
+                    <span className={styles.linkItem}>Trang chủ</span>
+                    <span className={styles.linkItem}>Thực đơn</span>
+                    <span className={styles.linkItem}>Giới thiệu</span>
+                    <span className={styles.linkItem}>Liên hệ</span>
                 </div>
                 <div className={styles.contactInfo}>
                     <p>Email:
                         <a href="mailto: foodly@service.com">foodly@service.com</a>
                     </p>
-                    <p>Phone: <a href="tel:+1234567890">+1 (234) 567-890</a></p>
-                    <p>Address: 123 Foodly St, Flavor Town, USA</p>
+                    <p>Điện thoại: <a href="tel:+1234567890">+1 (234) 567-890</a></p>
+                    <p>Địa chỉ: 123 Foodly St, Flavor Town, USA</p>
                 </div>
                 <div className={styles.socialMedia}>
                     <a href="https://www.facebook.com/foodly" target="_blank" rel="noopener noreferrer">Facebook</a>
@@ -25,7 +25,7 @@ const Footer = () => {
                 </div>
             </div>
             <div className={styles.copyRight}>
-                &copy; {new Date().getFullYear()} Foodly. All rights reserved.
+                &copy; {new Date().getFullYear()} Foodly. Bản quyền đã được bảo hộ.
             </div>
         </footer>
     )

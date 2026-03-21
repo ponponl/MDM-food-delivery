@@ -1,7 +1,7 @@
 import {Star, Dot} from 'lucide-react';
 import styles from './HomeCard.module.css';
 
-export default function HomeCard ({image, title, rating, ratingQuantity, distance, deliveryTime, fee, currency}) {
+export default function HomeCard ({image, title, rating, ratingQuantity, distance, deliveryTime}) {
     return (
         <div className={styles.card}>
             <img className={styles.imageCard} src={image} alt={title} />
@@ -16,7 +16,6 @@ export default function HomeCard ({image, title, rating, ratingQuantity, distanc
                     <span><Dot size={20} style={{ marginLeft: '-5px', marginRight: '-5px' }}/></span>
                     <span>{deliveryTime} mins</span>
                 </div>
-                <span style={{color:'grey'}}>{fee}{currency} delivery fee</span>
             </div>
         </div>
     );

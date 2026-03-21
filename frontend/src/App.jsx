@@ -12,7 +12,6 @@ function App() {
     <AuthProvider>
       <AddressProvider>
         <Toaster position="top-center" reverseOrder={false} />
-
         <Routes>
           <Route path="/" element={<Homepage />} />
           <Route path="/category/:categoryName" element={<CategorizedPage />} />

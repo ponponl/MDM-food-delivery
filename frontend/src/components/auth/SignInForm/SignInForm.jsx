@@ -11,8 +11,8 @@ const SignInEditorial = () => (
     <div className={styles.masthead}>
       <h1>FOODLY</h1>
       <div className={styles.mastheadDetails}>
-        <span>Est. 2024 — From local kitchens to your table</span>
-        <span>⭐ Premium delivery ⭐</span>
+        <span>Từ 2024 — Từ bếp địa phương đến bàn ăn của bạn</span>
+        <span>⭐ Giao hàng cao cấp ⭐</span>
       </div>
     </div>
 
@@ -21,24 +21,24 @@ const SignInEditorial = () => (
         <img 
           src="/FOODLY-logo.png"
           className={styles.mainLogo} 
-          alt="FOODHUB Logo" 
+          alt="Logo Foodly" 
         />
-        <div className={styles.photoCredit}>Fresh meals, daily</div>
+        <div className={styles.photoCredit}>Bữa ăn tươi mỗi ngày</div>
       </div>
       
       <div className={styles.articleSnippet}>
-        <h3 className={styles.articleTitle}>From Kitchen to Doorstep</h3>
+        <h3 className={styles.articleTitle}>Từ bếp đến tận cửa</h3>
         <p>
-          Discover the best local restaurants curated just for you. 
-          Fresh ingredients, passionate chefs, and lightning-fast delivery 
-          bring your cravings to life — anytime, anywhere.
+          Khám phá những nhà hàng địa phương tốt nhất được chọn riêng cho bạn.
+          Nguyên liệu tươi, đầu bếp tâm huyết và giao hàng siêu nhanh
+          mang vị ngon đến mọi lúc, mọi nơi.
         </p>
       </div>
     </div>
 
     <div className={styles.editorialFooter}>
       <div className={styles.thickDivider}></div>
-      <p className={styles.footerQuote}>"Good food brings people together."</p>
+      <p className={styles.footerQuote}>"Món ngon kết nối mọi người."</p>
     </div>
   </div>
 );
@@ -85,7 +85,7 @@ const SignInInputs = ({ onSwitch, initialUsername }) => {
             border: '1px solid #E5E7EB',
             fontSize: '15px',
             fontWeight: '600',
-            fontFamily: '"Inter", "Segoe UI", sans-serif',
+            fontFamily: '"Lexend", "Segoe UI", sans-serif',
             boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
           },
           iconTheme: {

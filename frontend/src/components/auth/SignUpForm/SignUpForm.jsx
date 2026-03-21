@@ -11,20 +11,17 @@ const SignUpEditorial = () => (
         <div className={styles.imageWrapper}>
           <img
             src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=1000"
-            alt="Gourmet Dish"
+            alt="Món ăn cao cấp"
           />
           <div className={styles.imageOverlay}></div>
         </div>
-        <p className={styles.caption}>EST. 2024 — SECRET RECIPE NO. 42</p>
+        <p className={styles.caption}>TỪ 2024 — CÔNG THỨC BÍ MẬT SỐ 42</p>
       </div>
 
       <div className={styles.articleContent}>
-        <span className={styles.dropCap}>T</span>
+        <span className={styles.dropCap}>B</span>
         <p className={styles.quoteText}>
-          he secret ingredient is always love — but we add a dash of speed too.
-          Every dish tells a story, from farm-fresh ingredients to your
-          doorstep, crafted with passion by local chefs who pour their heart
-          into every plate.
+          "Món ngon kết nối mọi người."
         </p>
       </div>
     </div>
@@ -32,9 +29,9 @@ const SignUpEditorial = () => (
     <div className={styles.editorialFooter}>
       <div className={styles.divider}></div>
       <div className={styles.footerFlex}>
-        <span>MENU ITEMS... 500+</span>
-        <span>HO CHI MINH CITY, MONDAY, 30 MIN</span>
-        <span>FREE DELIVERY</span>
+        <span>MÓN TRONG THỰC ĐƠN... 500+</span>
+        <span>TP. HỒ CHÍ MINH, THỨ HAI, 30 PHÚT</span>
+        <span>GIAO HÀNG MIỄN PHÍ</span>
       </div>
     </div>
   </div>
@@ -111,7 +108,7 @@ const SignUpInputs = ({ onSwitch, onRegisterSuccess }) => {
           fontSize: "14px",
           fontWeight: "500",
           boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
-          fontFamily: '"Inter", "Segoe UI", sans-serif',
+          fontFamily: '"Lexend", "Segoe UI", sans-serif',
         },
         iconTheme: {
           primary: "#4CAF50",
