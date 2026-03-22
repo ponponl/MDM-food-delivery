@@ -1,0 +1,123 @@
+.menuItemsList {
+    margin-top: 20px;
+}
+
+.categorySection {
+    margin-bottom: 40px;
+    scroll-margin-top: 100px;
+}
+
+.categoryTitle {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+    color: #1a1a1a;
+}
+
+.foodGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; 
+    gap: 12px; 
+}
+
+.foodCard {
+    background: white;
+    border: 1px solid #e8e8e8;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
+    height: 130px; 
+}
+
+.foodCard:hover {
+    background-color: #f7f7f7;
+}
+
+.foodInfo {
+    flex: 1;
+    padding: 12px; 
+    display: flex;
+    flex-direction: column;
+    min-width: 0; 
+}
+
+.foodName {
+    margin: 0 0 4px 0;
+    font-size: 1rem; 
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; 
+}
+
+.foodDescription {
+    font-size: 0.85rem;
+    color: #666;
+    line-height: 1.3;
+    -webkit-line-clamp: 2; 
+}
+
+.kjText {
+    color: #666;
+    font-weight: 500;
+}
+
+.price {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.imageWrapper {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    margin: 10px;
+    flex-shrink: 0;
+}
+
+.foodImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.addBtn {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    background: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    cursor: pointer;
+    color: #1a1a1a;
+    transition: transform 0.1s;
+}
+
+.addBtn:hover {
+    background: #EE5335;
+    color:#e8e8e8
+}
+
+@media (max-width: 600px) {
+    .foodGrid {
+        grid-template-columns: 1fr;
+    }
+    .foodCard {
+        height: auto;
+    }
+    .imageWrapper {
+        width: 100px;
+        height: 100px;
+    }
+}

@@ -11,3 +11,11 @@ export const searchRestaurants = async ({ name, category } = {}) => {
     const restaurants = await repo.findByFilters({ name, category });
     return restaurants;
 };
+
+export const getRestaurantById = async (id) => {
+    const restaurant = await repo.findById(id);
+    if (!restaurant) {
+        throw new Error('Restaurant not found');
+    }
+    return restaurant;
+}

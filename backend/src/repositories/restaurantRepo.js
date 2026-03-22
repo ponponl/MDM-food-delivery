@@ -65,4 +65,8 @@ export class RestaurantRepository {
 
         return await Restaurant.find(query);
     }
+
+    async findById(id) {
+        return await Restaurant.findById(id);
+    }
 }

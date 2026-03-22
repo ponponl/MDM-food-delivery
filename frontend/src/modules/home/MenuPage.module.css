@@ -57,3 +57,7 @@
     flex-direction: row;
     gap: 20px;
 }
+
+.cardWrapper {
+    cursor: pointer;
+}

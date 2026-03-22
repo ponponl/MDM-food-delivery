@@ -1,4 +1,5 @@
 import {useState, useEffect} from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../../components/navigation/Header';
 import Sidebar from '../../components/navigation/Sidebar';
 import styles from './MenuPage.module.css';
@@ -36,6 +37,8 @@ export default function MenuPage() {
     const [nuocEpRestaurants, setNuocEpRestaurants] = useState([]);
     const [banhNgotRestaurants, setBanhNgotRestaurants] = useState([]);
 
+    const navigate = useNavigate();
+
     useEffect(() => {
         const fetchRestaurant = async () => {
             try{
@@ -66,6 +69,10 @@ export default function MenuPage() {
 
         fetchRestaurant();
     }, [])
+
+    const handleRestaurantClick = (id) => {
+        navigate(`/restaurant/${id}`);
+    };
 
     return (
         <div style={{backgroundColor: '#FFFDFB'}}> 
@@ -100,16 +107,22 @@ export default function MenuPage() {
                                 ? item.images[0] 
                                 : burger;
                                 return(
-                                <RestaurantCard 
-                                    key={index} 
-                                    image={displayImage} 
-                                    title={item.name} 
-                                    rating={5} 
-                                    ratingQuantity={120} 
-                                    distance={5} 
-                                    deliveryTime={6} 
-                                    fee={15} 
-                                    currency={'$'} />
+                                    <div
+                                        key={item._id || index} 
+                                        onClick={() => handleRestaurantClick(item._id)}
+                                        className={styles.cardWrapper}
+                                    >
+                                        <RestaurantCard 
+                                            image={displayImage} 
+                                            title={item.name} 
+                                            rating={5} 
+                                            ratingQuantity={120} 
+                                            distance={5} 
+                                            deliveryTime={6} 
+                                            fee={15} 
+                                            currency={'$'} 
+                                        />
+                                    </div>
                                 )
                             })}
                         </div>
@@ -125,16 +138,22 @@ export default function MenuPage() {
                                 ? item.images[0] 
                                 : burger;
                                 return(
-                                <RestaurantCard 
-                                    key={index} 
-                                    image={displayImage} 
-                                    title={item.name} 
-                                    rating={5} 
-                                    ratingQuantity={120} 
-                                    distance={5} 
-                                    deliveryTime={6} 
-                                    fee={15} 
-                                    currency={'$'} />
+                                    <div
+                                        key={item._id || index} 
+                                        onClick={() => handleRestaurantClick(item._id)}
+                                        className={styles.cardWrapper}
+                                    >
+                                        <RestaurantCard 
+                                            key={index} 
+                                            image={displayImage} 
+                                            title={item.name} 
+                                            rating={5} 
+                                            ratingQuantity={120} 
+                                            distance={5} 
+                                            deliveryTime={6} 
+                                            fee={15} 
+                                            currency={'$'} />
+                                    </div>
                                 )
                             })}
                         </div>
@@ -150,16 +169,22 @@ export default function MenuPage() {
                                 ? item.images[0] 
                                 : burger;
                                 return(
-                                <RestaurantCard 
-                                    key={index} 
-                                    image={displayImage} 
-                                    title={item.name} 
-                                    rating={5} 
-                                    ratingQuantity={120} 
-                                    distance={5} 
-                                    deliveryTime={6} 
-                                    fee={15} 
-                                    currency={'$'} />
+                                    <div
+                                        key={item._id || index} 
+                                        onClick={() => handleRestaurantClick(item._id)}
+                                        className={styles.cardWrapper}
+                                    >
+                                        <RestaurantCard 
+                                            key={index} 
+                                            image={displayImage} 
+                                            title={item.name} 
+                                            rating={5} 
+                                            ratingQuantity={120} 
+                                            distance={5} 
+                                            deliveryTime={6} 
+                                            fee={15} 
+                                            currency={'$'} />
+                                    </div>
                                 )
                             })}
                         </div>
@@ -175,16 +200,22 @@ export default function MenuPage() {
                                 ? item.images[0] 
                                 : burger;
                                 return(
-                                <RestaurantCard 
-                                    key={index} 
-                                    image={displayImage} 
-                                    title={item.name} 
-                                    rating={5} 
-                                    ratingQuantity={120} 
-                                    distance={5} 
-                                    deliveryTime={6} 
-                                    fee={15} 
-                                    currency={'$'} />
+                                    <div
+                                        key={item._id || index} 
+                                        onClick={() => handleRestaurantClick(item._id)}
+                                        className={styles.cardWrapper}
+                                    >
+                                        <RestaurantCard 
+                                            key={index} 
+                                            image={displayImage} 
+                                            title={item.name} 
+                                            rating={5} 
+                                            ratingQuantity={120} 
+                                            distance={5} 
+                                            deliveryTime={6} 
+                                            fee={15} 
+                                            currency={'$'} />
+                                    </div>
                                 )
                             })}
                         </div>
@@ -200,16 +231,22 @@ export default function MenuPage() {
                                 ? item.images[0] 
                                 : burger;
                                 return(
-                                <RestaurantCard 
-                                    key={index} 
-                                    image={displayImage} 
-                                    title={item.name} 
-                                    rating={5} 
-                                    ratingQuantity={120} 
-                                    distance={5} 
-                                    deliveryTime={6} 
-                                    fee={15} 
-                                    currency={'$'} />
+                                    <div
+                                        key={item._id || index} 
+                                        onClick={() => handleRestaurantClick(item._id)}
+                                        className={styles.cardWrapper}
+                                    >
+                                        <RestaurantCard 
+                                            key={index} 
+                                            image={displayImage} 
+                                            title={item.name} 
+                                            rating={5} 
+                                            ratingQuantity={120} 
+                                            distance={5} 
+                                            deliveryTime={6} 
+                                            fee={15} 
+                                            currency={'$'} />
+                                    </div>
                                 )
                             })}
                         </div>
@@ -225,16 +262,22 @@ export default function MenuPage() {
                                 ? item.images[0] 
                                 : burger;
                                 return(
-                                <RestaurantCard 
-                                    key={index} 
-                                    image={displayImage} 
-                                    title={item.name} 
-                                    rating={5} 
-                                    ratingQuantity={120} 
-                                    distance={5} 
-                                    deliveryTime={6} 
-                                    fee={15} 
-                                    currency={'$'} />
+                                    <div
+                                        key={item._id || index} 
+                                        onClick={() => handleRestaurantClick(item._id)}
+                                        className={styles.cardWrapper}
+                                    >
+                                        <RestaurantCard 
+                                            key={index} 
+                                            image={displayImage} 
+                                            title={item.name} 
+                                            rating={5} 
+                                            ratingQuantity={120} 
+                                            distance={5} 
+                                            deliveryTime={6} 
+                                            fee={15} 
+                                            currency={'$'} />
+                                    </div>
                                 )
                             })}
                         </div>
@@ -250,16 +293,22 @@ export default function MenuPage() {
                                 ? item.images[0] 
                                 : burger;
                                 return(
-                                <RestaurantCard 
-                                    key={index} 
-                                    image={displayImage} 
-                                    title={item.name} 
-                                    rating={5} 
-                                    ratingQuantity={120} 
-                                    distance={5} 
-                                    deliveryTime={6} 
-                                    fee={15} 
-                                    currency={'$'} />
+                                    <div
+                                        key={item._id || index} 
+                                        onClick={() => handleRestaurantClick(item._id)}
+                                        className={styles.cardWrapper}
+                                    >
+                                        <RestaurantCard 
+                                            key={index} 
+                                            image={displayImage} 
+                                            title={item.name} 
+                                            rating={5} 
+                                            ratingQuantity={120} 
+                                            distance={5} 
+                                            deliveryTime={6} 
+                                            fee={15} 
+                                            currency={'$'} />
+                                    </div>
                                 )
                             })}
                         </div>
@@ -300,16 +349,22 @@ export default function MenuPage() {
                                 ? item.images[0] 
                                 : burger;
                                 return(
-                                <RestaurantCard 
-                                    key={index} 
-                                    image={displayImage} 
-                                    title={item.name} 
-                                    rating={5} 
-                                    ratingQuantity={120} 
-                                    distance={5} 
-                                    deliveryTime={6} 
-                                    fee={15} 
-                                    currency={'$'} />
+                                    <div
+                                        key={item._id || index} 
+                                            onClick={() => handleRestaurantClick(item._id)}
+                                            className={styles.cardWrapper}
+                                    >
+                                        <RestaurantCard 
+                                            key={index} 
+                                            image={displayImage} 
+                                            title={item.name} 
+                                            rating={5} 
+                                            ratingQuantity={120} 
+                                            distance={5} 
+                                            deliveryTime={6} 
+                                            fee={15} 
+                                            currency={'$'} />
+                                    </div>
                                 )
                             })}
                         </div>
@@ -325,16 +380,22 @@ export default function MenuPage() {
                                 ? item.images[0] 
                                 : burger;
                                 return(
-                                <RestaurantCard 
-                                    key={index} 
-                                    image={displayImage} 
-                                    title={item.name} 
-                                    rating={5} 
-                                    ratingQuantity={120} 
-                                    distance={5} 
-                                    deliveryTime={6} 
-                                    fee={15} 
-                                    currency={'$'} />
+                                    <div
+                                        key={item._id || index} 
+                                            onClick={() => handleRestaurantClick(item._id)}
+                                            className={styles.cardWrapper}
+                                    >
+                                        <RestaurantCard 
+                                            key={index} 
+                                            image={displayImage} 
+                                            title={item.name} 
+                                            rating={5} 
+                                            ratingQuantity={120} 
+                                            distance={5} 
+                                            deliveryTime={6} 
+                                            fee={15} 
+                                            currency={'$'} />
+                                    </div>
                                 )
                             })}
                         </div>

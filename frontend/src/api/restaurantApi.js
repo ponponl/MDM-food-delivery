@@ -5,6 +5,10 @@ const restaurantApi = {
         const url = '/restaurants';
         return axiosClient.get(url, { params });
     },
+    getById: (id) => {
+        const url = `/restaurants/${id}`;
+        return axiosClient.get(url);
+    },
     searchByName: (name) => {
         const url = '/restaurants';
         return axiosClient.get(url, { params: { name } });
