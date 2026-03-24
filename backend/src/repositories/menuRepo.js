@@ -10,7 +10,7 @@ const normalizeMenuItem = (menuItem, restaurantId) => {
   const available = menuItem.available === true;
 
   return {
-    itemId: menuItem.itemId?.toString?.() ?? menuItem.itemId,
+    itemId: menuItem._id?.toString?.() ?? menuItem._id,
     name: menuItem.name,
     price,
     description: menuItem.description,
@@ -34,7 +34,7 @@ export class MenuRepository {
     }
 
     const result = await Restaurant.findOne(
-      { 'menu.itemId': itemObjectId },
+      { 'menu._id': itemObjectId },
       { 'menu.$': 1, _id: 1 }
     ).lean();
 
@@ -57,9 +57,9 @@ export class MenuRepository {
 
     if (objectIds.length > 0) {
       const results = await Restaurant.aggregate([
-        { $match: { 'menu.itemId': { $in: objectIds } } },
+        { $match: { 'menu._id': { $in: objectIds } } },
         { $unwind: '$menu' },
-        { $match: { 'menu.itemId': { $in: objectIds } } },
+        { $match: { 'menu._id': { $in: objectIds } } },
         { $project: { _id: 1, menu: 1 } }
       ]);
 

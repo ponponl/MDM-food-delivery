@@ -2,7 +2,7 @@ import React from 'react';
 import { Plus } from 'lucide-react';
 import styles from './MenuItemList.module.css';
 
-const MenuItemsList = ({ groupedMenu }) => {
+const MenuItemsList = ({ groupedMenu, onAddToCart }) => {
     console.log(groupedMenu);
     return (
         <div className={styles.menuItemsList}>
@@ -27,7 +27,12 @@ const MenuItemsList = ({ groupedMenu }) => {
                                 {/* Ảnh và nút Add bên phải */}
                                 <div className={styles.imageWrapper}>
                                     <img src={item.images[0]} alt={item.name} className={styles.foodImage} />
-                                    <button className={styles.addBtn}>
+                                    <button
+                                        className={styles.addBtn}
+                                        type="button"
+                                        aria-label={`Add ${item.name} to cart`}
+                                        onClick={() => onAddToCart?.(item)}
+                                    >
                                         <Plus size={20} strokeWidth={3} />
                                     </button>
                                 </div>

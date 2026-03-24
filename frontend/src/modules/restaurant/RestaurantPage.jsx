@@ -7,7 +7,9 @@ import MenuSidebar from '../../components/menuSideBar/menuSideBar.jsx';
 import ReviewsSection from '../../components/reviewSection/ReviewSection.jsx';
 import MenuItemsList from '../../components/menuItemList/MenuItemList.jsx';
 import { AddressContext } from '../../context/AddressContext.jsx';
+import { useAuth } from '../../context/AuthContext.jsx';
 import restaurantApi from '../../api/restaurantApi';
+import cartApi from '../../api/cartApi';
 import styles from './RestaurantPage.module.css';
 
 const MOCK_REVIEWS = [
@@ -20,6 +22,7 @@ const MOCK_REVIEWS = [
 
 export default function RestaurantPage() {
     const { id } = useParams();
+    const { user } = useAuth();
     const [restaurant, setRestaurant] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -68,6 +71,30 @@ export default function RestaurantPage() {
     }, {});
     
     const categories = Object.keys(groupedMenu);
+
+    const resolveUserExternalId = (currentUser) =>
+        currentUser?.externalId ||
+        currentUser?.userExternalId ||
+        currentUser?.user_id ||
+        currentUser?.id ||
+        currentUser?.username;
+
+    const handleAddToCart = async (item) => {
+        const userExternalId = resolveUserExternalId(user);
+        const itemId = item?._id ?? item?.itemId;
+
+        if (!userExternalId || !itemId) {
+            window.alert('Vui lòng đăng nhập để thêm món vào giỏ.');
+            return;
+        }
+
+        try {
+            await cartApi.addItem({ userExternalId, itemId, quantity: 1 });
+        } catch (err) {
+            console.error('Add to cart failed:', err);
+            window.alert('Không thể thêm món vào giỏ. Vui lòng thử lại.');
+        }
+    };
 
     return (
         <div className={styles.restaurantPage}>
@@ -166,7 +193,7 @@ export default function RestaurantPage() {
                                     </div>
                                 ))}
                             </div> */}
-                            <MenuItemsList groupedMenu={groupedMenu} />
+                            <MenuItemsList groupedMenu={groupedMenu} onAddToCart={handleAddToCart} />
                         </section>
                     </div>
                 </main>
