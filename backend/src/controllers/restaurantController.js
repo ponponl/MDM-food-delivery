@@ -19,10 +19,10 @@ export const getRestaurant = async (req, res) => {
     }
 }
 
-export const getById = async (req, res) => {
+export const getByPublicId = async (req, res) => {
     try {
-        const { id } = req.params;
-        const restaurant = await restaurantService.getRestaurantById(id);
+        const { publicId } = req.params;
+        const restaurant = await restaurantService.getRestaurantByPublicId(publicId);
         res.status(200).json(restaurant);
     } catch (error) {
         res.status(404).json({ message: error.message });

@@ -5,8 +5,8 @@ const restaurantApi = {
         const url = '/restaurants';
         return axiosClient.get(url, { params });
     },
-    getById: (id) => {
-        const url = `/restaurants/${id}`;
+    getById: (publicId) => {
+        const url = `/restaurants/${publicId}`;
         return axiosClient.get(url);
     },
     getSummary: () => {

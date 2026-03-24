@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import menuItemSchema from './menuModel.js';
 
 const restaurantSchema = new mongoose.Schema({
-    // _id: mongoose.Schema.Types.ObjectId,
     slug: String,
     publicId: String,
     name: String,
@@ -26,6 +25,21 @@ const restaurantSchema = new mongoose.Schema({
     phone: String,
     images: [String],
     menu: [menuItemSchema]
+}, {
+    toJSON: {
+        versionKey: false,
+        transform: (_doc, ret) => {
+            delete ret._id;
+            return ret;
+        }
+    },
+    toObject: {
+        versionKey: false,
+        transform: (_doc, ret) => {
+            delete ret._id;
+            return ret;
+        }
+    }
 });
 
 export default mongoose.model('Restaurant', restaurantSchema, 'restaurant');

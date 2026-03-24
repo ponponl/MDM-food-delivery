@@ -16,7 +16,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Homepage />} />
           <Route path="/category/:categoryName" element={<CategorizedPage />} />
-          <Route path="/restaurant/:id" element={<RestaurantPage />} />
+          <Route path="/restaurant/:slugAndId" element={<RestaurantPage />} />
           <Route path="/auth" element={<AuthPage />} />
         </Routes>
 

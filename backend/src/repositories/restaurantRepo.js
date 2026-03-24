@@ -78,7 +78,7 @@ export class RestaurantRepository {
         return await Restaurant.find(query).limit(limit);
     }
 
-    async findById(id) {
-        return await Restaurant.findById(id);
+    async findByPublicId(publicId) {
+        return await Restaurant.findOne({ publicId });
     }
 }

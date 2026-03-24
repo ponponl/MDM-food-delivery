@@ -6,6 +6,21 @@ const categorySchema = new mongoose.Schema({
     iconKey: { type: String, required: true },
     order: { type: Number, default: 0 },
     displayName: { type: String, required: true }
+}, {
+    toJSON: {
+        versionKey: false,
+        transform: (_doc, ret) => {
+            delete ret._id;
+            return ret;
+        }
+    },
+    toObject: {
+        versionKey: false,
+        transform: (_doc, ret) => {
+            delete ret._id;
+            return ret;
+        }
+    }
 });
 
 export default mongoose.model('Category', categorySchema, 'category');

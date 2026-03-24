@@ -30,6 +30,16 @@ const categoryIconMap = {
 export default function MenuPage() {
     const navigate = useNavigate();
 
+    const slugify = (value) => (
+        (value ?? '')
+            .toString()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-zA-Z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '')
+            .toLowerCase()
+    );
+
     const { data: categories = [] } = useQuery({
         queryKey: ['categories'],
         queryFn: categoryApi.getAll,
@@ -52,8 +62,14 @@ export default function MenuPage() {
         (categories ?? []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
     ), [categories]);
 
-    const handleRestaurantClick = (id) => {
-        navigate(`/restaurant/${id}`);
+    const handleRestaurantClick = (restaurant) => {
+        const publicId = restaurant?.publicId || restaurant?.public_id || restaurant?._id || restaurant?.id;
+        if (!publicId) {
+            return;
+        }
+
+        const slug = restaurant?.slug || slugify(restaurant?.name);
+        navigate(`/restaurant/${slug}-${publicId}`);
     };
 
     return (
@@ -95,7 +111,7 @@ export default function MenuPage() {
                                 return(
                                     <div
                                         key={item._id || index} 
-                                        onClick={() => handleRestaurantClick(item._id)}
+                                        onClick={() => handleRestaurantClick(item)}
                                         className={styles.cardWrapper}
                                     >
                                         <RestaurantCard 
@@ -118,7 +134,7 @@ export default function MenuPage() {
                         return (
                             <div className={styles.menuItems} key={category.slug}>
                                 <div className={styles.menuLabel}>
-                                    <h2 style={{marginBottom: '10px', marginTop: '10px'}}>{category.label}</h2>
+                                    <h2 style={{marginBottom: '10px', marginTop: '10px'}}>{category.displayName}</h2>
                                     <Link to={`/category/${category.slug}`} className={styles.menuSeeAll}>Xem tất cả <ChevronRight size={16} /></Link>
                                 </div>
                                 <div className={styles.menuCard}>
@@ -129,7 +145,7 @@ export default function MenuPage() {
                                         return(
                                             <div
                                                 key={item._id || index} 
-                                                onClick={() => handleRestaurantClick(item._id)}
+                                                onClick={() => handleRestaurantClick(item)}
                                                 className={styles.cardWrapper}
                                             >
                                                 <RestaurantCard 

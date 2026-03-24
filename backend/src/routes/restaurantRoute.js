@@ -7,6 +7,6 @@ router.get('/', restaurantController.getRestaurant);
 
 router.get('/summary', restaurantController.getSummary);
 
-router.get('/:id', restaurantController.getById);
+router.get('/:publicId', restaurantController.getByPublicId);
 
 export default router;

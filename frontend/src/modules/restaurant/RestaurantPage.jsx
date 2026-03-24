@@ -21,12 +21,16 @@ const MOCK_REVIEWS = [
 
 
 export default function RestaurantPage() {
-    const { id } = useParams();
+    const { slugAndId } = useParams();
     const { user } = useAuth();
     const [restaurant, setRestaurant] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeCategory, setActiveCategory] = useState('Đánh giá');
+
+    const publicId = (slugAndId || '').includes('-')
+        ? (slugAndId || '').split('-').pop()
+        : slugAndId;
 
 
    useEffect(() => {
@@ -34,7 +38,7 @@ export default function RestaurantPage() {
             try {
                 setLoading(true);
                 // 3. Gọi API thực tế từ backend
-                const data = await restaurantApi.getById(id);
+                const data = await restaurantApi.getById(publicId);
                 const dataWithMockReviews = {
                     ...data,
                     reviews: MOCK_REVIEWS // Dùng dữ liệu giả ở đây
@@ -53,10 +57,10 @@ export default function RestaurantPage() {
             }
         };
 
-        if (id) {
+        if (publicId) {
             fetchRestaurantDetail();
         }
-    }, [id]);
+    }, [publicId]);
 
     if (loading) return <div className={styles.loadingContainer}>Đang tải dữ liệu nhà hàng...</div>;
     if (error) return <div className={styles.errorContainer}>{error}</div>;

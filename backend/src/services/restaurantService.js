@@ -12,8 +12,8 @@ export const searchRestaurants = async ({ name, category } = {}) => {
     return restaurants;
 };
 
-export const getRestaurantById = async (id) => {
-    const restaurant = await repo.findById(id);
+export const getRestaurantByPublicId = async (publicId) => {
+    const restaurant = await repo.findByPublicId(publicId);
     if (!restaurant) {
         throw new Error('Restaurant not found');
     }
