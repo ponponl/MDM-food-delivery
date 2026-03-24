@@ -1,5 +1,5 @@
-import * as cartService from './cart.service.js';
-import logger from '../../config/logger.js';
+import * as cartService from '../services/cartService.js';
+import logger from '../config/logger.js';
 
 export const addItemToCart = async (req, res, next) => {
   try {

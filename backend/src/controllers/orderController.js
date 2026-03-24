@@ -1,5 +1,5 @@
-import * as orderService from './order.service.js';
-import logger from '../../config/logger.js';
+import * as orderService from '../services/orderService.js';
+import logger from '../config/logger.js';
 
 export const createOrder = async (req, res, next) => {
   try {
@@ -48,7 +48,7 @@ export const createOrder = async (req, res, next) => {
 
   } catch (error) {
     logger.error(`Error creating order: ${error.message}`);
-    
+
     // Handle specific errors
     if (error.message === 'CART_EMPTY') {
       return res.status(400).json({
@@ -144,7 +144,7 @@ export const confirmOrder = async (req, res, next) => {
 
   } catch (error) {
     logger.error(`Error confirming order: ${error.message}`);
-    
+
     if (error.message === 'INVALID_STATUS_TRANSITION') {
       return res.status(400).json({
         status: 'error',
@@ -183,7 +183,7 @@ export const startDelivery = async (req, res, next) => {
 
   } catch (error) {
     logger.error(`Error starting delivery: ${error.message}`);
-    
+
     if (error.message === 'INVALID_STATUS_TRANSITION') {
       return res.status(400).json({
         status: 'error',
@@ -214,7 +214,7 @@ export const completeOrder = async (req, res, next) => {
 
   } catch (error) {
     logger.error(`Error completing order: ${error.message}`);
-    
+
     if (error.message === 'INVALID_STATUS_TRANSITION') {
       return res.status(400).json({
         status: 'error',
@@ -245,7 +245,7 @@ export const cancelOrder = async (req, res, next) => {
 
   } catch (error) {
     logger.error(`Error cancelling order: ${error.message}`);
-    
+
     if (error.message === 'INVALID_CANCELLATION') {
       return res.status(400).json({
         status: 'error',

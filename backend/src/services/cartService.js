@@ -1,6 +1,6 @@
-import redisClient from '../../config/redis.js';
-import * as menuService from '../../services/menu.service.js';
-import logger from '../../config/logger.js';
+import redisClient from '../config/redis.js';
+import * as menuService from './menu.service.js';
+import logger from '../config/logger.js';
 
 const CART_PREFIX = 'cart:';
 const CART_TTL = 86400; // 24 hours
@@ -12,11 +12,18 @@ export const addItemToCart = async (userExternalId, itemId, quantity) => {
   try {
     const cartKey = getCartKey(userExternalId);
 
-    // TODO: Verify item exists and is available
-    // const item = await menuService.getMenuItem(itemId);
-    // if (!item || !item.available) {
-    //   throw new Error('Item not available');
-    // }
+    const item = await menuService.getMenuItem(itemId);
+    if (!item) {
+      throw new Error('ITEM_NOT_FOUND');
+    }
+
+    if (!item.available) {
+      throw new Error('ITEM_UNAVAILABLE');
+    }
+
+    if (typeof item.stock === 'number' && item.stock < quantity) {
+      throw new Error('ITEM_OUT_OF_STOCK');
+    }
 
     // Check current cart size
     const currentSize = await redisClient.hLen(cartKey);
@@ -26,7 +33,7 @@ export const addItemToCart = async (userExternalId, itemId, quantity) => {
 
     // Increment quantity in Redis
     await redisClient.hIncrBy(cartKey, itemId.toString(), quantity);
-    
+
     // Set expiration
     await redisClient.expire(cartKey, CART_TTL);
 
@@ -49,6 +56,7 @@ export const addItemToCart = async (userExternalId, itemId, quantity) => {
 export const getCart = async (userExternalId) => {
   try {
     const cartKey = getCartKey(userExternalId);
+    console.log(`Fetching cart for user: ${userExternalId}`);
 
     // Get all items from cart
     const cartItems = await redisClient.hGetAll(cartKey);
@@ -61,31 +69,28 @@ export const getCart = async (userExternalId) => {
       };
     }
 
-    // TODO: Fetch item details from menu service
+    const itemIds = Object.keys(cartItems);
+    console.log('Cart item IDs:', itemIds);
+    const menuItems = await menuService.getMenuItems(itemIds);
+    console.log('Menu items fetched for cart:', menuItems);
     const items = [];
     let totalPrice = 0;
     let totalItems = 0;
 
     for (const [itemId, quantity] of Object.entries(cartItems)) {
       const qty = parseInt(quantity);
-      
-      // TODO: Get item details from menu service
-      // const itemDetails = await menuService.getMenuItem(itemId);
-      // For now, use mock data
-      const itemDetails = {
-        itemId,
-        name: `Item ${itemId}`,
-        price: 50000 // Mock price
-      };
-
-      const subtotal = itemDetails.price * qty;
+      const itemDetails = menuItems[itemId];
+      const price = typeof itemDetails?.price === 'number' ? itemDetails.price : 0;
+      const subtotal = price * qty;
       totalPrice += subtotal;
       totalItems += qty;
 
       items.push({
         itemId,
-        name: itemDetails.name,
-        price: itemDetails.price,
+        name: itemDetails?.name || `Item ${itemId}`,
+        price,
+        available: itemDetails?.available ?? false,
+        stock: itemDetails?.stock ?? 0,
         quantity: qty,
         subtotal
       });
@@ -112,6 +117,19 @@ export const updateItemQuantity = async (userExternalId, itemId, quantity) => {
       await redisClient.hDel(cartKey, itemId.toString());
       logger.info(`Removed item ${itemId} from cart for user ${userExternalId}`);
     } else {
+      const item = await menuService.getMenuItem(itemId);
+      if (!item) {
+        throw new Error('ITEM_NOT_FOUND');
+      }
+
+      if (!item.available) {
+        throw new Error('ITEM_UNAVAILABLE');
+      }
+
+      if (typeof item.stock === 'number' && item.stock < quantity) {
+        throw new Error('ITEM_OUT_OF_STOCK');
+      }
+
       // Set new quantity
       await redisClient.hSet(cartKey, itemId.toString(), quantity.toString());
       await redisClient.expire(cartKey, CART_TTL);
@@ -136,7 +154,7 @@ export const removeItemFromCart = async (userExternalId, itemId) => {
   try {
     const cartKey = getCartKey(userExternalId);
     await redisClient.hDel(cartKey, itemId.toString());
-    
+
     logger.info(`Removed item ${itemId} from cart for user ${userExternalId}`);
 
   } catch (error) {
@@ -149,7 +167,7 @@ export const clearCart = async (userExternalId) => {
   try {
     const cartKey = getCartKey(userExternalId);
     await redisClient.del(cartKey);
-    
+
     logger.info(`Cleared cart for user ${userExternalId}`);
 
   } catch (error) {
@@ -172,6 +190,6 @@ export const getCartItems = async (userExternalId) => {
 const getTotalItems = async (cartKey) => {
   const items = await redisClient.hGetAll(cartKey);
   if (!items) return 0;
-  
+
   return Object.values(items).reduce((sum, qty) => sum + parseInt(qty), 0);
 };
