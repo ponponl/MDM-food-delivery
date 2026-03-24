@@ -2,7 +2,11 @@ import * as cartService from '../services/cartService.js';
 import logger from '../config/logger.js';
 
 const resolveUserExternalId = (req) =>
-  req.user?.externalId || req.user?.userExternalId || req.body.userExternalId || req.query.userExternalId;
+  req.user?.externalId ||
+  req.user?.externalid ||
+  req.user?.userExternalId ||
+  req.body?.userExternalId ||
+  req.query?.userExternalId;
 
 export const addItemToCart = async (req, res, next) => {
   try {
@@ -51,10 +55,10 @@ export const getCart = async (req, res, next) => {
     const userExternalId = resolveUserExternalId(req);
 
     if (!userExternalId) {
-      return res.status(400).json({
+      return res.status(401).json({
         status: 'error',
-        message: 'Missing required parameter: userExternalId',
-        code: 'MISSING_PARAMETER'
+        message: 'Missing authentication context',
+        code: 'UNAUTHORIZED'
       });
     }
 
@@ -151,10 +155,10 @@ export const clearCart = async (req, res, next) => {
     const userExternalId = resolveUserExternalId(req);
 
     if (!userExternalId) {
-      return res.status(400).json({
+      return res.status(401).json({
         status: 'error',
-        message: 'Missing required parameter: userExternalId',
-        code: 'MISSING_PARAMETER'
+        message: 'Missing authentication context',
+        code: 'UNAUTHORIZED'
       });
     }
 
