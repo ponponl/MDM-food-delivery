@@ -38,12 +38,13 @@ class AuthMiddleware {
 
     verifyToken = catchAsync(async (req, res, next) => {
         const header = req.headers.authorization;
+        const bearerToken = header && header.startsWith('Bearer ') ? header.split(' ')[1] : null;
+        const cookieToken = req.cookies?.accessToken;
+        const token = bearerToken || cookieToken;
 
-        if (!header || !header.startsWith('Bearer ')) {
+        if (!token) {
             return next(new AppError('No token provided', 401));
         }
-
-        const token = header.split(' ')[1];
         
         try {
             const decoded = jwt.verify(token, config.jwt.secret);
@@ -63,12 +64,13 @@ class AuthMiddleware {
     authorizeRole(...allowedRoles) {
         return catchAsync(async (req, res, next) => {
             const header = req.headers.authorization;
+            const bearerToken = header && header.startsWith('Bearer ') ? header.split(' ')[1] : null;
+            const cookieToken = req.cookies?.accessToken;
+            const token = bearerToken || cookieToken;
 
-            if (!header || !header.startsWith('Bearer ')) {
+            if (!token) {
                 return next(new AppError('No token provided', 401));
             }
-
-            const token = header.split(' ')[1];
 
             try {
                 const decoded = jwt.verify(token, config.jwt.secret);

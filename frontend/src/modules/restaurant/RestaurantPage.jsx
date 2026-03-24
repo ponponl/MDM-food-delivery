@@ -86,17 +86,15 @@ export default function RestaurantPage() {
         currentUser?.username;
 
     const handleAddToCart = async (item) => {
-        const userExternalId = resolveUserExternalId(user);
         const itemId = item?._id ?? item?.itemId;
 
-        if (!userExternalId || !itemId) {
+        if (!user || !itemId) {
             window.alert('Vui lòng đăng nhập để thêm món vào giỏ.');
             return;
         }
 
         try {
             const response = await cartApi.addItem({
-                userExternalId,
                 itemId,
                 quantity: 1,
                 restaurantPublicId: publicId,

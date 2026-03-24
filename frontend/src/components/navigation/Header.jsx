@@ -29,18 +29,10 @@ export default function Header() {
     }
   };
 
-  const resolveUserExternalId = (currentUser) =>
-    currentUser?.externalId ||
-    currentUser?.userExternalId ||
-    currentUser?.user_id ||
-    currentUser?.id ||
-    currentUser?.username;
-
   const formatCurrency = (value) => `${Number(value || 0).toLocaleString('vi-VN')}đ`;
 
   const loadCart = async (silent = false) => {
-    const userExternalId = resolveUserExternalId(user);
-    if (!userExternalId) {
+    if (!user) {
       setCartItems([]);
       setCartItemCount(0);
       if (!silent) {
@@ -54,7 +46,7 @@ export default function Header() {
         setCartLoading(true);
         setCartError('');
       }
-      const response = await cartApi.getCart({ userExternalId });
+      const response = await cartApi.getCart();
       const payload = response?.data ?? response;
       const data = payload?.data ?? payload ?? {};
       const items = data.items || [];
@@ -113,11 +105,8 @@ export default function Header() {
   };
 
   const handleIncrease = async (item) => {
-    const userExternalId = resolveUserExternalId(user);
-    if (!userExternalId) return;
     try {
       await cartApi.updateItemQuantity({
-        userExternalId,
         itemId: item.itemId,
         quantity: (item.quantity || 0) + 1,
         restaurantPublicId: item.restaurantId,
@@ -131,13 +120,10 @@ export default function Header() {
   };
 
   const handleDecrease = async (item) => {
-    const userExternalId = resolveUserExternalId(user);
-    if (!userExternalId) return;
     try {
       const nextQty = (item.quantity || 0) - 1;
       if (nextQty <= 0) {
         await cartApi.removeItem({
-          userExternalId,
           itemId: item.itemId,
           restaurantPublicId: item.restaurantId,
           options: item.options || [],
@@ -145,7 +131,6 @@ export default function Header() {
         });
       } else {
         await cartApi.updateItemQuantity({
-          userExternalId,
           itemId: item.itemId,
           quantity: nextQty,
           restaurantPublicId: item.restaurantId,
@@ -161,11 +146,8 @@ export default function Header() {
   };
 
   const handleRemoveItem = async (item) => {
-    const userExternalId = resolveUserExternalId(user);
-    if (!userExternalId) return;
     try {
       await cartApi.removeItem({
-        userExternalId,
         itemId: item.itemId,
         restaurantPublicId: item.restaurantId,
         options: item.options || [],
@@ -178,12 +160,9 @@ export default function Header() {
   };
 
   const handleRemoveRestaurant = async (group) => {
-    const userExternalId = resolveUserExternalId(user);
-    if (!userExternalId) return;
     try {
       await Promise.all(
         group.items.map((item) => cartApi.removeItem({
-          userExternalId,
           itemId: item.itemId,
           restaurantPublicId: item.restaurantId,
           options: item.options || [],

@@ -9,19 +9,10 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const checkAuth = async () => {
-            const accessToken = localStorage.getItem('accessToken');
-
-            if (accessToken) {
-                try {
-                    const user = await fetchCurrentUser(accessToken);
-                    setUser(user);
-                } catch (error) {
-                    console.error("Token invalid or expired:", error);
-                    localStorage.removeItem('user');
-                    localStorage.removeItem('accessToken');
-                    setUser(null);
-                }
-            } else {
+            try {
+                const currentUser = await fetchCurrentUser();
+                setUser(currentUser);
+            } catch (error) {
                 setUser(null);
             }
             setLoading(false);
@@ -30,9 +21,7 @@ export const AuthProvider = ({ children }) => {
         checkAuth();
     }, []);
 
-    const loginUser = (userData, token) => {
-        localStorage.setItem('accessToken', token);
-        localStorage.setItem('user', JSON.stringify(userData));
+    const loginUser = (userData) => {
         setUser(userData);
     };
 
@@ -42,8 +31,6 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             console.error("Lỗi khi gọi API logout:", error);
         } finally {
-            localStorage.removeItem('user');
-            localStorage.removeItem('accessToken');
             setUser(null);
         }
     };

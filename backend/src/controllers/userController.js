@@ -1,6 +1,17 @@
 import { AppError, catchAsync } from "../middlewares/errorHandler.js";
 import { UserService } from "../services/userService.js";
 import { generateTokens, refreshTokenStore } from "../middlewares/auth.js";
+
+const buildCookieOptions = (maxAgeMs) => {
+    const isProd = process.env.NODE_ENV === 'production';
+    return {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
+        maxAge: maxAgeMs,
+        path: '/'
+    };
+};
 class UserController {
     constructor() {
         this.userService = new UserService();
@@ -22,7 +33,10 @@ class UserController {
             username: newUser.username 
         });
 
-        res.status(201).json({
+        res
+            .cookie('accessToken', tokens.accessToken, buildCookieOptions(15 * 60 * 1000))
+            .cookie('refreshToken', tokens.refreshToken, buildCookieOptions(7 * 24 * 60 * 60 * 1000))
+            .status(201).json({
             status: 'success',
             data: {
                 user: {
@@ -49,7 +63,10 @@ class UserController {
             username: user.username 
         });
 
-        res.status(200).json({
+        res
+            .cookie('accessToken', tokens.accessToken, buildCookieOptions(15 * 60 * 1000))
+            .cookie('refreshToken', tokens.refreshToken, buildCookieOptions(7 * 24 * 60 * 60 * 1000))
+            .status(200).json({
             status: 'success',
             ...tokens,
             data: { user }
@@ -68,14 +85,17 @@ class UserController {
     });
 
     logout = catchAsync(async (req, res, next) => {
-        const { refreshToken } = req.body;
+        const refreshToken = req.cookies?.refreshToken || req.body.refreshToken;
         if (refreshToken) {
             refreshTokenStore.delete(refreshToken);
         }
-        res.status(200).json({
-            status: 'success',
-            message: 'Logged out successfully'
-        });
+        res
+            .clearCookie('accessToken', buildCookieOptions(0))
+            .clearCookie('refreshToken', buildCookieOptions(0))
+            .status(200).json({
+                status: 'success',
+                message: 'Logged out successfully'
+            });
     });
 
     getMe = catchAsync(async (req, res, next) => {

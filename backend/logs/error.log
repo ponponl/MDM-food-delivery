@@ -1,3 +1,10 @@
 [2026-03-13 21:44:22] ERROR: PostgreSQL connection failed: 
 [2026-03-25 02:56:28] ERROR: Error in addItemToCart: ITEM_UNAVAILABLE
 [2026-03-25 02:56:28] ERROR: Error adding item to cart: ITEM_UNAVAILABLE
+[2026-03-25 06:00:59] ERROR: Error getting cart: Cannot read properties of undefined (reading 'userExternalId')
+[2026-03-25 06:01:10] ERROR: Error getting cart: Cannot read properties of undefined (reading 'userExternalId')
+[2026-03-25 06:01:10] ERROR: Error getting cart: Cannot read properties of undefined (reading 'userExternalId')
+[2026-03-25 06:01:12] ERROR: Error getting cart: Cannot read properties of undefined (reading 'userExternalId')
+[2026-03-25 06:01:12] ERROR: Error getting cart: Cannot read properties of undefined (reading 'userExternalId')
+[2026-03-25 06:01:16] ERROR: Error getting cart: Cannot read properties of undefined (reading 'userExternalId')
+[2026-03-25 06:01:21] ERROR: Error getting cart: Cannot read properties of undefined (reading 'userExternalId')
