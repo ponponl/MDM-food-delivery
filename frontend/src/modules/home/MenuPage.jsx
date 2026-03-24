@@ -1,4 +1,4 @@
-import {useState, useEffect} from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/navigation/Header';
 import Sidebar from '../../components/navigation/Sidebar';
@@ -13,6 +13,7 @@ import { Link } from 'react-router-dom';
 import SmallBanner from '../../components/decoration/SmallBanner';
 import restaurantApi from '../../api/restaurantApi.js';
 import categoryApi from '../../api/categoryApi.js';
+import { useQuery } from '@tanstack/react-query';
 
 const categoryIconMap = {
     HamburgerIcon,
@@ -27,35 +28,29 @@ const categoryIconMap = {
 };
 
 export default function MenuPage() {
-    const [restaurants, setRestaurants] = useState([]);
-    const [categories, setCategories] = useState([]);
-    const [restaurantsByCategory, setRestaurantsByCategory] = useState({});
-
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchRestaurant = async () => {
-            try {
-                const [categoryList, summary, allRestaurants] = await Promise.all([
-                    categoryApi.getAll(),
-                    restaurantApi.getSummary(),
-                    restaurantApi.getAll()
-                ]);
+    const { data: categories = [] } = useQuery({
+        queryKey: ['categories'],
+        queryFn: categoryApi.getAll,
+        staleTime: 30 * 60 * 1000
+    });
 
-                const sortedCategories = (categoryList ?? []).slice().sort(
-                    (a, b) => (a.order ?? 0) - (b.order ?? 0)
-                );
+    const { data: restaurantsByCategory = {} } = useQuery({
+        queryKey: ['restaurants-summary'],
+        queryFn: restaurantApi.getSummary,
+        staleTime: 60 * 1000
+    });
 
-                setCategories(sortedCategories);
-                setRestaurantsByCategory(summary ?? {});
-                setRestaurants(allRestaurants ?? []);
-            } catch (error) {
-                console.log("Không thể tải dữ liệu nhà hàng", error);
-            }
-        };
+    const { data: restaurants = [] } = useQuery({
+        queryKey: ['restaurants', { limit: 5 }],
+        queryFn: () => restaurantApi.getAll({ limit: 5 }),
+        staleTime: 60 * 1000
+    });
 
-        fetchRestaurant();
-    }, [])
+    const sortedCategories = useMemo(() => (
+        (categories ?? []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+    ), [categories]);
 
     const handleRestaurantClick = (id) => {
         navigate(`/restaurant/${id}`);
@@ -69,7 +64,7 @@ export default function MenuPage() {
                 <div className={styles.content}>
                     <div className={styles.category}>
                         <h2 style={{marginBottom: '10px'}}>Chào mừng đến với Foodly!</h2>
-                        {categories.map((category, index) => {
+                        {sortedCategories.map((category, index) => {
                             const IconComponent = categoryIconMap[category.iconKey];
                             const icon = IconComponent ? <IconComponent size={18} /> : null;
                             return (
@@ -118,7 +113,7 @@ export default function MenuPage() {
                             })}
                         </div>
                     </div>
-                    {categories.map((category) => {
+                    {sortedCategories.map((category) => {
                         const items = restaurantsByCategory[category.slug] ?? [];
                         return (
                             <div className={styles.menuItems} key={category.slug}>

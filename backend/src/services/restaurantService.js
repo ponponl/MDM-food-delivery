@@ -2,8 +2,8 @@ import {RestaurantRepository} from '../repositories/restaurantRepo.js';
 
 const repo = new RestaurantRepository();
 
-export const getAllRestaurants = async () => {
-    const restaurants = await repo.findAll();
+export const getAllRestaurants = async (limit) => {
+    const restaurants = await repo.findAll(limit);
     return restaurants;
 };
 

@@ -42,8 +42,12 @@ const buildNameRegex = (name) => {
 };
 
 export class RestaurantRepository {
-    async findAll() {
-        return await Restaurant.find();
+    async findAll(limit) {
+        const query = Restaurant.find();
+        if (Number.isInteger(limit) && limit > 0) {
+            query.limit(limit);
+        }
+        return await query;
     }
 
     async findByFilters({ name, category } = {}) {
