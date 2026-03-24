@@ -201,12 +201,8 @@
     font-size: 0.9rem;
 }
 
-@media (max-width: 900px) {
-    .twoColumnLayout { flex-direction: column; }
+@media (max-width: 500px) {
     .columnLeft { width: 100%; position: static; }
     .mainContent { margin-left: 0; padding: 20px; }
-    .heroOverlay { justify-content: center; text-align: center; }
-    .heroInfo { text-align: center; }
-    .heroMetaRow { justify-content: center; }
-    .heroRatingBtn { align-self: center; }
+    .twoColumnLayout { flex-direction: column; }
 }

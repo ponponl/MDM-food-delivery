@@ -20,7 +20,7 @@
     gap: 12px; 
 }
 
-@media (max-width: 600px) {
+@media (max-width: 1200px) {
     .foodGrid {
         grid-template-columns: 1fr;
     }

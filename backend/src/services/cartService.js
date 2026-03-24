@@ -88,6 +88,8 @@ export const getCart = async (userExternalId) => {
         price,
         available: itemDetails?.available ?? false,
         stock: itemDetails?.stock ?? 0,
+        restaurantId: itemDetails?.restaurantId ?? null,
+        restaurantName: itemDetails?.restaurantName ?? null,
         quantity: qty,
         subtotal
       });

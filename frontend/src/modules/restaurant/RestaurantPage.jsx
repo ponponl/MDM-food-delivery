@@ -96,6 +96,11 @@ export default function RestaurantPage() {
 
         try {
             await cartApi.addItem({ userExternalId, itemId, quantity: 1 });
+            const cartResponse = await cartApi.getCart({ userExternalId });
+            const payload = cartResponse?.data ?? cartResponse;
+            const data = payload?.data ?? payload ?? {};
+            const totalItems = data.totalItems || 0;
+            window.dispatchEvent(new CustomEvent('cart:updated', { detail: { totalItems } }));
         } catch (err) {
             console.error('Add to cart failed:', err);
             window.alert('Không thể thêm món vào giỏ. Vui lòng thử lại.');

@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import logger from '../config/logger.js';
 import Restaurant from '../models/restaurantModel.js';
 
-const normalizeMenuItem = (menuItem, restaurantId) => {
+const normalizeMenuItem = (menuItem, restaurantId, restaurantName) => {
   if (!menuItem) return null;
 
   const stock = Number.isFinite(menuItem.stock) ? menuItem.stock : 0;
@@ -18,7 +18,8 @@ const normalizeMenuItem = (menuItem, restaurantId) => {
     category: menuItem.category,
     available,
     stock,
-    restaurantId: restaurantId?.toString?.() ?? restaurantId
+    restaurantId: restaurantId?.toString?.() ?? restaurantId,
+    restaurantName: restaurantName || null
   };
 };
 
@@ -35,7 +36,7 @@ export class MenuRepository {
 
     const result = await Restaurant.findOne(
       { 'menu._id': itemObjectId },
-      { 'menu.$': 1, _id: 1 }
+      { 'menu.$': 1, _id: 1, name: 1 }
     ).lean();
 
     if (!result?.menu?.length) {
@@ -43,7 +44,7 @@ export class MenuRepository {
       return null;
     }
 
-    return normalizeMenuItem(result.menu[0], result._id);
+    return normalizeMenuItem(result.menu[0], result._id, result.name);
   }
 
   async findMenuItemsByIds(itemIds) {
@@ -60,11 +61,11 @@ export class MenuRepository {
         { $match: { 'menu._id': { $in: objectIds } } },
         { $unwind: '$menu' },
         { $match: { 'menu._id': { $in: objectIds } } },
-        { $project: { _id: 1, menu: 1 } }
+        { $project: { _id: 1, name: 1, menu: 1 } }
       ]);
 
       for (const result of results) {
-        const normalized = normalizeMenuItem(result.menu, result._id);
+        const normalized = normalizeMenuItem(result.menu, result._id, result.name);
         if (normalized?.itemId) {
           items[normalized.itemId] = normalized;
         }
@@ -100,6 +101,6 @@ export class MenuRepository {
       return [];
     }
 
-    return (restaurant.menu || []).map(item => normalizeMenuItem(item, restaurant._id));
+    return (restaurant.menu || []).map(item => normalizeMenuItem(item, restaurant._id, restaurant.name));
   }
 }
