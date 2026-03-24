@@ -56,7 +56,6 @@ export const addItemToCart = async (userExternalId, itemId, quantity) => {
 export const getCart = async (userExternalId) => {
   try {
     const cartKey = getCartKey(userExternalId);
-    console.log(`Fetching cart for user: ${userExternalId}`);
 
     // Get all items from cart
     const cartItems = await redisClient.hGetAll(cartKey);
@@ -70,9 +69,7 @@ export const getCart = async (userExternalId) => {
     }
 
     const itemIds = Object.keys(cartItems);
-    console.log('Cart item IDs:', itemIds);
     const menuItems = await menuService.getMenuItems(itemIds);
-    console.log('Menu items fetched for cart:', menuItems);
     const items = [];
     let totalPrice = 0;
     let totalItems = 0;

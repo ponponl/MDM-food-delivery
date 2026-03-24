@@ -1,11 +1,10 @@
 .menuSidebar {
     background: white;
-    padding: 10px 0;
+    padding: 0;
     width: 100%;
-    position: sticky;
-    top: calc(var(--header-height) + 20px);
+    position: relative;
     z-index: 10;
-    max-height: calc(100vh - var(--header-height) - 40px);
+    max-height: 100%;
     overflow-y: auto;
 }
 

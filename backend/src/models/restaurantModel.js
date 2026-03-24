@@ -24,7 +24,9 @@ const restaurantSchema = new mongoose.Schema({
     },
     phone: String,
     images: [String],
-    menu: [menuItemSchema]
+    menu: [menuItemSchema],
+    openTime: String,
+    closeTime: String
 }, {
     toJSON: {
         versionKey: false,

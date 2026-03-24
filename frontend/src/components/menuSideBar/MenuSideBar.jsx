@@ -3,18 +3,18 @@ import { ChevronDown } from 'lucide-react';
 import styles from './MenuSidebar.module.css';
 
 const MenuSidebar = ({ categories, activeCategory, onCategoryClick }) => {
+    const handleCategoryClick = (event, category) => {
+        event.preventDefault();
+        const target = document.getElementById(category);
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        onCategoryClick(category);
+    };
+
     return (
         <aside className={styles.menuSidebar}>
             <nav className={styles.categoryList}>
-                <a 
-                    href="#reviews" 
-                    className={`${styles.catLink} ${
-                        activeCategory === 'reviews' ? styles.active : ''
-                    }`}
-                    onClick={() => onCategoryClick('reviews')}
-                >
-                    Đánh giá
-                </a>
                 {categories.map((cat) => (
                     <a
                         key={cat}
@@ -22,7 +22,7 @@ const MenuSidebar = ({ categories, activeCategory, onCategoryClick }) => {
                         className={`${styles.catLink} ${
                             activeCategory === cat ? styles.active : ''
                         }`}
-                        onClick={() => onCategoryClick(cat)}
+                        onClick={(event) => handleCategoryClick(event, cat)}
                     >
                         {cat}
                     </a>

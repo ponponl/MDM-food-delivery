@@ -1,22 +1,20 @@
-import { useContext, useState, useEffect } from 'react';
-import { Star, Clock, Users, DollarSign, Plus, MapPin } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Star, Clock, MapPin } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import Header from '../../components/navigation/Header'; 
 import Sidebar from '../../components/navigation/Sidebar';
 import MenuSidebar from '../../components/menuSideBar/menuSideBar.jsx';
-import ReviewsSection from '../../components/reviewSection/ReviewSection.jsx';
 import MenuItemsList from '../../components/menuItemList/MenuItemList.jsx';
-import { AddressContext } from '../../context/AddressContext.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import restaurantApi from '../../api/restaurantApi';
 import cartApi from '../../api/cartApi';
 import styles from './RestaurantPage.module.css';
 
 const MOCK_REVIEWS = [
-    { id: 1, user_name: "Nguyễn Văn A", rating: 5, comment: "Đồ ăn rất ngon, giao hàng nhanh!" },
-    { id: 2, user_name: "Trần Thị B", rating: 4, comment: "Pizza còn nóng hổi, tuy nhiên hơi ít phô mai." },
-    { id: 3, user_name: "Lê Văn C", rating: 5, comment: "Tuyệt vời, sẽ ủng hộ dài dài." },
-    { id: 4, user_name: "Phạm Minh D", rating: 3, comment: "Vị hơi mặn so với khẩu vị của mình." }
+    { id: 1, user_name: "Nguyễn Văn A", rating: 5, comment: "Đồ ăn rất ngon, giao hàng nhanh!", created_at: "2024-12-10 09:24" },
+    { id: 2, user_name: "Trần Thị B", rating: 4, comment: "Pizza còn nóng hổi, tuy nhiên hơi ít phô mai.", created_at: "2024-12-08 18:10" },
+    { id: 3, user_name: "Lê Văn C", rating: 5, comment: "Tuyệt vời, sẽ ủng hộ dài dài.", created_at: "2024-12-02 20:41" },
+    { id: 4, user_name: "Phạm Minh D", rating: 3, comment: "Vị hơi mặn so với khẩu vị của mình.", created_at: "2024-11-29 12:05" }
 ];
 
 
@@ -26,7 +24,8 @@ export default function RestaurantPage() {
     const [restaurant, setRestaurant] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [activeCategory, setActiveCategory] = useState('Đánh giá');
+    const [activeCategory, setActiveCategory] = useState('');
+    const [isReviewOpen, setIsReviewOpen] = useState(false);
 
     const publicId = (slugAndId || '').includes('-')
         ? (slugAndId || '').split('-').pop()
@@ -47,7 +46,10 @@ export default function RestaurantPage() {
                 
                 // Set category mặc định là loại đầu tiên nếu có menu
                 if (data.menu && data.menu.length > 0) {
-                    setActiveCategory(data.menu[0].category);
+                    const firstCategory = data.menu
+                        .map((item) => item.category)
+                        .filter((category) => category)[0];
+                    setActiveCategory(firstCategory || '');
                 }
             } catch (err) {
                 console.error("Lỗi fetch nhà hàng:", err);
@@ -100,6 +102,26 @@ export default function RestaurantPage() {
         }
     };
 
+    const maskUserName = (name) => {
+        if (!name) return 'Ẩn danh';
+        const [first] = name.trim().split(' ');
+        if (!first) return 'Ẩn danh';
+        return `${first.slice(0, 3)}***`;
+    };
+
+    const formatReviewTime = (value) => {
+        if (!value) return '';
+        const normalized = String(value).replace(' ', 'T');
+        const parsed = new Date(normalized);
+        if (Number.isNaN(parsed.getTime())) return '';
+        const day = String(parsed.getDate()).padStart(2, '0');
+        const month = String(parsed.getMonth() + 1).padStart(2, '0');
+        const year = parsed.getFullYear();
+        const hours = String(parsed.getHours()).padStart(2, '0');
+        const minutes = String(parsed.getMinutes()).padStart(2, '0');
+        return `${day}/${month}/${year} ${hours}:${minutes}`;
+    };
+
     return (
         <div className={styles.restaurantPage}>
             <Header />
@@ -111,39 +133,34 @@ export default function RestaurantPage() {
                     <section className={styles.heroSection}>
                         <img src={restaurant.images[0]} alt={restaurant.name} className={styles.heroBgImg} />
                         <div className={styles.heroOverlay}>
-                            <h1>{restaurant.name}</h1>
+                            <div className={styles.heroInfo}>
+                                <h1 className={styles.heroTitle}>{restaurant.name}</h1>
+                                <div className={styles.heroMetaRow}>
+                                    <MapPin size={22} />
+                                    <span>{restaurant.address?.full || 'Chưa có địa chỉ'}</span>
+                                </div>
+                                <div className={styles.heroMetaRow}>
+                                    <Clock size={18} />
+                                    <span>
+                                        {restaurant.openTime || '--:--'} - {restaurant.closeTime || '--:--'}
+                                    </span>
+                                </div>
+                                <button
+                                    type="button"
+                                    className={styles.heroRatingBtn}
+                                    onClick={() => setIsReviewOpen(true)}
+                                >
+                                    <span className={styles.heroRatingValue}>{avgRating}</span>
+                                    <Star size={16} fill="#ffffff" color="#ffffff" />
+                                    <span className={styles.heroRatingCount}>({restaurant.reviews.length} reviews)</span>
+                                </button>
+                            </div>
                         </div>
                     </section>
 
                     <div className={styles.twoColumnLayout}>
-                        {/* CỘT TRÁI: Info & Danh mục */}
+                        {/* CỘT TRÁI: Danh mục */}
                         <aside className={styles.columnLeft}>
-                            <div className={styles.restaurantInfoCard}>
-                                <h2 className={styles.infoTitle}>Thông tin cửa hàng</h2>
-                                
-                                {/* Trạng thái hoạt động */}
-                                <div className={styles.statusLine}>
-                                    <Clock size={18} style={{color: 'black'}}/>
-                                    <span>Đang mở cửa</span>
-                                </div>
-
-                                {/* Dòng Rating và Khoảng cách */}
-                                <div className={styles.infoRow}>
-                                    <span className={styles.bold}>{avgRating}</span>
-                                    <Star size={16} fill="#4d4d4d" color="#4d4d4d" />
-                                    <span className={styles.gray}>({restaurant.reviews.length}+)</span>
-                                    <span className={styles.dot}>•</span>
-                                    <span>1.1 mi</span>
-                                </div>
-
-                                {/* Dòng Giá và Loại hình */}
-                                <div className={styles.infoRow}>
-                                    <span>$$</span>
-                                    <span className={styles.dot}>•</span>
-                                    <span>{restaurant.type}</span>
-                                </div>
-                            </div>
-
                             <MenuSidebar 
                                 categories={categories} 
                                 activeCategory={activeCategory} 
@@ -151,60 +168,51 @@ export default function RestaurantPage() {
                             />
                         </aside>
 
-                        {/* CỘT PHẢI: Strip, Reviews & Món ăn */}
+                        {/* CỘT PHẢI: Món ăn */}
                         <section className={styles.columnRight}>
-                            <div className={styles.infoStrip}>
-                                <div className={styles.infoItem}>
-                                    <DollarSign size={20} color="#EE5335" />
-                                    <div>
-                                        <p className={styles.label}>Phí giao hàng</p>
-                                        <p className={styles.val}>{restaurant.deliveryFee?.toLocaleString() || 0}đ</p>
-                                    </div>
-                                </div>
-                                <div className={styles.infoItem}>
-                                    <Clock size={20} color="#EE5335" />
-                                    <div>
-                                        <p className={styles.label}>Thời gian</p>
-                                        <p className={styles.val}>{restaurant.deliveryTime} phút</p>
-                                    </div>
-                                </div>
-                                <button className={styles.groupBtn}>
-                                    <Users size={18} /> Đặt nhóm
-                                </button>
-                            </div>
-
-                            <ReviewsSection reviews={restaurant.reviews} avgRating={avgRating} />
-
-                            {/* <div className={styles.menuItemsList}>
-                                {Object.entries(groupedMenu).map(([category, items]) => (
-                                    <div key={category} id={category} className={styles.categorySection}>
-                                        <h2 className={styles.categoryTitle}>{category}</h2>
-                                        <div className={styles.foodGrid}>
-                                            {items.map(item => (
-                                                <div key={item._id} className={styles.foodCard}>
-                                                    <div className={styles.foodImage}>
-                                                        <img src={item.image} alt={item.name} />
-                                                        <button className={styles.addBtn}><Plus size={20} color="white" /></button>
-                                                    </div>
-                                                    <div className={styles.foodInfo}>
-                                                        <h4>{item.name}</h4>
-                                                        <p>{item.description}</p>
-                                                        <span className={styles.price}>{item.price.toLocaleString()}đ</span>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div> */}
                             <MenuItemsList groupedMenu={groupedMenu} onAddToCart={handleAddToCart} />
                         </section>
                     </div>
                 </main>
             </div>
-            <footer className={styles.footer}>
-                © 2026 <span>Foodly</span> — Mang niềm vui đến từng bữa ăn.
-            </footer>
+
+            {isReviewOpen && (
+                <div className={styles.modalBackdrop} role="presentation" onClick={() => setIsReviewOpen(false)}>
+                    <div
+                        className={styles.reviewModal}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Restaurant reviews"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <div className={styles.modalHeader}>
+                            <h3>Đánh giá ({restaurant.reviews.length})</h3>
+                            <button
+                                type="button"
+                                className={styles.modalCloseBtn}
+                                onClick={() => setIsReviewOpen(false)}
+                                aria-label="Close reviews"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <div className={styles.modalBody}>
+                            {restaurant.reviews.map((review) => (
+                                <div key={review.id} className={styles.reviewItem}>
+                                    <div className={styles.reviewTitleRow}>
+                                        <span className={styles.reviewUser}>{maskUserName(review.user_name)}</span>
+                                        <span className={styles.reviewRating}>{review.rating}<Star size={16} fill="#ee5335" color="#ee5335" /></span>
+                                    </div>
+                                    <p className={styles.reviewComment}>{review.comment}</p>
+                                    <span className={styles.reviewTime}>
+                                        {formatReviewTime(review.created_at)}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
