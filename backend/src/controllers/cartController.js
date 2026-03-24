@@ -1,14 +1,18 @@
 import * as cartService from '../services/cartService.js';
 import logger from '../config/logger.js';
 
+const resolveUserExternalId = (req) =>
+  req.user?.externalId || req.user?.userExternalId || req.body.userExternalId || req.query.userExternalId;
+
 export const addItemToCart = async (req, res, next) => {
   try {
-    const { userExternalId, itemId, quantity } = req.body;
+    const { itemId, quantity, restaurantPublicId, options = [], note = null } = req.body;
+    const userExternalId = resolveUserExternalId(req);
 
-    if (!userExternalId || !itemId || !quantity) {
+    if (!userExternalId || !itemId || !quantity || !restaurantPublicId) {
       return res.status(400).json({
         status: 'error',
-        message: 'Missing required fields: userExternalId, itemId, quantity',
+        message: 'Missing required fields: userExternalId, itemId, quantity, restaurantPublicId',
         code: 'MISSING_FIELDS'
       });
     }
@@ -21,7 +25,14 @@ export const addItemToCart = async (req, res, next) => {
       });
     }
 
-    const result = await cartService.addItemToCart(userExternalId, itemId, quantity);
+    const result = await cartService.addItemToCart(
+      userExternalId,
+      restaurantPublicId,
+      itemId,
+      quantity,
+      options,
+      note
+    );
 
     res.status(200).json({
       status: 'success',
@@ -37,7 +48,7 @@ export const addItemToCart = async (req, res, next) => {
 
 export const getCart = async (req, res, next) => {
   try {
-    const { userExternalId } = req.query;
+    const userExternalId = resolveUserExternalId(req);
 
     if (!userExternalId) {
       return res.status(400).json({
@@ -62,12 +73,13 @@ export const getCart = async (req, res, next) => {
 
 export const updateItemQuantity = async (req, res, next) => {
   try {
-    const { userExternalId, itemId, quantity } = req.body;
+    const { itemId, quantity, restaurantPublicId, options = [], note = null } = req.body;
+    const userExternalId = resolveUserExternalId(req);
 
-    if (!userExternalId || !itemId || quantity === undefined) {
+    if (!userExternalId || !itemId || quantity === undefined || !restaurantPublicId) {
       return res.status(400).json({
         status: 'error',
-        message: 'Missing required fields: userExternalId, itemId, quantity',
+        message: 'Missing required fields: userExternalId, itemId, quantity, restaurantPublicId',
         code: 'MISSING_FIELDS'
       });
     }
@@ -80,7 +92,14 @@ export const updateItemQuantity = async (req, res, next) => {
       });
     }
 
-    const result = await cartService.updateItemQuantity(userExternalId, itemId, quantity);
+    const result = await cartService.updateItemQuantity(
+      userExternalId,
+      restaurantPublicId,
+      itemId,
+      quantity,
+      options,
+      note
+    );
 
     res.status(200).json({
       status: 'success',
@@ -96,21 +115,29 @@ export const updateItemQuantity = async (req, res, next) => {
 
 export const removeItemFromCart = async (req, res, next) => {
   try {
-    const { userExternalId, itemId } = req.body;
+    const { itemId, restaurantPublicId, options = [], itemKey = null } = req.body;
+    const userExternalId = resolveUserExternalId(req);
 
-    if (!userExternalId || !itemId) {
+    if (!userExternalId || !itemId || !restaurantPublicId) {
       return res.status(400).json({
         status: 'error',
-        message: 'Missing required fields: userExternalId, itemId',
+        message: 'Missing required fields: userExternalId, itemId, restaurantPublicId',
         code: 'MISSING_FIELDS'
       });
     }
 
-    await cartService.removeItemFromCart(userExternalId, itemId);
+    const result = await cartService.removeItemFromCart(
+      userExternalId,
+      restaurantPublicId,
+      itemId,
+      options,
+      itemKey
+    );
 
     res.status(200).json({
       status: 'success',
-      message: 'Item removed from cart'
+      message: 'Item removed from cart',
+      cart: result
     });
 
   } catch (error) {
@@ -121,7 +148,7 @@ export const removeItemFromCart = async (req, res, next) => {
 
 export const clearCart = async (req, res, next) => {
   try {
-    const { userExternalId } = req.query;
+    const userExternalId = resolveUserExternalId(req);
 
     if (!userExternalId) {
       return res.status(400).json({
@@ -140,6 +167,31 @@ export const clearCart = async (req, res, next) => {
 
   } catch (error) {
     logger.error(`Error clearing cart: ${error.message}`);
+    next(error);
+  }
+};
+
+export const getCartByRestaurant = async (req, res, next) => {
+  try {
+    const { restaurantPublicId } = req.params;
+    const userExternalId = resolveUserExternalId(req);
+
+    if (!userExternalId || !restaurantPublicId) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Missing required parameters: userExternalId, restaurantPublicId',
+        code: 'MISSING_FIELDS'
+      });
+    }
+
+    const cart = await cartService.getCartByRestaurant(userExternalId, restaurantPublicId);
+
+    res.status(200).json({
+      status: 'success',
+      data: cart
+    });
+  } catch (error) {
+    logger.error(`Error getting cart by restaurant: ${error.message}`);
     next(error);
   }
 };

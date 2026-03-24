@@ -59,7 +59,7 @@ export default function Header() {
       const data = payload?.data ?? payload ?? {};
       const items = data.items || [];
       setCartItems(items);
-      setCartItemCount(data.totalItems || 0);
+      setCartItemCount(data.totalQty || 0);
     } catch (error) {
       if (!silent) {
         setCartError('Khong the tai gio hang. Vui long thu lai.');
@@ -83,9 +83,12 @@ export default function Header() {
 
   useEffect(() => {
     const handleCartUpdated = (event) => {
-      const totalItems = event?.detail?.totalItems;
-      if (typeof totalItems === 'number') {
-        setCartItemCount(totalItems);
+      const totalQty = event?.detail?.totalQty;
+      const fallbackTotal = event?.detail?.totalItems;
+      if (typeof totalQty === 'number') {
+        setCartItemCount(totalQty);
+      } else if (typeof fallbackTotal === 'number') {
+        setCartItemCount(fallbackTotal);
       } else {
         loadCart(true);
       }
@@ -116,7 +119,10 @@ export default function Header() {
       await cartApi.updateItemQuantity({
         userExternalId,
         itemId: item.itemId,
-        quantity: (item.quantity || 0) + 1
+        quantity: (item.quantity || 0) + 1,
+        restaurantPublicId: item.restaurantId,
+        options: item.options || [],
+        note: item.note || null
       });
       await loadCart(true);
     } catch (error) {
@@ -130,9 +136,22 @@ export default function Header() {
     try {
       const nextQty = (item.quantity || 0) - 1;
       if (nextQty <= 0) {
-        await cartApi.removeItem({ userExternalId, itemId: item.itemId });
+        await cartApi.removeItem({
+          userExternalId,
+          itemId: item.itemId,
+          restaurantPublicId: item.restaurantId,
+          options: item.options || [],
+          itemKey: item.itemKey || null
+        });
       } else {
-        await cartApi.updateItemQuantity({ userExternalId, itemId: item.itemId, quantity: nextQty });
+        await cartApi.updateItemQuantity({
+          userExternalId,
+          itemId: item.itemId,
+          quantity: nextQty,
+          restaurantPublicId: item.restaurantId,
+          options: item.options || [],
+          note: item.note || null
+        });
       }
 
       await loadCart(true);
@@ -145,7 +164,13 @@ export default function Header() {
     const userExternalId = resolveUserExternalId(user);
     if (!userExternalId) return;
     try {
-      await cartApi.removeItem({ userExternalId, itemId: item.itemId });
+      await cartApi.removeItem({
+        userExternalId,
+        itemId: item.itemId,
+        restaurantPublicId: item.restaurantId,
+        options: item.options || [],
+        itemKey: item.itemKey || null
+      });
       await loadCart(true);
     } catch (error) {
       setCartError('Khong the xoa mon an.');
@@ -157,7 +182,13 @@ export default function Header() {
     if (!userExternalId) return;
     try {
       await Promise.all(
-        group.items.map((item) => cartApi.removeItem({ userExternalId, itemId: item.itemId }))
+        group.items.map((item) => cartApi.removeItem({
+          userExternalId,
+          itemId: item.itemId,
+          restaurantPublicId: item.restaurantId,
+          options: item.options || [],
+          itemKey: item.itemKey || null
+        }))
       );
       await loadCart(true);
     } catch (error) {

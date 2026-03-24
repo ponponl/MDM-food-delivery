@@ -9,6 +9,9 @@ router.post('/items', cartController.addItemToCart);
 // Get cart
 router.get('/', cartController.getCart);
 
+// Get cart by restaurant
+router.get('/restaurants/:restaurantPublicId', cartController.getCartByRestaurant);
+
 // Update item quantity
 router.put('/items', cartController.updateItemQuantity);
 

@@ -37,26 +37,26 @@ export default function CartModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    const next = new Set(items.map((item) => item.itemId));
+    const next = new Set(items.map((item) => item.itemKey || item.itemId));
     setSelectedItemIds(next);
   }, [isOpen, items]);
 
-  const isItemSelected = (itemId) => selectedItemIds.has(itemId);
+  const isItemSelected = (itemKey) => selectedItemIds.has(itemKey);
 
-  const toggleItem = (itemId) => {
+  const toggleItem = (itemKey) => {
     setSelectedItemIds((prev) => {
       const next = new Set(prev);
-      if (next.has(itemId)) {
-        next.delete(itemId);
+      if (next.has(itemKey)) {
+        next.delete(itemKey);
       } else {
-        next.add(itemId);
+        next.add(itemKey);
       }
       return next;
     });
   };
 
   const toggleGroup = (group) => {
-    const groupIds = group.items.map((item) => item.itemId);
+    const groupIds = group.items.map((item) => item.itemKey || item.itemId);
     const allSelected = groupIds.every((id) => selectedItemIds.has(id));
 
     setSelectedItemIds((prev) => {
@@ -73,7 +73,7 @@ export default function CartModal({
   const selectedTotal = useMemo(() => {
     if (!items?.length) return 0;
     return items
-      .filter((item) => selectedItemIds.has(item.itemId))
+      .filter((item) => selectedItemIds.has(item.itemKey || item.itemId))
       .reduce((sum, item) => sum + (item.subtotal || 0), 0);
   }, [items, selectedItemIds]);
 
@@ -134,7 +134,7 @@ export default function CartModal({
               {groups.map((group) => {
                 const groupSelected = group.items.every((item) => isItemSelected(item.itemId));
                 return (
-                  <div key={group.id} className={styles.groupBlock}>
+                        <div key={group.id} className={styles.groupBlock}>
                     <div className={styles.groupHeader}>
                       <label className={styles.checkboxRow}>
                         <input
@@ -156,12 +156,12 @@ export default function CartModal({
 
                     <div className={styles.itemList}>
                       {group.items.map((item) => (
-                        <div key={item.itemId} className={styles.itemRow}>
+                        <div key={item.itemKey || item.itemId} className={styles.itemRow}>
                           <label className={styles.checkboxRow}>
                             <input
                               type="checkbox"
-                              checked={isItemSelected(item.itemId)}
-                              onChange={() => toggleItem(item.itemId)}
+                              checked={isItemSelected(item.itemKey || item.itemId)}
+                              onChange={() => toggleItem(item.itemKey || item.itemId)}
                             />
                             <span className={styles.itemName}>{item.name}</span>
                           </label>

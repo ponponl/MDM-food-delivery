@@ -18,9 +18,9 @@ export const createOrder = async ({ userExternalId, restaurantId, deliveryAddres
     await client.query('BEGIN');
 
     // Get cart from Redis
-    const cartItems = await cartService.getCartItems(userExternalId);
+    const cartItems = await cartService.getCartItems(userExternalId, restaurantId);
 
-    if (!cartItems || Object.keys(cartItems).length === 0) {
+    if (!cartItems || cartItems.length === 0) {
       throw new Error('CART_EMPTY');
     }
 
@@ -37,13 +37,14 @@ export const createOrder = async ({ userExternalId, restaurantId, deliveryAddres
     }
 
     // Get item prices and calculate total
-    const itemIds = Object.keys(cartItems);
+    const itemIds = [...new Set(cartItems.map((item) => item._id || item.itemId))];
     const menuItems = await menuService.getMenuItems(itemIds);
 
     let totalPrice = 0;
     const orderItems = [];
 
-    for (const [itemId, quantity] of Object.entries(cartItems)) {
+    for (const cartItem of cartItems) {
+      const itemId = cartItem._id || cartItem.itemId;
       const menuItem = menuItems[itemId];
 
       // TODO: Check if item is available
@@ -51,8 +52,8 @@ export const createOrder = async ({ userExternalId, restaurantId, deliveryAddres
     //     throw new Error('ITEM_UNAVAILABLE');
     //   }
 
-      const qty = parseInt(quantity);
-      const price = menuItem?.price || 50000; // Mock price
+      const qty = parseInt(cartItem.quantity);
+      const price = menuItem?.price ?? cartItem.price ?? 0;
       const subtotal = price * qty;
 
       totalPrice += subtotal;
