@@ -57,13 +57,21 @@ export class RestaurantRepository {
         }
 
         if (categoryRegex) {
-            query.$or = [
-                { type: categoryRegex },
-                { 'menu.category': categoryRegex }
-            ];
+            query.type = categoryRegex;
         }
 
         return await Restaurant.find(query);
+    }
+
+    async findByCategoryLimited(category, limit = 5) {
+        const categoryRegex = buildCategoryRegex(category);
+        if (!categoryRegex) {
+            return [];
+        }
+
+        const query = { type: categoryRegex };
+
+        return await Restaurant.find(query).limit(limit);
     }
 
     async findById(id) {

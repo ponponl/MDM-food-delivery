@@ -9,6 +9,10 @@ const restaurantApi = {
         const url = `/restaurants/${id}`;
         return axiosClient.get(url);
     },
+    getSummary: () => {
+        const url = '/restaurants/summary';
+        return axiosClient.get(url);
+    },
     searchByName: (name) => {
         const url = '/restaurants';
         return axiosClient.get(url, { params: { name } });

@@ -19,3 +19,14 @@ export const getRestaurantById = async (id) => {
     }
     return restaurant;
 }
+
+export const getRestaurantsSummary = async (categories = [], limit = 5) => {
+    const summaryEntries = await Promise.all(
+        categories.map(async (category) => {
+            const items = await repo.findByCategoryLimited(category.slug, limit);
+            return [category.slug, items];
+        })
+    );
+
+    return Object.fromEntries(summaryEntries);
+};
