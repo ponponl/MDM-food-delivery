@@ -104,7 +104,7 @@
     line-height: 1;
 }
 
-@media (max-width: 1024px) {
+/* @media (max-width: 1024px) {
     .content {
         margin-left: 0;
         padding: 20px;
@@ -131,4 +131,4 @@
     .menuCard {
         gap: 16px;
     }
-}
+} */

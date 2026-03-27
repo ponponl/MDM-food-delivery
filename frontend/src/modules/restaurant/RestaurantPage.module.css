@@ -192,7 +192,7 @@
     align-items: center;
     font-family: Lexend, sans-serif;
     font-weight: 650;
-    color: #ee5335;
+    color: var(--primary-color);
 }
 
 .reviewComment {

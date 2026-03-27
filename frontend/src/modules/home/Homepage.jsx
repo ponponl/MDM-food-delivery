@@ -5,6 +5,7 @@ import homeBanner from '../../assets/home-banner.png';
 import Header from '../../components/navigation/Header';
 import {AddressContext} from '../../context/AddressContext.jsx';
 import MenuPage from './MenuPage';
+import ClientLayout from '../../layouts/ClientLayout/ClientLayout.jsx';
 import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -112,9 +113,11 @@ export default function Homepage (){
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const {address} = useContext(AddressContext);
 
-    return (
-        <div>
-            {address ? <MenuPage /> : <HomeWithoutAddress />}
-        </div>
-    )
+    return address ? (
+        <ClientLayout>
+            <MenuPage />
+        </ClientLayout>
+    ) : (
+        <HomeWithoutAddress />
+    );
 }

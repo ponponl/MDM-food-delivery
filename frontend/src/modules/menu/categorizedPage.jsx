@@ -1,10 +1,8 @@
 import {useState, useEffect} from 'react';
-import Header from '../../components/navigation/Header';
-import Sidebar from '../../components/navigation/Sidebar';
 import styles from './CategorizedPage.module.css';
 import RestaurantCard from '../../components/display/RestaurantCard';
 import burger from '../../assets/burger.png';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import restaurantApi from '../../api/restaurantApi.js';
 
 const normalize = (value) => (
@@ -26,13 +24,14 @@ const CATEGORY_LABELS = {
     'ca-phe': 'Cà Phê',
     'tra-sua': 'Trà Sữa',
     'nuoc-ep': 'Nước Ép',
-    'trang-mieng': 'Bánh Ngọt',
+    'banh-ngot': 'Bánh Ngọt',
 };
 
 export default function CategorizedPage() {
     const [selected, setSelected] = useState('');
     const [restaurants, setRestaurants] = useState([]);
     const {categoryName} = useParams();
+    const navigate = useNavigate();
 
     useEffect(() => {
         let isMounted = true;
@@ -58,11 +57,29 @@ export default function CategorizedPage() {
         };
     }, [categoryName]);
 
+    const slugify = (value) => (
+        (value ?? '')
+            .toString()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-zA-Z0-9]+/g, '-')
+            .replace(/(^-|-$)/g, '')
+            .toLowerCase()
+    );
+
+    const handleRestaurantClick = (restaurant) => {
+        const publicId = restaurant?.publicId || restaurant?.public_id || restaurant?._id || restaurant?.id;
+        if (!publicId) {
+            return;
+        }
+
+        const slug = restaurant?.slug || slugify(restaurant?.name);
+        navigate(`/restaurant/${slug}-${publicId}`);
+    };
+
     return (
         <div style={{backgroundColor: '#FFFDFB'}}> 
-            <Header />
             <div className={styles.container}>
-                <Sidebar />
                 <div className={styles.content}>
                     <div className={styles.category}>
                         <h3 style={{marginBottom: '10px'}}>{CATEGORY_LABELS[normalize(categoryName)] ?? categoryName}</h3>
@@ -104,7 +121,8 @@ export default function CategorizedPage() {
                                     distance={5} 
                                     deliveryTime={6} 
                                     fee={15} 
-                                    currency={'$'} />
+                                    currency={'$'}
+                                    onClick={() => handleRestaurantClick(item)} />
                                 )
                             })}
                         </div>

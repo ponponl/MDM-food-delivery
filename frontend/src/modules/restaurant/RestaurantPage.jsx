@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Star, Clock, MapPin } from 'lucide-react';
 import { useParams } from 'react-router-dom';
-import Header from '../../components/navigation/Header'; 
-import Sidebar from '../../components/navigation/Sidebar';
 import MenuSidebar from '../../components/menuSideBar/menuSideBar.jsx';
 import MenuItemsList from '../../components/menuItemList/MenuItemList.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -64,9 +62,7 @@ export default function RestaurantPage() {
         }
     }, [publicId]);
 
-    if (loading) return <div className={styles.loadingContainer}>Đang tải dữ liệu nhà hàng...</div>;
-    if (error) return <div className={styles.errorContainer}>{error}</div>;
-    if (!restaurant) return <div className={styles.errorContainer}>Không tìm thấy nhà hàng này.</div>;
+    if (loading || error || !restaurant) return null;
 
     const avgRating = (restaurant.reviews.reduce((acc, rev) => acc + rev.rating, 0) / restaurant.reviews.length).toFixed(1);
 
@@ -141,57 +137,52 @@ export default function RestaurantPage() {
 
     return (
         <div className={styles.restaurantPage}>
-            <Header />
-            
-            <div className={styles.pageBody}>
-                <Sidebar />
-                <main className={styles.mainContent}>
-                    {/* Phần Banner */}
-                    <section className={styles.heroSection}>
-                        <img src={restaurant.images[0]} alt={restaurant.name} className={styles.heroBgImg} />
-                        <div className={styles.heroOverlay}>
-                            <div className={styles.heroInfo}>
-                                <h1 className={styles.heroTitle}>{restaurant.name}</h1>
-                                <div className={styles.heroMetaRow}>
-                                    <MapPin size={22} />
-                                    <span>{restaurant.address?.full || 'Chưa có địa chỉ'}</span>
-                                </div>
-                                <div className={styles.heroMetaRow}>
-                                    <Clock size={18} />
-                                    <span>
-                                        {restaurant.openTime || '--:--'} - {restaurant.closeTime || '--:--'}
-                                    </span>
-                                </div>
-                                <button
-                                    type="button"
-                                    className={styles.heroRatingBtn}
-                                    onClick={() => setIsReviewOpen(true)}
-                                >
-                                    <span className={styles.heroRatingValue}>{avgRating}</span>
-                                    <Star size={16} fill="#ffffff" color="#ffffff" />
-                                    <span className={styles.heroRatingCount}>({restaurant.reviews.length} reviews)</span>
-                                </button>
+            <main className={styles.mainContent}>
+                {/* Phần Banner */}
+                <section className={styles.heroSection}>
+                    <img src={restaurant.images[0]} alt={restaurant.name} className={styles.heroBgImg} />
+                    <div className={styles.heroOverlay}>
+                        <div className={styles.heroInfo}>
+                            <h1 className={styles.heroTitle}>{restaurant.name}</h1>
+                            <div className={styles.heroMetaRow}>
+                                <MapPin size={22} />
+                                <span>{restaurant.address?.full || 'Chưa có địa chỉ'}</span>
                             </div>
+                            <div className={styles.heroMetaRow}>
+                                <Clock size={18} />
+                                <span>
+                                    {restaurant.openTime || '--:--'} - {restaurant.closeTime || '--:--'}
+                                </span>
+                            </div>
+                            <button
+                                type="button"
+                                className={styles.heroRatingBtn}
+                                onClick={() => setIsReviewOpen(true)}
+                            >
+                                <span className={styles.heroRatingValue}>{avgRating}</span>
+                                <Star size={16} fill="#ffffff" color="#ffffff" />
+                                <span className={styles.heroRatingCount}>({restaurant.reviews.length} reviews)</span>
+                            </button>
                         </div>
-                    </section>
-
-                    <div className={styles.twoColumnLayout}>
-                        {/* CỘT TRÁI: Danh mục */}
-                        <aside className={styles.columnLeft}>
-                            <MenuSidebar 
-                                categories={categories} 
-                                activeCategory={activeCategory} 
-                                onCategoryClick={setActiveCategory}
-                            />
-                        </aside>
-
-                        {/* CỘT PHẢI: Món ăn */}
-                        <section className={styles.columnRight}>
-                            <MenuItemsList groupedMenu={groupedMenu} onAddToCart={handleAddToCart} />
-                        </section>
                     </div>
-                </main>
-            </div>
+                </section>
+
+                <div className={styles.twoColumnLayout}>
+                    {/* CỘT TRÁI: Danh mục */}
+                    <aside className={styles.columnLeft}>
+                        <MenuSidebar 
+                            categories={categories} 
+                            activeCategory={activeCategory} 
+                            onCategoryClick={setActiveCategory}
+                        />
+                    </aside>
+
+                    {/* CỘT PHẢI: Món ăn */}
+                    <section className={styles.columnRight}>
+                        <MenuItemsList groupedMenu={groupedMenu} onAddToCart={handleAddToCart} />
+                    </section>
+                </div>
+            </main>
 
             {isReviewOpen && (
                 <div className={styles.modalBackdrop} role="presentation" onClick={() => setIsReviewOpen(false)}>

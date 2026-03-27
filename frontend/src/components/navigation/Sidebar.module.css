@@ -33,7 +33,7 @@
 
 .IsActive{
     background-color: rgb(255, 235, 213);
-    color: #FF6B35;
+    color: var(--primary-color);
     border-radius: 5px;
     cursor: pointer;
 }

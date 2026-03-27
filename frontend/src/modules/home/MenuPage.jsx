@@ -1,7 +1,5 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../components/navigation/Header';
-import Sidebar from '../../components/navigation/Sidebar';
 import styles from './MenuPage.module.css';
 import { HamburgerIcon, PizzaIcon, BowlFoodIcon, BowlSteamIcon, CoffeeIcon, CakeIcon, PintGlassIcon, OrangeIcon, BreadIcon } from "@phosphor-icons/react";
 import CategoryTag from '../../components/display/CategoryTag';
@@ -74,9 +72,7 @@ export default function MenuPage() {
 
     return (
         <div style={{backgroundColor: '#FFFDFB'}}> 
-            <Header />
             <div className={styles.container}>
-                <Sidebar />
                 <div className={styles.content}>
                     <div className={styles.category}>
                         <h2 style={{marginBottom: '10px'}}>Chào mừng đến với Foodly!</h2>
