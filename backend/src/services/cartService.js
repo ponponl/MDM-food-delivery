@@ -110,19 +110,25 @@ export const addItemToCart = async (
       throw new Error('ITEM_UNAVAILABLE');
     }
 
-    if (typeof item.stock === 'number' && item.stock < quantity) {
-      throw new Error('ITEM_OUT_OF_STOCK');
-    }
-
     const itemKey = buildItemKey(itemId, options);
     const normalizedOptions = normalizeOptionsForStorage(options);
     const itemImage = resolveItemImage(item);
+    const existingItemRaw = await redisClient.hGet(cartKey, itemKey);
+    const existingQty = existingItemRaw
+      ? Number(JSON.parse(existingItemRaw)?.quantity) || 0
+      : 0;
+    const nextQty = existingQty + quantity;
+
+    if (typeof item.stock === 'number' && item.stock < nextQty) {
+      throw new Error('ITEM_OUT_OF_STOCK');
+    }
+
     const itemJson = JSON.stringify({
       _id: item._id || itemId,
       itemId: item._id || itemId,
       name: item.name || `Item ${itemId}`,
       price: typeof item.price === 'number' ? item.price : 0,
-      quantity,
+      quantity: nextQty,
       image: itemImage,
       options: normalizedOptions,
       note: note || null,
@@ -135,7 +141,7 @@ export const addItemToCart = async (
       arguments: [
         itemKey,
         itemJson,
-        String(quantity),
+        String(nextQty),
         String(CART_TTL),
         String(restaurantPublicId)
       ]
