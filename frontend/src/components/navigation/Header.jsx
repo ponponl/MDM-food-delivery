@@ -1,5 +1,6 @@
 import styles from './Header.module.css';
-import { Search, Bell, ShoppingCart, ChevronDown, MapPin, User, LogOut } from 'lucide-react';
+import { Search, Bell, ShoppingCart, ChevronDown, MapPin, User } from 'lucide-react';
+import { FishSimpleIcon, UserCircleIcon, SignOutIcon } from '@phosphor-icons/react';
 import { useEffect, useState } from 'react';
 import { AddressContext } from '../../context/AddressContext';
 import { useContext } from 'react';
@@ -16,17 +17,34 @@ export default function Header() {
   const [cartItems, setCartItems] = useState([]);
   const [cartLoading, setCartLoading] = useState(false);
   const [cartError, setCartError] = useState('');
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { user, logoutUser } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
+      setIsProfileOpen(false);
       await logoutService();
       logoutUser();
       navigate('/auth');
     } catch (error) {
       console.error("Đăng xuất thất bại:", error);
     }
+  };
+
+  const handleOpenProfile = () => {
+    setIsProfileOpen(true);
+  };
+
+  const handleCloseProfile = () => {
+    setIsProfileOpen(false);
+  };
+
+  const getDisplayName = () => {
+    if (!user) {
+      return 'User';
+    }
+    return user.username || user.name || user.email || 'User';
   };
 
   const formatCurrency = (value) => `${Number(value || 0).toLocaleString('vi-VN')}đ`;
@@ -201,15 +219,38 @@ export default function Header() {
         }
         <div className={styles.authButton}>
           {user ? 
-            (<>
-              <button className={styles.bthProfile}><User size={17}/><span style={{marginLeft: '5px', marginTop: '3px'}}>Hồ sơ</span></button>
-              <button className={styles.bthProfile} onClick={handleLogout}><LogOut size={17}/><span style={{marginLeft: '5px', marginTop: '3px'}}>Đăng xuất</span></button>
-            </>) :
+            (
+              <button className={styles.bthProfile} onClick={handleOpenProfile}>
+                <User size={17}/>
+                <span style={{marginLeft: '5px', marginTop: '3px'}}>Hồ sơ</span>
+              </button>
+            ) :
             (<>
               <button className={styles.bthSignIn} onClick={() => navigate('/auth')}>Đăng nhập</button>
             </>)}
         </div>
     </div>
+    {isProfileOpen && (
+      <div className={styles.profileOverlay} onClick={handleCloseProfile}>
+        <div className={styles.profileModal} onClick={(event) => event.stopPropagation()}>
+          <div className={styles.profileHeader}>
+            <div className={styles.profileAvatar}>
+              <FishSimpleIcon size={20} weight="fill" />
+            </div>
+            <div className={styles.profileName}>{getDisplayName()}</div>
+          </div>
+          <div className={styles.profileDivider} />
+          <button className={styles.profileItem} type="button">
+            <span className={styles.profileItemIcon}><UserCircleIcon size={20} /></span>
+            Thông tin cá nhân
+          </button>
+          <button className={styles.profileItem} type="button" onClick={handleLogout}>
+            <span className={styles.profileItemIcon}><SignOutIcon size={20} /></span>
+            Đăng xuất
+          </button>
+        </div>
+      </div>
+    )}
     <CartModal
       isOpen={isCartOpen}
       onClose={handleCloseCart}
