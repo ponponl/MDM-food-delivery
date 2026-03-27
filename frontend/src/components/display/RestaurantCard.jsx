@@ -1,9 +1,9 @@
 import {Star, Dot} from 'lucide-react';
 import styles from './RestaurantCard.module.css';
 
-export default function RestaurantCard ({image, title, rating, ratingQuantity, distance, deliveryTime}) {
+export default function RestaurantCard ({image, title, rating, ratingQuantity, onClick}) {
     return (
-        <div className={styles.card}>
+        <div className={styles.card} onClick={onClick}>
             <div className={styles.imageWrapper}>
                 <img className={styles.imageCard} src={image} alt={title} />
             </div>

@@ -42,8 +42,12 @@ const buildNameRegex = (name) => {
 };
 
 export class RestaurantRepository {
-    async findAll() {
-        return await Restaurant.find();
+    async findAll(limit) {
+        const query = Restaurant.find();
+        if (Number.isInteger(limit) && limit > 0) {
+            query.limit(limit);
+        }
+        return await query;
     }
 
     async findByFilters({ name, category } = {}) {
@@ -57,12 +61,24 @@ export class RestaurantRepository {
         }
 
         if (categoryRegex) {
-            query.$or = [
-                { type: categoryRegex },
-                { 'menu.category': categoryRegex }
-            ];
+            query.type = categoryRegex;
         }
 
         return await Restaurant.find(query);
+    }
+
+    async findByCategoryLimited(category, limit = 5) {
+        const categoryRegex = buildCategoryRegex(category);
+        if (!categoryRegex) {
+            return [];
+        }
+
+        const query = { type: categoryRegex };
+
+        return await Restaurant.find(query).limit(limit);
+    }
+
+    async findByPublicId(publicId) {
+        return await Restaurant.findOne({ publicId });
     }
 }

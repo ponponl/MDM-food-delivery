@@ -2,7 +2,7 @@ import pool from "../config/postgres.js";
 class UserRepository {
     async findAccountByUsername(username) {
         const result = await pool.query(
-            `SELECT a.*, u.name, u.phone 
+            `SELECT u.name, u.phone, u.externalId, a.*
              FROM accounts a 
              JOIN users u ON a.user_id = u.id 
              WHERE a.username = $1`,
@@ -11,7 +11,10 @@ class UserRepository {
         
         const row = result.rows[0];
         if (!row) return null;
-        return row;
+        return {
+            ...row,
+            externalId: row.externalid
+        };
     }
 
     async findAccountByEmail(email) {
@@ -29,11 +32,12 @@ class UserRepository {
 
             const userResult = await client.query(
                 `INSERT INTO users (name, phone, addresses) 
-                 VALUES ($1, $2, $3) RETURNING id`,
+                 VALUES ($1, $2, $3) RETURNING id, externalId`,
                 [name, phone, JSON.stringify(addresses || [])]
             );
 
             const userId = userResult.rows[0].id;
+            const externalId = userResult.rows[0].externalid;
 
             const accountResult = await client.query(
                 `INSERT INTO accounts (user_id, username, email, password) 
@@ -45,7 +49,8 @@ class UserRepository {
             return {
                 ...accountResult.rows[0],
                 name,
-                phone
+                phone,
+                externalId
             };
         } catch (error) {
             await client.query('ROLLBACK');

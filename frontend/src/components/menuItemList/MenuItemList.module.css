@@ -1,0 +1,27 @@
+.menuItemsList {
+    margin-top: 0;
+}
+
+.categorySection {
+    margin-bottom: 1.5rem;
+    scroll-margin-top: 100px;
+}
+
+.categoryTitle {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-bottom: 20px;
+    color: #1a1a1a;
+}
+
+.foodGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; 
+    gap: 12px; 
+}
+
+@media (max-width: 1200px) {
+    .foodGrid {
+        grid-template-columns: 1fr;
+    }
+}

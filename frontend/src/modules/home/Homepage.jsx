@@ -2,9 +2,10 @@ import {User, MapPin, ArrowRight} from 'lucide-react';
 import { useState } from 'react';
 import styles from './Homepage.module.css';
 import homeBanner from '../../assets/home-banner.png';
-import Header from '../../components/navigation/Header';
+import Header from '../../components/header/Header.jsx';
 import {AddressContext} from '../../context/AddressContext.jsx';
-import MenuPage from './MenuPage';
+import MenuPage from '../menu/menuPage.jsx';
+import ClientLayout from '../../layouts/ClientLayout/ClientLayout.jsx';
 import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -112,9 +113,11 @@ export default function Homepage (){
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const {address} = useContext(AddressContext);
 
-    return (
-        <div>
-            {address ? <MenuPage /> : <HomeWithoutAddress />}
-        </div>
-    )
+    return address ? (
+        <ClientLayout>
+            <MenuPage />
+        </ClientLayout>
+    ) : (
+        <HomeWithoutAddress />
+    );
 }

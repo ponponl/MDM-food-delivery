@@ -4,21 +4,24 @@ import morgan from 'morgan';
 import mongoose from 'mongoose';
 import logger from './config/logger.js';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import connectMongo from './config/mongodb.js';
 import redisClient from './config/redis.js';
 import neo4jDriver from './config/neo4j.js';
 import pgPool from './config/postgres.js';
-import userRoute from './routes/userRoute.js';
-import restaurantRoute from './routes/restaurantRoute.js';
+import apiRoutes from './routes/index.js';
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  credentials: true
+}));
+app.use(cookieParser());
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
 
-app.use('/api/users', userRoute);
-app.use('/api/restaurants', restaurantRoute);
+app.use('/api', apiRoutes);
 
 connectMongo();
 redisClient.connect()

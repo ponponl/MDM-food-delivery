@@ -1,0 +1,344 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 15, 10, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1500;
+}
+
+.modal {
+  width: min(780px, 92vw);
+  max-height: 85vh;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 18px 45px rgba(30, 20, 10, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  margin-bottom: 3px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(30, 20, 10, 0.1);
+}
+
+.header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #2b1a12;
+}
+
+.closeButton {
+  display: inline-flex;
+  border: none;
+  padding:  4px;
+  background: transparent;
+  color: #6c4a3b;
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  background: var(--secondary-color);
+  border-radius: 4px;
+}
+
+.body {
+  padding: 18px 22px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.stateText {
+  color: #6c4a3b;
+  text-align: center;
+  padding: 28px 0;
+}
+
+.errorText {
+  color: #c63e2b;
+  text-align: center;
+  padding: 28px 0;
+}
+
+.groupList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.groupBlock {
+  border-radius: 12px;
+  padding: 12px;
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 4, 10, 0.1);
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 6px 10px;
+  border-bottom: 1px dashed rgba(255, 107, 53, 0.2);
+}
+
+.groupLabel {
+  font-weight: 700;
+  color: #2b1a12;
+}
+
+.groupInfo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.groupImage,
+.groupPlaceholder {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3e6dc;
+  color: #8b6b5c;
+  font-weight: 700;
+  font-size: 0.7rem;
+}
+
+.groupImage {
+  object-fit: cover;
+  background: #f3e6dc;
+}
+
+.checkboxRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  color: #2b1a12;
+}
+
+.itemList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+  padding-left: 18px;
+  border-left: 2px solid rgba(255, 107, 53, 0.18);
+}
+
+.itemRow {
+  display: grid;
+  grid-template-columns: minmax(200px, 1.2fr) auto auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 4px 6px;
+}
+
+.itemInfo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.itemImage,
+.itemPlaceholder {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3e6dc;
+  color: #8b6b5c;
+  font-weight: 600;
+  font-size: 0.7rem;
+  flex-shrink: 0;
+}
+
+.itemImage {
+  object-fit: cover;
+  background: #f3e6dc;
+}
+
+.itemName {
+  font-weight: 600;
+  color: #3a2418;
+}
+
+.qtyControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff3ec;
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+
+.qtyButton {
+  border: none;
+  background: #ff6b35;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.qtyButton:hover {
+  background: var(--hover-color);
+}
+
+.qtyButton:disabled {
+  background: #f2c5b3;
+  cursor: not-allowed;
+}
+
+.qtyValue {
+  min-width: 18px;
+  text-align: center;
+  font-weight: 600;
+  color: #2b1a12;
+}
+
+.itemPrice {
+  width: 80px;
+  font-weight: 600;
+  color: #ff6b35;
+  text-align: right;
+}
+
+.trashButton {
+  border: none;
+  padding: 6px 8px;
+  background: transparent;
+  color: var(--primary-color);
+  cursor: pointer;
+}
+
+.trashButton:hover {
+  background: var(--secondary-color);
+  border-radius: 4px;
+}
+
+.footer {
+  padding: 16px 22px 22px;
+  background: #fff;
+  box-shadow: 0 -2px 8px rgba(30, 20, 10, 0.1);
+}
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: Lexend, sans-serif;
+  font-size: 1rem;
+  color: #2b1a12;
+  margin-bottom: 12px;
+}
+
+.orderButton {
+  width: 100%;
+  border: none;
+  border-radius: 999px;
+  background: #ff6b35;
+  color: white;
+  font-weight: 700;
+  padding: 12px 0;
+  cursor: pointer;
+}
+
+.orderButton:hover {
+  background: var(--hover-color);
+}
+
+.orderButton:disabled {
+  background: #f2c5b3;
+  cursor: not-allowed;
+}
+
+.confirmOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 15, 10, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.confirmBox {
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px 20px;
+  width: min(360px, 90%);
+  box-shadow: 0 16px 30px rgba(30, 20, 10, 0.25);
+}
+
+.confirmText {
+  margin: 0 0 16px;
+  color: #2b1a12;
+  font-weight: 600;
+}
+
+.confirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.confirmCancel,
+.confirmOk {
+  border: none;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: Lexend, sans-serif;
+}
+
+.confirmCancel {
+  background: #f0e0d6;
+  color: #6c4a3b;
+}
+
+.confirmOk {
+  background: #ff6b35;
+  color: white;
+}
+
+.confirmCancel:hover {
+  background: #e0c8b3;
+}
+
+.confirmOk:hover {
+  background: var(--hover-color);
+}
+
+@media (max-width: 720px) {
+  .itemRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .itemPrice {
+    text-align: left;
+  }
+
+  .qtyControls {
+    justify-content: flex-start;
+  }
+}

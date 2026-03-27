@@ -70,10 +70,9 @@ const SignInInputs = ({ onSwitch, initialUsername }) => {
     try {
         const response = await login(formData);
         
-        const user = response.data.user;
-        const token = response.accessToken;
+        const user = response.data?.user || response.data?.data?.user;
 
-        loginUser(user, token);
+        loginUser(user);
 
         toast.success(`Chào mừng trở lại, ${user.username}!`, {
           duration: 3000,

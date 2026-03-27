@@ -1,0 +1,45 @@
+.menuSidebar {
+    background: white;
+    padding: 0;
+    width: 100%;
+    position: relative;
+    z-index: 10;
+    max-height: 100%;
+    overflow-y: auto;
+}
+
+.menuSidebar::-webkit-scrollbar {
+    width: 4px;
+}
+.menuSidebar::-webkit-scrollbar-thumb {
+    background: #d1d1d1;
+    border-radius: 10px;
+}
+
+.categoryList {
+    display: flex;
+    flex-direction: column;
+}
+
+.catLink {
+    display: block;
+    padding: 12px 20px;
+    text-decoration: none;
+    color: #4d4d4d;
+    font-size: 1rem;
+    font-weight: 600;
+    border-left: 4px solid transparent; 
+    transition: all 0.2s ease;
+}
+
+.catLink:hover {
+    color: #EE5335;
+    background-color: #f7f7f7;
+}
+
+.catLink.active {
+    color: #EE5335;
+    font-weight: 800;
+    border-left: 4px solid #EE5335;
+    background-color: #f7f7f7;
+}
