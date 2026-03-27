@@ -25,7 +25,7 @@
 }
 
 .card:hover h4 {
-    color: #FF6B35;
+    color: var(--primary-color);
 }
 
 .cardContent {

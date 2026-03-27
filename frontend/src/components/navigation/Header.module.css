@@ -18,7 +18,7 @@
     align-items: center;
     font-size: 1.5rem;
     font-weight: bold;
-    color: #FF6B35;
+    color: var(--primary-color);
     text-decoration: none;
     margin-right: 30px;
     margin-left: 10px;
@@ -84,8 +84,8 @@
 
 .cartIcon {
     background-color: transparent;
-    color: #FF6B35;
-    border: 2px solid #FF6B35;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -98,16 +98,15 @@
 }
 
 .cartIcon:hover {
-    background-color: orange;
-    border: 2px solid orange;
+    background-color: var(--hover-color);
+    border: 2px solid var(--hover-color);
     color: white;
     cursor: pointer;
 }
 
-.cartIcon:active {
-    transform: scale(1.05);   
-    background-color: orange;
-    border: 2px solid orange;
+.cartIcon:active { 
+    background-color: var(--hover-color);
+    border: 2px solid var(--hover-color);
     color: white;
 }
 
@@ -122,7 +121,7 @@
 }
 
 .bthProfile {
-    background-color: #FF3D00;
+    background-color: var(--primary-color);
     color: white;
     display: flex;
     align-items: center;
@@ -136,27 +135,25 @@
 }
 
 .bthProfile:hover {
-    transform: scale(1.05);   
-    background-color: orange;
+    background-color: var(--hover-color);
     border: 0;
 }
 
 .bthSignUp, .bthSignIn {
-    background-color: #FF3D00;
+    background-color: var(--primary-color);
     border: none;
     padding: 5px 10px;
     border-radius: 50px;
     cursor: pointer;
     font-weight: bold;
-    border: 2px solid #FF3D00;
+    border: 2px solid var(--primary-color);
     color: white;
     height: 32px;
 }
 
 .bthSignIn:hover {
-    transform: scale(1.05);   
-    background-color: orange;
-    border: 2px solid orange;
+    background-color: var(--hover-color);
+    border: 2px solid var(--hover-color);
 }
 
 .addressHolder {
@@ -171,14 +168,12 @@
     font-weight: bold;
 }
 
-.addressHolder:hover {
-    transform: scale(1.05);   
+.addressHolder:hover { 
     background-color: rgb(213, 213, 213);
     cursor: pointer;
 }
 
 .addressHolder:active {
-    transform: scale(1.05);   
     background-color: rgb(213, 213, 213);
     color: black;
 }

@@ -6,12 +6,12 @@
     border-radius: 50px;
     justify-content: center;
     padding: 10px 15px 10px 15px;
+    margin-right: 12px;
     color: black;
-    margin: 5px;
 }
 
 .categoryTag:hover {
-    background-color: orange;
+    background-color: var(--primary-color);
     color: white;
     cursor: pointer;
 }
@@ -23,6 +23,7 @@
 
 .categoryText {
     line-height: 1;
+    font-size: 0.9rem;
 }
 
 .categoryIcon {

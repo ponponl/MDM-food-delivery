@@ -1,5 +1,5 @@
 .header {
-    background-color: #ff6347;
+    background-color: var(--primary-color);
     color: white;
     padding: 1rem;
     text-align: center;
@@ -23,7 +23,7 @@
 
 .actionButtons {
     background-color: white;
-    color: #ff6347;
+    color: var(--primary-color);
     border: none;
     padding: 0.5rem 1rem;
     margin-left: 1rem;
