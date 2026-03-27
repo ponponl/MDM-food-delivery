@@ -124,8 +124,9 @@ export default function CartModal({
         </div>
 
         <div className={styles.body}>
-          {isLoading && <div className={styles.stateText}>Đang tải giỏ hàng...</div>}
-          {!isLoading && error && <div className={styles.errorText}>{error}</div>}
+          {/* {isLoading && <div className={styles.stateText}>Đang tải giỏ hàng...</div>}
+          {!isLoading && error && <div className={styles.errorText}>{error}</div>} */}
+
           {!isLoading && !error && items.length === 0 && (
             <div className={styles.stateText}>Giỏ hàng trống.</div>
           )}

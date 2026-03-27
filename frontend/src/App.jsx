@@ -1,6 +1,6 @@
 import { Routes, Route } from 'react-router-dom';
 import Homepage from './modules/home/Homepage.jsx';
-import CategorizedPage from './modules/menu/categorizedPage.jsx';
+import CategoryPage from './modules/category/categoryPage.jsx';
 import AuthPage from './modules/auth/AuthPage.jsx';
 import RestaurantPage from './modules/restaurant/RestaurantPage.jsx';
 import ClientLayout from './layouts/ClientLayout/ClientLayout.jsx';
@@ -17,7 +17,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Homepage />} />
           <Route element={<ClientLayout />}>
-            <Route path="/category/:categoryName" element={<CategorizedPage />} />
+            <Route path="/category/:categoryName" element={<CategoryPage />} />
             <Route path="/restaurant/:slugAndId" element={<RestaurantPage />} />
           </Route>
           <Route path="/auth" element={<AuthPage />} />

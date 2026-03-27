@@ -1,6 +1,6 @@
 import {useState, useEffect} from 'react';
-import styles from './CategorizedPage.module.css';
-import RestaurantCard from '../../components/display/RestaurantCard';
+import styles from './CategoryPage.module.css';
+import RestaurantCard from '../../components/display/RestaurantCard.jsx';
 import burger from '../../assets/burger.png';
 import { useParams, useNavigate } from 'react-router-dom';
 import restaurantApi from '../../api/restaurantApi.js';
@@ -27,7 +27,7 @@ const CATEGORY_LABELS = {
     'banh-ngot': 'Bánh Ngọt',
 };
 
-export default function CategorizedPage() {
+export default function CategoryPage() {
     const [selected, setSelected] = useState('');
     const [restaurants, setRestaurants] = useState([]);
     const {categoryName} = useParams();

@@ -1,6 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom';
-import Header from '../../components/navigation/Header';
-import Sidebar from '../../components/navigation/Sidebar';
+import Header from '../../components/header/Header';
+import Sidebar from '../../components/sidebar/Sidebar';
 // import Footer from '../../components/footer/Footer';
 import styles from './ClientLayout.module.css';
 

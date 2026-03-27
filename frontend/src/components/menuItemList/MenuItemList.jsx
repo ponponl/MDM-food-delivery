@@ -1,4 +1,4 @@
-import MenuCard from './MenuCard';
+import MenuCard from '../display/MenuCard';
 import styles from './MenuItemList.module.css';
 
 const MenuItemsList = ({ groupedMenu, onAddToCart }) => {
