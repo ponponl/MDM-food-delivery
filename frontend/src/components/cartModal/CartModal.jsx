@@ -7,10 +7,11 @@ const buildGroups = (items = []) => {
 
   items.forEach((item) => {
     const key = item.restaurantId || 'unknown';
-    const fallback = key === 'unknown' ? 'Khac' : `Nha hang ${String(key).slice(-6)}`;
+    const fallback = 'Nhà hàng';
     const label = item.restaurantName || fallback;
+    const image = item.restaurantImage || null;
     if (!groups.has(key)) {
-      groups.set(key, { id: key, label, items: [] });
+      groups.set(key, { id: key, label, image, items: [] });
     }
     groups.get(key).items.push(item);
   });
@@ -132,9 +133,9 @@ export default function CartModal({
           {!isLoading && !error && items.length > 0 && (
             <div className={styles.groupList}>
               {groups.map((group) => {
-                const groupSelected = group.items.every((item) => isItemSelected(item.itemId));
+                const groupSelected = group.items.every((item) => isItemSelected(item.itemKey || item.itemId));
                 return (
-                        <div key={group.id} className={styles.groupBlock}>
+                  <div key={group.id} className={styles.groupBlock}>
                     <div className={styles.groupHeader}>
                       <label className={styles.checkboxRow}>
                         <input
@@ -142,7 +143,19 @@ export default function CartModal({
                           checked={groupSelected}
                           onChange={() => toggleGroup(group)}
                         />
-                        <span className={styles.groupLabel}>{group.label}</span>
+                        <span className={styles.groupInfo}>
+                          {group.image ? (
+                            <img
+                              className={styles.groupImage}
+                              src={group.image}
+                              alt={group.label}
+                              loading="lazy"
+                            />
+                          ) : (
+                            <span className={styles.groupPlaceholder}>NH</span>
+                          )}
+                          <span className={styles.groupLabel}>{group.label}</span>
+                        </span>
                       </label>
                       <button
                         type="button"
@@ -163,7 +176,19 @@ export default function CartModal({
                               checked={isItemSelected(item.itemKey || item.itemId)}
                               onChange={() => toggleItem(item.itemKey || item.itemId)}
                             />
-                            <span className={styles.itemName}>{item.name}</span>
+                            <span className={styles.itemInfo}>
+                              {item.image ? (
+                                <img
+                                  className={styles.itemImage}
+                                  src={item.image}
+                                  alt={item.name}
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <span className={styles.itemPlaceholder}>Ảnh</span>
+                              )}
+                              <span className={styles.itemName}>{item.name}</span>
+                            </span>
                           </label>
 
                           <div className={styles.qtyControls}>
