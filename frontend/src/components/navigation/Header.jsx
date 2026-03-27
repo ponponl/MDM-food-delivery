@@ -76,11 +76,12 @@ export default function Header() {
   useEffect(() => {
     const handleCartUpdated = (event) => {
       const totalQty = event?.detail?.totalQty;
-      const fallbackTotal = event?.detail?.totalItems;
+      const deltaQty = event?.detail?.deltaQty;
+
       if (typeof totalQty === 'number') {
         setCartItemCount(totalQty);
-      } else if (typeof fallbackTotal === 'number') {
-        setCartItemCount(fallbackTotal);
+      } else if (typeof deltaQty === 'number') {
+        setCartItemCount((prev) => Math.max(0, prev + deltaQty));
       } else {
         loadCart(true);
       }

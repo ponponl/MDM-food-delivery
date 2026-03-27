@@ -25,8 +25,9 @@
   align-items: center;
   justify-content: space-between;
   padding: 18px 22px;
-  border-bottom: 1px solid rgba(255, 107, 53, 0.2);
+  margin-bottom: 3px;
   background: #fff;
+  box-shadow: 0 2px 8px rgba(30, 20, 10, 0.1);
 }
 
 .header h3 {
@@ -36,10 +37,17 @@
 }
 
 .closeButton {
+  display: inline-flex;
   border: none;
+  padding:  4px;
   background: transparent;
   color: #6c4a3b;
   cursor: pointer;
+}
+
+.closeButton:hover {
+  background: var(--secondary-color);
+  border-radius: 4px;
 }
 
 .body {
@@ -67,10 +75,10 @@
 }
 
 .groupBlock {
-  border: 1px solid rgba(255, 107, 53, 0.2);
   border-radius: 12px;
   padding: 12px;
   background: #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 4, 10, 0.1);
 }
 
 .groupHeader {
@@ -190,6 +198,15 @@
   cursor: pointer;
 }
 
+.qtyButton:hover {
+  background: var(--hover-color);
+}
+
+.qtyButton:disabled {
+  background: #f2c5b3;
+  cursor: not-allowed;
+}
+
 .qtyValue {
   min-width: 18px;
   text-align: center;
@@ -198,6 +215,7 @@
 }
 
 .itemPrice {
+  width: 80px;
   font-weight: 600;
   color: #ff6b35;
   text-align: right;
@@ -205,21 +223,28 @@
 
 .trashButton {
   border: none;
+  padding: 6px 8px;
   background: transparent;
-  color: #cc4a2d;
+  color: var(--primary-color);
   cursor: pointer;
+}
+
+.trashButton:hover {
+  background: var(--secondary-color);
+  border-radius: 4px;
 }
 
 .footer {
   padding: 16px 22px 22px;
-  border-top: 1px solid rgba(255, 107, 53, 0.2);
   background: #fff;
+  box-shadow: 0 -2px 8px rgba(30, 20, 10, 0.1);
 }
 
 .totalRow {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  font-family: Lexend, sans-serif;
   font-size: 1rem;
   color: #2b1a12;
   margin-bottom: 12px;
@@ -234,6 +259,10 @@
   font-weight: 700;
   padding: 12px 0;
   cursor: pointer;
+}
+
+.orderButton:hover {
+  background: var(--hover-color);
 }
 
 .orderButton:disabled {
@@ -252,7 +281,7 @@
 }
 
 .confirmBox {
-  background: #fffaf6;
+  background: #fff;
   border-radius: 14px;
   padding: 18px 20px;
   width: min(360px, 90%);
@@ -278,16 +307,25 @@
   border-radius: 999px;
   font-weight: 600;
   cursor: pointer;
+  font-family: Lexend, sans-serif;
 }
 
 .confirmCancel {
   background: #f0e0d6;
-  color: #4b2d20;
+  color: #6c4a3b;
 }
 
 .confirmOk {
   background: #ff6b35;
   color: white;
+}
+
+.confirmCancel:hover {
+  background: #e0c8b3;
+}
+
+.confirmOk:hover {
+  background: var(--hover-color);
 }
 
 @media (max-width: 720px) {

@@ -1,3 +1,10 @@
+:root {
+  --primary-color: #ff6b35;
+  --secondary-color: #f7f7f7;
+  --hover-color: #e55b2c;
+  --text-color: #333;
+}
+
 * {
   margin: 0;
   padding: 0;

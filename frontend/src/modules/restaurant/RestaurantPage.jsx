@@ -93,19 +93,27 @@ export default function RestaurantPage() {
             return;
         }
 
+        const optimisticDelta = 1;
+        window.dispatchEvent(new CustomEvent('cart:updated', { detail: { deltaQty: optimisticDelta } }));
+
         try {
             const response = await cartApi.addItem({
                 itemId,
-                quantity: 1,
+                quantity: optimisticDelta,
                 restaurantPublicId: publicId,
                 options: item?.options || [],
                 note: null
             });
             const payload = response?.data ?? response;
             const data = payload?.cart ?? payload?.data ?? payload ?? {};
-            const totalQty = data.totalQty || 0;
-            window.dispatchEvent(new CustomEvent('cart:updated', { detail: { totalQty, totalItems: totalQty } }));
+            const totalQty = typeof data.totalQty === 'number' ? data.totalQty : null;
+            if (typeof totalQty === 'number') {
+                window.dispatchEvent(new CustomEvent('cart:updated', { detail: { totalQty } }));
+            } else {
+                window.dispatchEvent(new CustomEvent('cart:updated', { detail: {} }));
+            }
         } catch (err) {
+            window.dispatchEvent(new CustomEvent('cart:updated', { detail: { deltaQty: -optimisticDelta } }));
             console.error('Add to cart failed:', err);
             window.alert('Không thể thêm món vào giỏ. Vui lòng thử lại.');
         }
