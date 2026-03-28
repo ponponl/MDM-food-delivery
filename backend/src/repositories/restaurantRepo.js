@@ -81,4 +81,23 @@ export class RestaurantRepository {
     async findByPublicId(publicId) {
         return await Restaurant.findOne({ publicId });
     }
+
+    async search(query, limit = 20) {
+        if (!query || !query.trim()) {
+            return [];
+        }
+
+        const searchRegex = new RegExp(escapeRegex(query.trim()), 'i');
+
+        return await Restaurant.find(
+            {
+                $or: [
+                    { name: searchRegex },
+                    { type: searchRegex },
+                    { 'menu.name': searchRegex },
+                    { 'menu.category': searchRegex }
+                ]
+            }
+        ).limit(limit);
+    }
 }

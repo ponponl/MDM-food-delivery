@@ -1,13 +1,14 @@
 import styles from './Header.module.css';
 import { Search, Bell, ShoppingCart, ChevronDown, MapPin, User } from 'lucide-react';
 import { FishSimpleIcon, UserCircleIcon, SignOutIcon } from '@phosphor-icons/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { AddressContext } from '../../context/AddressContext';
 import { useContext } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { logout as logoutService } from '../../services/authService';
 import { useNavigate } from 'react-router-dom';
 import cartApi from '../../api/cartApi';
+import searchApi from '../../api/searchApi';
 import CartModal from '../cartModal/CartModal';
 
 export default function Header() {
@@ -18,6 +19,10 @@ export default function Header() {
   const [cartLoading, setCartLoading] = useState(false);
   const [cartError, setCartError] = useState('');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [searchResult, setSearchResult] = useState([]);
+  const searchTimeoutRef = useRef(null);
   const { user, logoutUser } = useAuth();
   const navigate = useNavigate();
 
@@ -38,6 +43,81 @@ export default function Header() {
 
   const handleCloseProfile = () => {
     setIsProfileOpen(false);
+  };
+
+  const handleSearch = async (searchTerm) => {
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (!searchTerm || !searchTerm.trim()) {
+      setSearchResult([]);
+      setLoading(false);
+      return;
+    }
+
+    // Debounce search - wait 300ms after user stops typing
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        setLoading(true);
+        const response = await searchApi.searchAll(searchTerm, 20);
+        const results = response?.data?.data || response?.data || [];
+        
+        // Extract suggestions prioritizing categories first
+        const categories = new Set();
+        const restaurants = new Set();
+        const foods = new Set();
+        
+        results.forEach(restaurant => {
+          // Extract categories from matched foods
+          restaurant.matchedFoods?.forEach(food => {
+            if (food.category) {
+              categories.add(food.category);
+            }
+            if (food.name) {
+              foods.add(food.name);
+            }
+          });
+          
+          // Add restaurant name
+          if (restaurant.restaurantName) {
+            restaurants.add(restaurant.restaurantName);
+          }
+        });
+        
+        // Combine with priority: categories > restaurants > foods
+        const suggestions = [
+          ...Array.from(categories).map(cat => ({ text: cat, type: 'category' })),
+          ...Array.from(restaurants).map(rest => ({ text: rest, type: 'restaurant' })),
+          ...Array.from(foods).map(food => ({ text: food, type: 'food' }))
+        ].slice(0, 10);
+        
+        setSearchResult(suggestions);
+      } catch (error) {
+        console.error('Search error:', error);
+        setSearchResult([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
+  };
+
+  const handleSelectKeyword = (keyword) => {
+    // Navigate to search results page with keyword
+    const searchTerm = typeof keyword === 'string' ? keyword : keyword.text;
+    navigate(`/search/${encodeURIComponent(searchTerm)}`);
+    setQuery('');
+    setSearchResult([]);
+  };
+
+  const getSuggestClassName = (type) => {
+    const typeMap = {
+      category: styles.suggestCategory,
+      restaurant: styles.suggestRestaurant,
+      food: styles.suggestFood
+    };
+    return `${styles.suggestItem} ${typeMap[type] || ''}`;
   };
 
   const getDisplayName = () => {
@@ -90,6 +170,14 @@ export default function Header() {
     }
     loadCart(true);
   }, [user]);
+
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const handleCartUpdated = (event) => {
@@ -202,12 +290,36 @@ export default function Header() {
           <div className={styles.withAddress}>
             <div className={styles.searchBar}> 
               <Search size={16} />
-              <input 
-                className={styles.searchInput}
-                type="text"
-                placeholder="Tìm nhà hàng hoặc món ăn..."
-                onChange={(e) => console.log('Từ khóa tìm kiếm:', e.target.value)}
-              />
+              <form className={styles.searchForm}>
+                              <input 
+                                className={styles.searchInput}
+                                type="text"
+                                placeholder="Tìm nhà hàng hoặc món ăn..."
+                                value={query}
+                                onChange={(e) => {
+                                  const nextQuery = e.target.value;
+                                  setQuery(nextQuery);
+                                  handleSearch(nextQuery);
+                                }}
+                              />
+                            </form>
+                            {loading && <p className={styles.searchLoading}>Đang tìm kiếm...</p>}
+              
+                            {searchResult.length > 0 && (
+                              <div className={styles.searchResult}>
+                                {searchResult.map((item, index) => (
+                                  <div 
+                                    className={getSuggestClassName(item.type)}
+                                    key={index}
+                                    onClick={() => handleSelectKeyword(item)}
+                                  >
+                                    <Search size={14} />
+                                    <span className={styles.suggestText}>{item.text}</span>
+                                    {item.type === 'category' && <span className={styles.badge}>Danh mục</span>}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
             </div>
             <button className={styles.addressHolder}><MapPin size={17}/><span  style={{marginLeft: '5px', marginRight: '5px', marginTop: '2px'}}>{address}</span><ChevronDown size={17}/></button>
             <button className={styles.notificationIcon}><Bell size={17} /></button>

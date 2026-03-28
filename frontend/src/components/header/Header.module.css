@@ -36,6 +36,7 @@
     color: grey;
     height: 32px;
     justify-content: center;
+    position: relative;
 }
 
 .searchInput {
@@ -48,6 +49,93 @@
 
 .searchInput:focus {
     outline: none;
+}
+
+.searchForm {
+    flex: 1;
+    display: flex;
+    margin: 0;
+    padding: 0;
+}
+
+.searchLoading {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 10px 20px;
+    font-size: 0.85rem;
+    color: #888;
+    border-bottom: 1px solid #eee;
+    margin: 0;
+}
+
+.searchResult {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-top: none;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.suggestItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #555;
+    font-size: 0.9rem;
+}
+
+.suggestItem:hover {
+    background-color: #f9f9f9;
+    color: var(--primary-color);
+}
+
+.suggestItem:last-child {
+    border-bottom: none;
+}
+
+.suggestText {
+    flex: 1;
+    font-weight: 500;
+}
+
+.badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: white;
+    background-color: var(--primary-color);
+    padding: 3px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+.suggestCategory {
+    background-color: rgba(var(--primary-color-rgb), 0.05);
+    border-left: 3px solid var(--primary-color);
+    padding-left: 13px;
+}
+
+.suggestCategory:hover {
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+}
+
+.suggestRestaurant {
+    border-left: 3px solid #e0e0e0;
+}
+
+.suggestFood {
+    border-left: 3px solid #f0f0f0;
 }
 
 .withAddress {

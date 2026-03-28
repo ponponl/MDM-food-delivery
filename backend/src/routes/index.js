@@ -4,6 +4,7 @@ import restaurantRoute from './restaurantRoute.js';
 import categoryRoute from './categoryRoute.js';
 import cartRoute from './cartRoute.js';
 import orderRoute from './orderRoute.js';
+import searchRoute from '../modules/search/searchRoute.js'
 
 const router = express.Router();
 
@@ -12,5 +13,6 @@ router.use('/restaurants', restaurantRoute);
 router.use('/categories', categoryRoute);
 router.use('/cart', cartRoute);
 router.use('/orders', orderRoute);
+router.use('/search', searchRoute);
 
 export default router;
