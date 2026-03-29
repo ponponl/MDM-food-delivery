@@ -1,12 +1,12 @@
 import styles from './Header.module.css';
-import { Search, Bell, ShoppingCart, ChevronDown, MapPin, User } from 'lucide-react';
+import { Search, Bell, ShoppingCart, ChevronDown, MapPin, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import { FishSimpleIcon, UserCircleIcon, SignOutIcon } from '@phosphor-icons/react';
 import { useEffect, useState, useRef } from 'react';
 import { AddressContext } from '../../context/AddressContext';
 import { useContext } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { logout as logoutService } from '../../services/authService';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import cartApi from '../../api/cartApi';
 import searchApi from '../../api/searchApi';
 import CartModal from '../cartModal/CartModal';
@@ -31,7 +31,7 @@ export default function Header() {
       setIsProfileOpen(false);
       await logoutService();
       logoutUser();
-      navigate('/auth');
+      // navigate('/auth');
     } catch (error) {
       console.error("Đăng xuất thất bại:", error);
     }
@@ -285,7 +285,15 @@ export default function Header() {
   return (
     <>
     <div className={styles.header}>
-        <div className={styles.logo}>FOODLY</div>
+        <Link className={styles.logo} to="/"> FOODLY </Link>
+        <div className={styles.chevronGroup}>
+          <button className={styles.chevronButton} type="button" aria-label="Back">
+            <ChevronLeft size={18} />
+          </button>
+          <button className={styles.chevronButton} type="button" aria-label="Forward">
+            <ChevronRight size={18} />
+          </button>
+        </div>
         {address &&
           <div className={styles.withAddress}>
             <div className={styles.searchBar}> 
