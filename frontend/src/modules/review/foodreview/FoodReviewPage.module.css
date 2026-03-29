@@ -1,0 +1,136 @@
+.container {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 24px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  font-family: 'Inter', -apple-system, sans-serif;
+}
+
+/* Header Section: Ảnh bên trái, thông tin bên phải */
+.foodHeader {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+  margin-bottom: 40px;
+}
+
+.foodImage {
+  width: 400px;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 12px;
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+}
+
+.foodInfo {
+  flex: 1;
+}
+
+.foodInfo h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1F2933;
+  margin-bottom: 8px;
+  text-transform: capitalize;
+}
+
+.price {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #FF6B35;
+  margin-bottom: 16px;
+}
+
+.description {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #4b5563;
+  margin-bottom: 24px;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #E5E7EB;
+  margin: 40px 0;
+}
+
+.reviewSection h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1F2933;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.reviewSection h3::before {
+  content: '★';
+  color: #FFB800;
+}
+
+.reviewsList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.reviewItem {
+  padding: 16px;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.reviewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.rating {
+  display: flex;
+  gap: 2px;
+}
+
+.date {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.comment {
+  font-size: 1rem;
+  color: #374151;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.emptyMsg {
+  text-align: center;
+  padding: 40px;
+  background-color: #FFFDFB;
+  border: 1px dashed #E5E7EB;
+  border-radius: 12px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .foodHeader {
+    flex-direction: column;
+  }
+
+  .foodImage {
+    width: 100%;
+    height: 250px;
+  }
+
+  .container {
+    margin: 10px;
+    padding: 16px;
+  }
+}

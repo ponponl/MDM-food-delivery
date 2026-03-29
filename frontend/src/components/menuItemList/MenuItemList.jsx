@@ -1,7 +1,14 @@
+import { useNavigate } from 'react-router-dom';
 import MenuCard from '../display/MenuCard';
 import styles from './MenuItemList.module.css';
 
 const MenuItemsList = ({ groupedMenu, onAddToCart }) => {
+    const navigate = useNavigate();
+
+    const handleItemClick = (item) => {
+        navigate(`/food/${item._id}`, { state: { foodItem: item } });
+    };
+
     return (
         <div className={styles.menuItemsList}>
             {Object.entries(groupedMenu).map(([category, items]) => (
@@ -22,13 +29,18 @@ const MenuItemsList = ({ groupedMenu, onAddToCart }) => {
                                     const statusLabel = item?.available === false ? 'Tạm ngưng phục vụ' : 'Hết món';
 
                                     return (
-                                        <MenuCard
+                                        <div
                                             key={item._id}
-                                            item={item}
-                                            isUnavailable={isUnavailable}
-                                            statusLabel={statusLabel}
-                                            onAddToCart={onAddToCart}
-                                        />
+                                            onClick={() => handleItemClick(item)}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <MenuCard
+                                                item={item}
+                                                isUnavailable={isUnavailable}
+                                                statusLabel={statusLabel}
+                                                onAddToCart={onAddToCart}
+                                            />
+                                        </div>
                                     );
                                 })}
                             </div>

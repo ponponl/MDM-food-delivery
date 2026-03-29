@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Star, Clock, MapPin } from 'lucide-react';
 import { useParams } from 'react-router-dom';
@@ -6,43 +7,46 @@ import MenuItemsList from '../../components/menuItemList/MenuItemList.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import restaurantApi from '../../api/restaurantApi';
 import cartApi from '../../api/cartApi';
+import reviewApi from '../../api/reviewApi';
 import styles from './RestaurantPage.module.css';
 
-const MOCK_REVIEWS = [
-    { id: 1, user_name: "Nguyễn Văn A", rating: 5, comment: "Đồ ăn rất ngon, giao hàng nhanh!", created_at: "2024-12-10 09:24" },
-    { id: 2, user_name: "Trần Thị B", rating: 4, comment: "Pizza còn nóng hổi, tuy nhiên hơi ít phô mai.", created_at: "2024-12-08 18:10" },
-    { id: 3, user_name: "Lê Văn C", rating: 5, comment: "Tuyệt vời, sẽ ủng hộ dài dài.", created_at: "2024-12-02 20:41" },
-    { id: 4, user_name: "Phạm Minh D", rating: 3, comment: "Vị hơi mặn so với khẩu vị của mình.", created_at: "2024-11-29 12:05" }
-];
-
-
 export default function RestaurantPage() {
+    const navigate = useNavigate();
     const { slugAndId } = useParams();
     const { user } = useAuth();
     const [restaurant, setRestaurant] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [activeCategory, setActiveCategory] = useState('');
-    const [isReviewOpen, setIsReviewOpen] = useState(false);
 
     const publicId = (slugAndId || '').includes('-')
         ? (slugAndId || '').split('-').pop()
         : slugAndId;
 
+    const handleViewReviews = () => {
+        navigate(`/restaurant/${publicId}/reviews`, { 
+            state: { 
+                restaurantName: restaurant.name
+            } 
+        });
+    };
 
    useEffect(() => {
         const fetchRestaurantDetail = async () => {
             try {
                 setLoading(true);
-                // 3. Gọi API thực tế từ backend
-                const data = await restaurantApi.getById(publicId);
-                const dataWithMockReviews = {
-                    ...data,
-                    reviews: MOCK_REVIEWS // Dùng dữ liệu giả ở đây
-                };
-                setRestaurant(dataWithMockReviews);
+                const [data, reviewsResponse] = await Promise.all([
+                    restaurantApi.getById(publicId),
+                    reviewApi.getReviewsByRestaurantId(publicId).catch(() => []) 
+                ]);
                 
-                // Set category mặc định là loại đầu tiên nếu có menu
+                const realReviews = reviewsResponse?.data || reviewsResponse || [];
+                
+                setRestaurant({
+                    ...data,
+                    reviews: realReviews
+                });
+                
                 if (data.menu && data.menu.length > 0) {
                     const firstCategory = data.menu
                         .map((item) => item.category)
@@ -64,7 +68,10 @@ export default function RestaurantPage() {
 
     if (loading || error || !restaurant) return null;
 
-    const avgRating = (restaurant.reviews.reduce((acc, rev) => acc + rev.rating, 0) / restaurant.reviews.length).toFixed(1);
+    const totalReviews = restaurant.reviews?.length || 0;
+    const avgRating = totalReviews > 0 
+        ? (restaurant.reviews.reduce((acc, rev) => acc + rev.rating, 0) / totalReviews).toFixed(1)
+        : '0.0';
 
     const groupedMenu = (restaurant.menu || []).reduce((acc, item) => {
         if (!acc[item.category]) acc[item.category] = [];
@@ -138,7 +145,6 @@ export default function RestaurantPage() {
     return (
         <div className={styles.restaurantPage}>
             <main className={styles.mainContent}>
-                {/* Phần Banner */}
                 <section className={styles.heroSection}>
                     <img src={restaurant.images[0]} alt={restaurant.name} className={styles.heroBgImg} />
                     <div className={styles.heroOverlay}>
@@ -157,7 +163,7 @@ export default function RestaurantPage() {
                             <button
                                 type="button"
                                 className={styles.heroRatingBtn}
-                                onClick={() => setIsReviewOpen(true)}
+                                onClick={handleViewReviews}
                             >
                                 <span className={styles.heroRatingValue}>{avgRating}</span>
                                 <Star size={16} fill="#ffffff" color="#ffffff" />
@@ -168,7 +174,6 @@ export default function RestaurantPage() {
                 </section>
 
                 <div className={styles.twoColumnLayout}>
-                    {/* CỘT TRÁI: Danh mục */}
                     <aside className={styles.columnLeft}>
                         <MenuSidebar 
                             categories={categories} 
@@ -177,50 +182,12 @@ export default function RestaurantPage() {
                         />
                     </aside>
 
-                    {/* CỘT PHẢI: Món ăn */}
                     <section className={styles.columnRight}>
                         <MenuItemsList groupedMenu={groupedMenu} onAddToCart={handleAddToCart} />
                     </section>
                 </div>
             </main>
 
-            {isReviewOpen && (
-                <div className={styles.modalBackdrop} role="presentation" onClick={() => setIsReviewOpen(false)}>
-                    <div
-                        className={styles.reviewModal}
-                        role="dialog"
-                        aria-modal="true"
-                        aria-label="Restaurant reviews"
-                        onClick={(event) => event.stopPropagation()}
-                    >
-                        <div className={styles.modalHeader}>
-                            <h3>Đánh giá ({restaurant.reviews.length})</h3>
-                            <button
-                                type="button"
-                                className={styles.modalCloseBtn}
-                                onClick={() => setIsReviewOpen(false)}
-                                aria-label="Close reviews"
-                            >
-                                ×
-                            </button>
-                        </div>
-                        <div className={styles.modalBody}>
-                            {restaurant.reviews.map((review) => (
-                                <div key={review.id} className={styles.reviewItem}>
-                                    <div className={styles.reviewTitleRow}>
-                                        <span className={styles.reviewUser}>{maskUserName(review.user_name)}</span>
-                                        <span className={styles.reviewRating}>{review.rating}<Star size={16} fill="#ee5335" color="#ee5335" /></span>
-                                    </div>
-                                    <p className={styles.reviewComment}>{review.comment}</p>
-                                    <span className={styles.reviewTime}>
-                                        {formatReviewTime(review.created_at)}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

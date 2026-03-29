@@ -1,0 +1,110 @@
+.reviewPage {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    font-family: 'Inter', sans-serif;
+    color: #1F2933;
+}
+
+.header {
+    margin-bottom: 2rem;
+}
+
+.backBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    color: #FF6B35;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 1.5rem;
+    padding: 0;
+}
+
+.restaurantSummary h1 {
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+}
+
+.ratingOverview {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    background: #FFFDFB;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #E5E7EB;
+}
+
+.bigRating {
+    font-size: 3rem;
+    font-weight: 800;
+    color: #FF6B35;
+}
+
+.starsCol {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 0.9rem;
+    color: #4b5563;
+}
+
+.reviewList {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.reviewCard {
+    display: flex;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: #ffffff;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.userAvatar {
+    width: 48px;
+    height: 48px;
+    background: #f3f4f6;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.reviewContent {
+    flex: 1;
+}
+
+.reviewHeader {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.userName {
+    font-weight: 700;
+}
+
+.itemRating {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+}
+
+.reviewDate {
+    font-size: 0.8rem;
+    color: #9ca3af;
+}
+
+.comment {
+    margin-top: 12px;
+    line-height: 1.5;
+    color: #374151;
+}
