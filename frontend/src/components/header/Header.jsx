@@ -45,6 +45,11 @@ export default function Header() {
     setIsProfileOpen(false);
   };
 
+  const handleViewProfile = () => {
+    navigate('/profile');
+    setIsProfileOpen(false);
+  };
+
   const handleSearch = async (searchTerm) => {
     // Clear previous timeout
     if (searchTimeoutRef.current) {
@@ -352,7 +357,7 @@ export default function Header() {
             <div className={styles.profileName}>{getDisplayName()}</div>
           </div>
           <div className={styles.profileDivider} />
-          <button className={styles.profileItem} type="button">
+          <button className={styles.profileItem} type="button" onClick={handleViewProfile}>
             <span className={styles.profileItemIcon}><UserCircleIcon size={20} /></span>
             Thông tin cá nhân
           </button>

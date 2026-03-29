@@ -1,0 +1,117 @@
+.profileContainer {
+    max-width: 1100px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.pageTitle {
+    font-size: 24px;
+    color: #1F2933;
+    margin-bottom: 30px;
+    font-weight: 700;
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 24px;
+}
+
+.card {
+    background: #FFFFFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.cardHeader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #F3F4F6;
+}
+
+.cardHeader h2 { font-size: 18px; flex: 1; }
+
+.inputGroup { margin-bottom: 16px; }
+
+.inputGroup label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+    color: #374151;
+}
+
+.inputGroup input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #D1D5DB;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.saveBtn {
+    background: #FF6B35;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.2s;
+}
+
+.saveBtn:hover { background: #FF3D00; }
+
+.addressItem {
+    padding: 16px;
+    border: 1px solid #E5E7EB;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    position: relative;
+}
+
+.addressItem.default {
+    border-color: #4CAF50;
+    background: #F0FDF4;
+}
+
+.defaultBadge {
+    background: #4CAF50;
+    color: white;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-left: 8px;
+}
+
+.addressActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.textBtn {
+    background: none;
+    border: none;
+    color: #FF6B35;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.readOnlyInput {
+    background-color: #F3F4F6;
+    color: #6B7280;
+    cursor: not-allowed;
+    border: 1px solid #E5E7EB;
+}
+
+@media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+}

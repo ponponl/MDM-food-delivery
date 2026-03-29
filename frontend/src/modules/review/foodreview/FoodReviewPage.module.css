@@ -109,14 +109,36 @@
   margin: 0;
 }
 
-.emptyMsg {
-  text-align: center;
-  padding: 40px;
-  background-color: #FFFDFB;
-  border: 1px dashed #E5E7EB;
-  border-radius: 12px;
-  color: #9ca3af;
-  font-style: italic;
+.emptyContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    background: transparent;
+    border: none;
+}
+
+.emptyImage {
+    width: 260px;
+    height: 260px;
+    object-fit: contain;
+    margin-bottom: 20px;
+    opacity: 0.5; 
+    filter: grayscale(100%); 
+    transition: transform 0.3s ease;
+}
+
+.emptyImage:hover {
+    transform: scale(1.05); 
+}
+
+.emptyText {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+    color: #9CA3AF;
+    font-family: 'Inter', sans-serif;
 }
 
 @media (max-width: 768px) {

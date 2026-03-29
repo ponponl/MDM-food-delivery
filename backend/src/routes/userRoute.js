@@ -10,6 +10,8 @@ router.post('/refresh', userController.refresh);
 
 router.post('/logout', authMiddleware.verifyToken, userController.logout);
 router.get('/me', authMiddleware.verifyToken, userController.getMe);
+router.put('/profile', authMiddleware.verifyToken, userController.updateProfile);
+router.put('/addresses', authMiddleware.verifyToken, userController.updateAddresses);
 
 router.post('/find-by-username', authMiddleware.verifyToken, userController.getUserByUsername);
 

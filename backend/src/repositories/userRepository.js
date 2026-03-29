@@ -2,7 +2,7 @@ import pool from "../config/postgres.js";
 class UserRepository {
     async findAccountByUsername(username) {
         const result = await pool.query(
-            `SELECT u.name, u.phone, u.externalId, a.*
+            `SELECT u.name, u.phone, u.externalId, u.addresses, a.*
              FROM accounts a 
              JOIN users u ON a.user_id = u.id 
              WHERE a.username = $1`,
@@ -58,6 +58,27 @@ class UserRepository {
         } finally {
             client.release();
         }
+    }
+    async updateProfileInfo(userId, { name, phone }) {
+        const result = await pool.query(
+            `UPDATE users 
+             SET name = $1, phone = $2
+             WHERE id = $3
+             RETURNING *`,
+            [name, phone, userId]
+        );
+        return result.rows[0] || null;
+    }
+
+    async updateAddresses(userId, addresses) {
+        const result = await pool.query(
+            `UPDATE users 
+             SET addresses = $1
+             WHERE id = $2
+             RETURNING *`,
+            [JSON.stringify(addresses || []), userId]
+        );
+        return result.rows[0] || null;
     }
 }
 

@@ -42,4 +42,22 @@ const fetchCurrentUser = async () => {
     }
 };
 
-export { register, login, logout, fetchCurrentUser };
+const updateProfile = async (profileData) => {
+    try {
+        const response = await api.put('/users/profile', profileData);
+        return response.data.data?.user || response.data.user;
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};
+
+const updateAddresses = async (addresses) => {
+    try {
+        const response = await api.put('/users/addresses', { addresses });
+        return response.data.data?.user || response.data.user;
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};
+
+export { register, login, logout, fetchCurrentUser, updateProfile, updateAddresses };

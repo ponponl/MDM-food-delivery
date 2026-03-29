@@ -55,6 +55,21 @@ class UserService {
             addresses
         });
     }
+    async updateProfileInfo(userId, updateData) {
+        const updatedUser = await this.userRepository.updateProfileInfo(userId, updateData);
+        if (!updatedUser) {
+            throw new AppError("Người dùng không tồn tại", 404);
+        }
+        return updatedUser;
+    }
+
+    async updateProfileAddresses(userId, addresses) {
+        const updatedUser = await this.userRepository.updateAddresses(userId, addresses);
+        if (!updatedUser) {
+            throw new AppError("Người dùng không tồn tại", 404);
+        }
+        return updatedUser;
+    }
 }
 
 export { UserService };

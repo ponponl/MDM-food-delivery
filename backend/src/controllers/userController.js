@@ -146,6 +146,34 @@ class UserController {
             data: { user }
         });
     });
+
+    updateProfile = catchAsync(async (req, res, next) => {
+        const { name, phone } = req.body;
+        
+        await this.userService.updateProfileInfo(req.user.id, {
+            name, phone
+        });
+
+        const user = await this.userService.getUserByUsername(req.user.username);
+        
+        res.status(200).json({
+            status: 'success',
+            data: { user }
+        });
+    });
+
+    updateAddresses = catchAsync(async (req, res, next) => {
+        const { addresses } = req.body;
+        
+        await this.userService.updateProfileAddresses(req.user.id, addresses);
+
+        const user = await this.userService.getUserByUsername(req.user.username);
+        
+        res.status(200).json({
+            status: 'success',
+            data: { user }
+        });
+    });
 }
 
 const userController = new UserController();
