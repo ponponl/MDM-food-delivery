@@ -168,6 +168,10 @@ export default function Header() {
   const loadUserAddresses = async () => {
     if (!user) return [];
 
+    if (Array.isArray(user?.addresses) && user.addresses.length > 0) {
+      return user.addresses;
+    }
+
     try {
       setIsLoadingAddresses(true);
       const response = await userApi.getMe();

@@ -1,28 +1,34 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { logout, fetchCurrentUser } from '../services/authService';
+import React, { createContext, useContext } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { logout } from '../services/authService';
+import userApi from '../api/userApi';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
 
-    useEffect(() => {
-        const checkAuth = async () => {
-            try {
-                const currentUser = await fetchCurrentUser();
-                setUser(currentUser);
-            } catch (error) {
-                setUser(null);
+    const fetchMe = async () => {
+        try {
+            const response = await userApi.getMe();
+            const payload = response?.data ?? response;
+            return payload?.data?.user || payload?.user || payload || null;
+        } catch (error) {
+            if (error?.response?.status === 401) {
+                return null;
             }
-            setLoading(false);
-        };
+            throw error;
+        }
+    };
 
-        checkAuth();
-    }, []);
+    const { data: user, isLoading } = useQuery({
+        queryKey: ['me'],
+        queryFn: fetchMe,
+        retry: false
+    });
 
     const loginUser = (userData) => {
-        setUser(userData);
+        queryClient.setQueryData(['me'], userData || null);
     };
 
     const logoutUser = async () => {
@@ -31,12 +37,13 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             console.error("Lỗi khi gọi API logout:", error);
         } finally {
-            setUser(null);
+            queryClient.setQueryData(['me'], null);
+            queryClient.removeQueries({ queryKey: ['me'] });
         }
     };
 
     return (
-        <AuthContext.Provider value={{ user, loginUser, logoutUser, loading }}>
+        <AuthContext.Provider value={{ user, loginUser, logoutUser, loading: isLoading }}>
             {children}
         </AuthContext.Provider>
     );
