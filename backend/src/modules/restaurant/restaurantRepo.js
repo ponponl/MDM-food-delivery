@@ -1,4 +1,4 @@
-import Restaurant from '../models/restaurantModel.js'
+import Restaurant from './restaurantModel.js'
 
 const CATEGORY_MAP = {
     'burger': 'Burger',

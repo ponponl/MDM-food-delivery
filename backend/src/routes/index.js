@@ -1,9 +1,9 @@
 import express from 'express';
 import userRoute from './userRoute.js';
-import restaurantRoute from './restaurantRoute.js';
-import categoryRoute from './categoryRoute.js';
-import cartRoute from './cartRoute.js';
-import orderRoute from './orderRoute.js';
+import restaurantRoute from '../modules/restaurant/restaurantRoute.js';
+import categoryRoute from '../modules/category/categoryRoute.js';
+import cartRoute from '../modules/cart/cartRoute.js';
+import orderRoute from '../modules/order/orderRoute.js';
 import searchRoute from '../modules/search/searchRoute.js'
 
 const router = express.Router();

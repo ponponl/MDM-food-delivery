@@ -1,9 +1,9 @@
-import pgPool from '../config/postgres.js';
-import redisClient from '../config/redis.js';
-import * as cartService from './cartService.js';
-import * as menuService from './menu.service.js';
-import logger from '../config/logger.js';
-import { OrderRepository } from '../repositories/orderRepo.js';
+import pgPool from '../../config/postgres.js';
+import redisClient from '../../config/redis.js';
+import logger from '../../config/logger.js';
+import * as cartService from '../cart/cartService.js';
+import * as menuService from '../menu/menu.service.js';
+import { OrderRepository } from './orderRepo.js';
 
 const ORDER_MIN_VALUE = 20000;
 const ORDER_MAX_VALUE = 10000000;

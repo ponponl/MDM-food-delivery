@@ -1,5 +1,5 @@
-import * as orderService from '../services/orderService.js';
-import logger from '../config/logger.js';
+import * as orderService from './orderService.js';
+import logger from '../../config/logger.js';
 
 export const createOrder = async (req, res, next) => {
   try {

@@ -1,5 +1,5 @@
-import * as categoryService from '../services/categoryService.js';
-import redisClient from '../config/redis.js';
+import * as categoryService from './categoryService.js';
+import redisClient from '../../config/redis.js';
 
 const CATEGORY_CACHE_KEY = 'categories:all';
 const CATEGORY_CACHE_TTL_SECONDS = 3600;

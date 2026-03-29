@@ -1,5 +1,5 @@
-import pgPool from '../config/postgres.js';
-import { buildOrdersPagination, mapOrderDetailRow, mapOrderSummaryRow } from '../models/orderModel.js';
+import pgPool from '../../config/postgres.js';
+import { buildOrdersPagination, mapOrderDetailRow, mapOrderSummaryRow } from './orderModel.js';
 
 export class OrderRepository {
   async findUserIdByExternalId(client, userExternalId) {

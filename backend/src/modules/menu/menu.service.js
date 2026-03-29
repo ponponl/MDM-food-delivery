@@ -1,5 +1,5 @@
-import logger from '../config/logger.js';
-import { MenuRepository } from '../repositories/menuRepo.js';
+import logger from '../../config/logger.js';
+import { MenuRepository } from './menuRepo.js';
 
 const menuRepository = new MenuRepository();
 

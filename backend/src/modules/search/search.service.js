@@ -1,4 +1,4 @@
-import {RestaurantRepository} from '../../repositories/restaurantRepo.js';
+import {RestaurantRepository} from '../restaurant/restaurantRepo.js';
 
 const repo = new RestaurantRepository();
 

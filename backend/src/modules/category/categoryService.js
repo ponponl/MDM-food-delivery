@@ -1,4 +1,4 @@
-import { CategoryRepository } from '../repositories/categoryRepo.js';
+import { CategoryRepository } from './categoryRepo.js';
 
 const repo = new CategoryRepository();
 

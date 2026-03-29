@@ -1,6 +1,6 @@
-import * as restaurantService from '../services/restaurantService.js'
-import * as categoryService from '../services/categoryService.js'
-import redisClient from '../config/redis.js';
+import * as restaurantService from './restaurantService.js'
+import * as categoryService from '../category/categoryService.js'
+import redisClient from '../../config/redis.js';
 
 const SUMMARY_CACHE_KEY = 'restaurants:summary:5';
 const SUMMARY_CACHE_TTL_SECONDS = 120;
