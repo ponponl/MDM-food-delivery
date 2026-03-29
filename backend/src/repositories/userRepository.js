@@ -2,7 +2,7 @@ import pool from "../config/postgres.js";
 class UserRepository {
     async findAccountByUsername(username) {
         const result = await pool.query(
-            `SELECT u.name, u.phone, u.externalId, a.*
+            `SELECT u.name, u.phone, u.externalId, u.addresses, a.*
              FROM accounts a 
              JOIN users u ON a.user_id = u.id 
              WHERE a.username = $1`,
@@ -11,8 +11,17 @@ class UserRepository {
         
         const row = result.rows[0];
         if (!row) return null;
+        let addresses = row.addresses;
+        if (typeof addresses === 'string') {
+            try {
+                addresses = JSON.parse(addresses);
+            } catch (error) {
+                addresses = [];
+            }
+        }
         return {
             ...row,
+            addresses: Array.isArray(addresses) ? addresses : [],
             externalId: row.externalid
         };
     }

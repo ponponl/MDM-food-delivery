@@ -1,0 +1,211 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 15, 10, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1600;
+}
+
+.modal {
+  width: min(720px, 92vw);
+  max-height: 85vh;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 18px 45px rgba(30, 20, 10, 0.25);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(30, 20, 10, 0.1);
+}
+
+.header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #2b1a12;
+}
+
+.closeButton {
+  display: inline-flex;
+  border: none;
+  padding: 4px;
+  background: transparent;
+  color: #6c4a3b;
+  cursor: pointer;
+}
+
+.section {
+  padding: 14px 22px;
+  border-bottom: 1px dashed rgba(255, 107, 53, 0.2);
+}
+
+.sectionTitle {
+  font-weight: 700;
+  color: #2b1a12;
+  margin-bottom: 8px;
+}
+
+.restaurantName {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #3a2418;
+}
+
+.itemList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.itemRow {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  font-size: 0.95rem;
+}
+
+.itemInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.itemImage,
+.itemPlaceholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #f3e6dc;
+  color: #8b6b5c;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  flex-shrink: 0;
+}
+
+.itemImage {
+  object-fit: cover;
+}
+
+.itemName {
+  font-weight: 600;
+  color: #3a2418;
+}
+
+.itemMeta {
+  color: #6c4a3b;
+}
+
+.itemPrice {
+  font-weight: 600;
+  color: #ff6b35;
+}
+
+.totalRow {
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  color: #2b1a12;
+}
+
+.addressList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.addressOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  color: #2b1a12;
+}
+
+.manualForm {
+  display: grid;
+  gap: 10px;
+}
+
+.manualForm input {
+  width: 100%;
+  border: 1px solid #e6d6cc;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  color: #2b1a12;
+  font-family: inherit;
+}
+
+.manualForm textarea {
+  height: 40px;
+  width: 100%;
+  border: 1px solid #e6d6cc;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  color: #2b1a12;
+  font-family: inherit;
+}
+
+.errorText {
+  color: #c63e2b;
+  padding: 10px 22px 0;
+}
+
+.footer {
+  padding: 16px 22px 22px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cancelButton,
+.confirmButton {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cancelButton {
+  background: var(--light-gray-color);
+  color: #6c4a3b;
+}
+
+.confirmButton {
+  background: var(--primary-color);
+  color: white;
+}
+
+.confirmButton:disabled {
+  background: #f2c5b3;
+  cursor: not-allowed;
+}
+
+.cancelButton:hover {
+    background: var(--hover-gray-color);
+}
+
+.confirmButton:hover:not(:disabled) {
+    background: var(--hover-color);
+}

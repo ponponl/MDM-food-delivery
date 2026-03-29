@@ -25,28 +25,53 @@ export default function CartModal({
   items = [],
   isLoading,
   error,
+  isPlacingOrder,
   onIncrease,
   onDecrease,
   onRemoveItem,
   onRemoveRestaurant,
+  onPlaceOrder,
   formatCurrency
 }) {
   const [selectedItemIds, setSelectedItemIds] = useState(new Set());
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
 
   const groups = useMemo(() => buildGroups(items), [items]);
 
   useEffect(() => {
     if (!isOpen) return;
-    const next = new Set(items.map((item) => item.itemKey || item.itemId));
+    if (!items.length) {
+      setSelectedItemIds(new Set());
+      setSelectedRestaurantId(null);
+      return;
+    }
+
+    const firstRestaurantId = items[0]?.restaurantId || 'unknown';
+    const next = new Set(
+      items
+        .filter((item) => (item.restaurantId || 'unknown') === firstRestaurantId)
+        .map((item) => item.itemKey || item.itemId)
+    );
+    setSelectedRestaurantId(firstRestaurantId);
     setSelectedItemIds(next);
   }, [isOpen, items]);
 
   const isItemSelected = (itemKey) => selectedItemIds.has(itemKey);
 
-  const toggleItem = (itemKey) => {
+  const toggleItem = (item, itemKey) => {
+    const itemRestaurantId = item?.restaurantId || 'unknown';
     setSelectedItemIds((prev) => {
-      const next = new Set(prev);
+      let next = new Set(prev);
+
+      if (selectedRestaurantId && selectedRestaurantId !== itemRestaurantId) {
+        next = new Set();
+      }
+
+      if (selectedRestaurantId !== itemRestaurantId) {
+        setSelectedRestaurantId(itemRestaurantId);
+      }
+
       if (next.has(itemKey)) {
         next.delete(itemKey);
       } else {
@@ -59,6 +84,12 @@ export default function CartModal({
   const toggleGroup = (group) => {
     const groupIds = group.items.map((item) => item.itemKey || item.itemId);
     const allSelected = groupIds.every((id) => selectedItemIds.has(id));
+
+    if (selectedRestaurantId && selectedRestaurantId !== group.id) {
+      setSelectedRestaurantId(group.id);
+      setSelectedItemIds(new Set(groupIds));
+      return;
+    }
 
     setSelectedItemIds((prev) => {
       const next = new Set(prev);
@@ -77,6 +108,14 @@ export default function CartModal({
       .filter((item) => selectedItemIds.has(item.itemKey || item.itemId))
       .reduce((sum, item) => sum + (item.subtotal || 0), 0);
   }, [items, selectedItemIds]);
+
+  const handlePlaceOrder = () => {
+    if (!selectedRestaurantId || selectedItemIds.size === 0) return;
+    onPlaceOrder?.({
+      restaurantId: selectedRestaurantId,
+      selectedItemIds: Array.from(selectedItemIds)
+    });
+  };
 
   const requestRemoveItem = (item) => {
     setConfirmAction({
@@ -124,8 +163,8 @@ export default function CartModal({
         </div>
 
         <div className={styles.body}>
-          {/* {isLoading && <div className={styles.stateText}>Đang tải giỏ hàng...</div>}
-          {!isLoading && error && <div className={styles.errorText}>{error}</div>} */}
+          {isLoading && <div className={styles.stateText}>Đang tải giỏ hàng...</div>}
+          {!isLoading && error && <div className={styles.errorText}>{error}</div>}
 
           {!isLoading && !error && items.length === 0 && (
             <div className={styles.stateText}>Giỏ hàng trống.</div>
@@ -175,7 +214,7 @@ export default function CartModal({
                             <input
                               type="checkbox"
                               checked={isItemSelected(item.itemKey || item.itemId)}
-                              onChange={() => toggleItem(item.itemKey || item.itemId)}
+                              onChange={() => toggleItem(item, item.itemKey || item.itemId)}
                             />
                             <span className={styles.itemInfo}>
                               {item.image ? (
@@ -263,8 +302,13 @@ export default function CartModal({
             <span>Tổng tiền</span>
             <strong>{formatCurrency(selectedTotal)}</strong>
           </div>
-          <button type="button" className={styles.orderButton} disabled={selectedTotal === 0}>
-            Đặt hàng
+          <button
+            type="button"
+            className={styles.orderButton}
+            onClick={handlePlaceOrder}
+            disabled={selectedTotal === 0 || !selectedRestaurantId || isPlacingOrder}
+          >
+            {isPlacingOrder ? 'Đang đặt...' : 'Đặt hàng'}
           </button>
         </div>
       </div>

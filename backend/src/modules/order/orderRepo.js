@@ -2,6 +2,15 @@ import pgPool from '../../config/postgres.js';
 import { buildOrdersPagination, mapOrderDetailRow, mapOrderSummaryRow } from './orderModel.js';
 
 export class OrderRepository {
+  async findUserByExternalId(client, userExternalId) {
+    const executor = client ?? pgPool;
+    const result = await executor.query(
+      'SELECT id, phone, addresses FROM users WHERE externalId = $1',
+      [userExternalId]
+    );
+    return result.rows[0] ?? null;
+  }
+
   async findUserIdByExternalId(client, userExternalId) {
     const executor = client ?? pgPool;
     const result = await executor.query(

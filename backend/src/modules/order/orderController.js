@@ -1,43 +1,55 @@
 import * as orderService from './orderService.js';
 import logger from '../../config/logger.js';
 
+const resolveUserExternalId = (req) =>
+  req.user?.externalId ||
+  req.user?.externalid ||
+  req.user?.userExternalId ||
+  req.body?.userExternalId ||
+  req.query?.userExternalId;
+
 export const createOrder = async (req, res, next) => {
   try {
-    const { userExternalId, restaurantId, deliveryAddress, note } = req.body;
+    const { restaurantId, deliveryAddress, note, paymentMethod, itemKeys } = req.body;
+    const userExternalId = resolveUserExternalId(req);
 
-    if (!userExternalId || !restaurantId || !deliveryAddress) {
-      return res.status(400).json({
+    if (!userExternalId) {
+      return res.status(401).json({
         status: 'error',
-        message: 'Missing required fields: userExternalId, restaurantId, deliveryAddress',
-        code: 'MISSING_FIELDS'
+        message: 'Missing authentication context',
+        code: 'UNAUTHORIZED'
       });
     }
 
-    // Validate deliveryAddress structure
-    const { receiver, phone, address } = deliveryAddress;
-    if (!receiver || !phone || !address) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Invalid delivery address. Required: receiver, phone, address',
-        code: 'INVALID_DELIVERY_ADDRESS'
-      });
-    }
+    if (deliveryAddress) {
+      // Validate deliveryAddress structure
+      const { receiver, phone, address } = deliveryAddress;
+      if (!receiver || !phone || !address) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Invalid delivery address. Required: receiver, phone, address',
+          code: 'INVALID_DELIVERY_ADDRESS'
+        });
+      }
 
-    // Validate phone format (Vietnamese: 10-11 digits, starts with 0)
-    const phoneRegex = /^0\d{9,10}$/;
-    if (!phoneRegex.test(phone)) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Invalid phone number format',
-        code: 'INVALID_PHONE'
-      });
+      // Validate phone format (Vietnamese: 10-11 digits, starts with 0)
+      const phoneRegex = /^0\d{9,10}$/;
+      if (!phoneRegex.test(phone)) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Invalid phone number format',
+          code: 'INVALID_PHONE'
+        });
+      }
     }
 
     const order = await orderService.createOrder({
       userExternalId,
       restaurantId,
       deliveryAddress,
-      note
+      note,
+      paymentMethod,
+      itemKeys
     });
 
     res.status(201).json({
@@ -58,11 +70,59 @@ export const createOrder = async (req, res, next) => {
       });
     }
 
+    if (error.message === 'ITEM_KEYS_REQUIRED') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Selected items are required',
+        code: 'ITEM_KEYS_REQUIRED'
+      });
+    }
+
+    if (error.message === 'CART_ITEM_NOT_FOUND') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Some selected items are not found in cart',
+        code: 'CART_ITEM_NOT_FOUND'
+      });
+    }
+
+    if (error.message === 'MULTIPLE_RESTAURANTS') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Please select items from a single restaurant',
+        code: 'MULTIPLE_RESTAURANTS'
+      });
+    }
+
+    if (error.message === 'MISSING_DELIVERY_ADDRESS') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Delivery address is required',
+        code: 'MISSING_DELIVERY_ADDRESS'
+      });
+    }
+
     if (error.message.includes('ITEM_UNAVAILABLE')) {
       return res.status(400).json({
         status: 'error',
         message: 'Some items are unavailable',
         code: 'ITEM_UNAVAILABLE'
+      });
+    }
+
+    if (error.message === 'ITEM_OUT_OF_STOCK') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Some items are out of stock',
+        code: 'ITEM_OUT_OF_STOCK'
+      });
+    }
+
+    if (error.message === 'CART_RESTAURANT_MISMATCH' || error.message === 'ITEM_RESTAURANT_MISMATCH') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Items must belong to the selected restaurant',
+        code: 'CART_RESTAURANT_MISMATCH'
       });
     }
 

@@ -8,8 +8,11 @@ import { useAuth } from '../../context/AuthContext';
 import { logout as logoutService } from '../../services/authService';
 import { useNavigate, Link } from 'react-router-dom';
 import cartApi from '../../api/cartApi';
+import orderApi from '../../api/orderApi';
+import userApi from '../../api/userApi';
 import searchApi from '../../api/searchApi';
 import CartModal from '../cartModal/CartModal';
+import ConfirmOrderModal from '../confirmOrder/ConfirmOrderModal';
 
 export default function Header() {
   const {address} = useContext(AddressContext);
@@ -18,6 +21,12 @@ export default function Header() {
   const [cartItems, setCartItems] = useState([]);
   const [cartLoading, setCartLoading] = useState(false);
   const [cartError, setCartError] = useState('');
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [confirmError, setConfirmError] = useState('');
+  const [confirmData, setConfirmData] = useState(null);
+  const [confirmAddresses, setConfirmAddresses] = useState([]);
+  const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -128,6 +137,50 @@ export default function Header() {
   };
 
   const formatCurrency = (value) => `${Number(value || 0).toLocaleString('vi-VN')}đ`;
+
+  const buildFallbackAddress = () => {
+    if (address && address.receiver && address.phone && address.address) {
+      return address;
+    }
+
+    let addressText = '';
+    if (typeof address === 'string') {
+      addressText = address;
+    } else if (address?.full) {
+      addressText = address.full;
+    } else if (address?.address) {
+      addressText = address.address;
+    } else if (address?.value) {
+      addressText = address.value;
+    }
+
+    if (!addressText) {
+      return null;
+    }
+
+    return {
+      receiver: user?.name || user?.username || user?.email || 'Khach hang',
+      phone: user?.phone || user?.phoneNumber || user?.mobile || '',
+      address: addressText
+    };
+  };
+
+  const loadUserAddresses = async () => {
+    if (!user) return [];
+
+    try {
+      setIsLoadingAddresses(true);
+      const response = await userApi.getMe();
+      const payload = response?.data ?? response;
+      const userData = payload?.data?.user || payload?.user || payload || {};
+      const addresses = Array.isArray(userData.addresses) ? userData.addresses : [];
+      return addresses;
+    } catch (error) {
+      return [];
+    } finally {
+      setIsLoadingAddresses(false);
+    }
+  };
 
   const loadCart = async (silent = false) => {
     if (!user) {
@@ -282,6 +335,94 @@ export default function Header() {
     }
   };
 
+  const handlePlaceOrder = async ({ restaurantId, selectedItemIds }) => {
+    if (!user) {
+      setCartError('Vui lòng đăng nhập để đặt hàng.');
+      return;
+    }
+
+    if (!restaurantId) {
+      setCartError('Vui lòng chọn nhà hàng để đặt hàng.');
+      return;
+    }
+
+    const restaurantItems = cartItems.filter(
+      (item) => (item.restaurantId || 'unknown') === restaurantId
+    );
+
+    if (!restaurantItems.length) {
+      setCartError('Giỏ hàng của nhà hàng này đang trống.');
+      return;
+    }
+
+    if (!selectedItemIds?.length) {
+      setCartError('Vui lòng chọn món để đặt hàng.');
+      return;
+    }
+
+    const selectedKeys = restaurantItems
+      .filter((item) => selectedItemIds.includes(item.itemKey || item.itemId))
+      .map((item) => item.itemKey || item.itemId);
+
+    if (!selectedKeys.length) {
+      setCartError('Vui lòng chọn món hợp lệ để đặt hàng.');
+      return;
+    }
+
+    const selectedItems = restaurantItems.filter((item) =>
+      selectedKeys.includes(item.itemKey || item.itemId)
+    );
+
+    const totalValue = selectedItems.reduce(
+      (sum, item) => sum + (item.subtotal || 0),
+      0
+    );
+
+    const fallbackAddress = buildFallbackAddress();
+    const addresses = await loadUserAddresses();
+    const mergedAddresses = addresses.length > 0
+      ? addresses
+      : (fallbackAddress ? [fallbackAddress] : []);
+
+    setConfirmAddresses(mergedAddresses);
+    setConfirmData({
+      restaurantId,
+      restaurantName: selectedItems[0]?.restaurantName || 'Nha hang',
+      items: selectedItems.map((item) => ({
+        ...item,
+        subtotal: formatCurrency(item.subtotal || 0)
+      })),
+      total: formatCurrency(totalValue),
+      itemKeys: selectedKeys
+    });
+    setConfirmError('');
+    setIsConfirmOpen(true);
+    setIsCartOpen(false);
+  };
+
+  const handleConfirmOrder = async (deliveryAddress) => {
+    if (!confirmData) return;
+    try {
+      setIsPlacingOrder(true);
+      setConfirmError('');
+      await orderApi.createOrder({
+        userExternalId: user?.externalId || user?.externalid || user?.userExternalId,
+        restaurantId: confirmData.restaurantId,
+        deliveryAddress,
+        paymentMethod: 'cash',
+        itemKeys: confirmData.itemKeys
+      });
+      await loadCart(true);
+      setIsConfirmOpen(false);
+      setConfirmData(null);
+      window.alert('Đặt hàng thành công!');
+    } catch (error) {
+      setConfirmError('Không thể đặt hàng. Vui lòng thử lại.');
+    } finally {
+      setIsPlacingOrder(false);
+    }
+  };
+
   return (
     <>
     <div className={styles.header}>
@@ -377,11 +518,26 @@ export default function Header() {
       items={cartItems}
       isLoading={cartLoading}
       error={cartError}
+      isPlacingOrder={isPlacingOrder}
       onIncrease={handleIncrease}
       onDecrease={handleDecrease}
       onRemoveItem={handleRemoveItem}
       onRemoveRestaurant={handleRemoveRestaurant}
+      onPlaceOrder={handlePlaceOrder}
       formatCurrency={formatCurrency}
+    />
+    <ConfirmOrderModal
+      isOpen={isConfirmOpen}
+      onClose={() => setIsConfirmOpen(false)}
+      restaurantName={confirmData?.restaurantName}
+      items={confirmData?.items}
+      total={confirmData?.total}
+      addresses={confirmAddresses}
+      defaultReceiver={user?.name || user?.username || user?.email || ''}
+      defaultPhone={user?.phone || user?.phoneNumber || user?.mobile || ''}
+      isSubmitting={isPlacingOrder}
+      error={confirmError}
+      onConfirm={handleConfirmOrder}
     />
     </>
   );

@@ -383,12 +383,82 @@ export const clearCart = async (userExternalId) => {
   }
 };
 
+export const clearCartByRestaurant = async (userExternalId, restaurantPublicId) => {
+  try {
+    const restaurantsKey = getRestaurantsKey(userExternalId);
+    const cartKey = getCartKey(userExternalId, restaurantPublicId);
+    const totalQtyKey = getTotalQtyKey(userExternalId, restaurantPublicId);
+
+    const pipeline = redisClient.multi();
+    pipeline.del(cartKey, totalQtyKey);
+    pipeline.sRem(restaurantsKey, restaurantPublicId);
+    await pipeline.exec();
+
+    logger.info(`Cleared cart for user ${userExternalId} at restaurant ${restaurantPublicId}`);
+  } catch (error) {
+    logger.error(`Error in clearCartByRestaurant: ${error.message}`);
+    throw error;
+  }
+};
+
 export const getCartItems = async (userExternalId, restaurantPublicId) => {
   try {
     const cart = await getCartByRestaurant(userExternalId, restaurantPublicId);
     return cart.items || [];
   } catch (error) {
     logger.error(`Error in getCartItems: ${error.message}`);
+    throw error;
+  }
+};
+
+export const getCartItemsByKeys = async (userExternalId, restaurantPublicId, itemKeys = []) => {
+  try {
+    if (!Array.isArray(itemKeys) || itemKeys.length === 0) {
+      return [];
+    }
+
+    const cartKey = getCartKey(userExternalId, restaurantPublicId);
+    const cartItems = await redisClient.hGetAll(cartKey);
+
+    if (!cartItems || Object.keys(cartItems).length === 0) {
+      return [];
+    }
+
+    return itemKeys
+      .map((itemKey) => {
+        const itemJson = cartItems[itemKey];
+        if (!itemJson) return null;
+        return parseCartItem(itemJson, itemKey);
+      })
+      .filter(Boolean);
+  } catch (error) {
+    logger.error(`Error in getCartItemsByKeys: ${error.message}`);
+    throw error;
+  }
+};
+
+export const removeItemsByKey = async (userExternalId, restaurantPublicId, itemKeys = []) => {
+  try {
+    if (!Array.isArray(itemKeys) || itemKeys.length === 0) {
+      return;
+    }
+
+    const cartKey = getCartKey(userExternalId, restaurantPublicId);
+    const totalQtyKey = getTotalQtyKey(userExternalId, restaurantPublicId);
+    const restaurantsKey = getRestaurantsKey(userExternalId);
+
+    await Promise.all(
+      itemKeys.map((itemKey) =>
+        redisClient.eval(deleteItemLua, {
+          keys: [cartKey, totalQtyKey, restaurantsKey],
+          arguments: [itemKey, String(restaurantPublicId)]
+        })
+      )
+    );
+
+    logger.info(`Removed ${itemKeys.length} items from cart for user ${userExternalId}`);
+  } catch (error) {
+    logger.error(`Error in removeItemsByKey: ${error.message}`);
     throw error;
   }
 };
