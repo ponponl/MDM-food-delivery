@@ -57,6 +57,25 @@ const resolveRestaurantInfo = async (restaurantPublicId, fallbackName = null) =>
   return { restaurantName, restaurantImage };
 };
 
+const buildRedisItemJson = (item, restaurantPublicId) => JSON.stringify({
+  _id: item._id || item.itemId,
+  itemId: item.itemId,
+  name: item.name || `Item ${item.itemId}`,
+  price: typeof item.price === 'number' ? item.price : 0,
+  priceSnapshot: typeof item.priceSnapshot === 'number'
+    ? item.priceSnapshot
+    : (typeof item.price === 'number' ? item.price : 0),
+  priceCurrent: typeof item.priceCurrent === 'number' ? item.priceCurrent : null,
+  priceUpdated: item.priceUpdated === true,
+  quantity: Number(item.quantity) || 0,
+  image: item.image || null,
+  options: Array.isArray(item.options) ? item.options : [],
+  note: item.note || null,
+  restaurantId: item.restaurantId || restaurantPublicId,
+  restaurantName: item.restaurantName || null,
+  restaurantImage: item.restaurantImage || null
+});
+
 const getGlobalTotalQty = async (userExternalId) => {
   const restaurantsKey = getRestaurantsKey(userExternalId);
   const restaurantIds = await redisClient.sMembers(restaurantsKey);
@@ -111,6 +130,7 @@ export const addItemToCart = async (
     }
 
     const itemKey = buildItemKey(itemId, options);
+    const restaurantInfo = await resolveRestaurantInfo(restaurantPublicId, item.restaurantName);
     const normalizedOptions = normalizeOptionsForStorage(options);
     const itemImage = resolveItemImage(item);
     const existingItemRaw = await redisClient.hGet(cartKey, itemKey);
@@ -128,12 +148,16 @@ export const addItemToCart = async (
       itemId: item._id || itemId,
       name: item.name || `Item ${itemId}`,
       price: typeof item.price === 'number' ? item.price : 0,
+      priceSnapshot: typeof item.price === 'number' ? item.price : 0,
+      priceCurrent: null,
+      priceUpdated: false,
       quantity: nextQty,
       image: itemImage,
       options: normalizedOptions,
       note: note || null,
       restaurantId: restaurantPublicId,
-      restaurantName: item.restaurantName || null
+      restaurantName: restaurantInfo.restaurantName || item.restaurantName || null,
+      restaurantImage: restaurantInfo.restaurantImage || null
     });
 
     await redisClient.eval(addOrUpdateItemLua, {
@@ -187,6 +211,7 @@ export const updateItemQuantity = async (
     }
 
     const itemKey = buildItemKey(itemId, options);
+    const restaurantInfo = await resolveRestaurantInfo(restaurantPublicId, item.restaurantName);
     const normalizedOptions = normalizeOptionsForStorage(options);
     const itemImage = resolveItemImage(item);
     const itemJson = JSON.stringify({
@@ -194,12 +219,16 @@ export const updateItemQuantity = async (
       itemId: item._id || itemId,
       name: item.name || `Item ${itemId}`,
       price: typeof item.price === 'number' ? item.price : 0,
+      priceSnapshot: typeof item.price === 'number' ? item.price : 0,
+      priceCurrent: null,
+      priceUpdated: false,
       quantity,
       image: itemImage,
       options: normalizedOptions,
       note: note || null,
       restaurantId: restaurantPublicId,
-      restaurantName: item.restaurantName || null
+      restaurantName: restaurantInfo.restaurantName || item.restaurantName || null,
+      restaurantImage: restaurantInfo.restaurantImage || null
     });
 
     await redisClient.eval(addOrUpdateItemLua, {
@@ -273,24 +302,10 @@ export const getCartByRestaurant = async (userExternalId, restaurantPublicId) =>
       .map(([itemKey, itemJson]) => parseCartItem(itemJson, itemKey))
       .filter(Boolean);
 
-    const missingImageIds = parsedItems
-      .filter((item) => item?.itemId && !item.image)
-      .map((item) => item.itemId);
-
-    if (missingImageIds.length > 0) {
-      const menuItems = await menuService.getMenuItems(missingImageIds);
-      parsedItems.forEach((item) => {
-        if (!item?.itemId || item.image) return;
-        const menuItem = menuItems?.[item.itemId];
-        const fallbackImage = resolveItemImage(menuItem);
-        if (fallbackImage) {
-          item.image = fallbackImage;
-        }
-      });
-    }
-
-    const fallbackName = parsedItems.find((item) => item?.restaurantName)?.restaurantName || null;
-    const restaurantInfo = await resolveRestaurantInfo(restaurantPublicId, fallbackName);
+    const restaurantInfo = {
+      restaurantName: parsedItems.find((item) => item?.restaurantName)?.restaurantName || null,
+      restaurantImage: parsedItems.find((item) => item?.restaurantImage)?.restaurantImage || null
+    };
 
     const items = parsedItems.map((item) => ({
       ...item,
@@ -459,6 +474,32 @@ export const removeItemsByKey = async (userExternalId, restaurantPublicId, itemK
     logger.info(`Removed ${itemKeys.length} items from cart for user ${userExternalId}`);
   } catch (error) {
     logger.error(`Error in removeItemsByKey: ${error.message}`);
+    throw error;
+  }
+};
+
+export const updateCartPriceFlags = async (
+  userExternalId,
+  restaurantPublicId,
+  items = []
+) => {
+  try {
+    if (!Array.isArray(items) || items.length === 0) {
+      return;
+    }
+
+    const cartKey = getCartKey(userExternalId, restaurantPublicId);
+    const pipeline = redisClient.multi();
+
+    items.forEach((item) => {
+      if (!item?.itemKey) return;
+      const itemJson = buildRedisItemJson(item, restaurantPublicId);
+      pipeline.hSet(cartKey, item.itemKey, itemJson);
+    });
+
+    await pipeline.exec();
+  } catch (error) {
+    logger.error(`Error in updateCartPriceFlags: ${error.message}`);
     throw error;
   }
 };

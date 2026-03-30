@@ -115,7 +115,12 @@ export default function ConfirmOrderModal({
                     ) : (
                       <span className={styles.itemPlaceholder}>Ảnh</span>
                     )}
-                    <div className={styles.itemName}>{item.name}</div>
+                    <div className={styles.itemName}>
+                      {item.name}
+                      {item.priceUpdated && (
+                        <span className={styles.priceBadge}>Giá mới cập nhật</span>
+                      )}
+                    </div>
                   </div>
                   <div className={styles.itemMeta}>x{item.quantity}</div>
                   <div className={styles.itemPrice}>{item.subtotal}</div>

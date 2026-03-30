@@ -111,6 +111,8 @@ export const createOrder = async ({
 
     let totalPrice = 0;
     const orderItems = [];
+    const priceUpdates = [];
+    const cartPriceUpdates = [];
 
     for (const cartItem of cartItems) {
       const itemId = cartItem._id || cartItem.itemId;
@@ -129,9 +131,26 @@ export const createOrder = async ({
         throw new Error('ITEM_OUT_OF_STOCK');
       }
 
-      const price = typeof cartItem.price === 'number'
-        ? cartItem.price
-        : (menuItem?.price ?? 0);
+      const currentPrice = typeof menuItem?.price === 'number' ? menuItem.price : 0;
+      const snapshotPrice = typeof cartItem.priceSnapshot === 'number'
+        ? cartItem.priceSnapshot
+        : (typeof cartItem.price === 'number' ? cartItem.price : currentPrice);
+
+      if (snapshotPrice !== currentPrice) {
+        priceUpdates.push({
+          itemId,
+          snapshotPrice,
+          currentPrice
+        });
+
+        cartPriceUpdates.push({
+          ...cartItem,
+          priceCurrent: currentPrice,
+          priceUpdated: true
+        });
+      }
+
+      const price = currentPrice;
       const subtotal = price * qty;
 
       totalPrice += subtotal;
@@ -181,6 +200,10 @@ export const createOrder = async ({
 
     await client.query('COMMIT');
 
+    if (cartPriceUpdates.length > 0) {
+      await cartService.updateCartPriceFlags(userExternalId, targetRestaurantId, cartPriceUpdates);
+    }
+
     // Clear cart from Redis
     if (useItemKeys) {
       await cartService.removeItemsByKey(userExternalId, targetRestaurantId, itemKeys);
@@ -206,7 +229,8 @@ export const createOrder = async ({
       paymentMethod: paymentMethod,
       paymentStatus: 'pending',
       estimatedDelivery: '30-45 minutes',
-      createdAt: order.created_at
+      createdAt: order.created_at,
+      priceUpdates
     };
 
   } catch (error) {
@@ -216,6 +240,129 @@ export const createOrder = async ({
   } finally {
     client.release();
   }
+};
+
+export const previewOrder = async ({
+  userExternalId,
+  restaurantId,
+  itemKeys = null
+}) => {
+  if (!userExternalId) {
+    throw new Error('MISSING_USER');
+  }
+
+  let targetRestaurantId = restaurantId;
+
+  if (!targetRestaurantId) {
+    const cartSummary = await cartService.getCart(userExternalId);
+    const restaurants = cartSummary?.restaurants || [];
+    if (!restaurants.length) {
+      throw new Error('CART_EMPTY');
+    }
+    if (restaurants.length > 1) {
+      throw new Error('MULTIPLE_RESTAURANTS');
+    }
+    targetRestaurantId = restaurants[0]?.restaurantId || restaurants[0]?.id || null;
+  }
+
+  if (!targetRestaurantId) {
+    throw new Error('MISSING_RESTAURANT');
+  }
+
+  const useItemKeys = Array.isArray(itemKeys) && itemKeys.length > 0;
+  if (Array.isArray(itemKeys) && itemKeys.length === 0) {
+    throw new Error('ITEM_KEYS_REQUIRED');
+  }
+
+  const cartItems = useItemKeys
+    ? await cartService.getCartItemsByKeys(userExternalId, targetRestaurantId, itemKeys)
+    : await cartService.getCartItems(userExternalId, targetRestaurantId);
+
+  if (!cartItems || cartItems.length === 0) {
+    throw new Error('CART_EMPTY');
+  }
+
+  if (useItemKeys && cartItems.length !== itemKeys.length) {
+    throw new Error('CART_ITEM_NOT_FOUND');
+  }
+
+  const cartRestaurantIds = new Set(
+    cartItems
+      .map((item) => item?.restaurantId)
+      .filter(Boolean)
+  );
+
+  if (cartRestaurantIds.size > 1 || (cartRestaurantIds.size === 1 && !cartRestaurantIds.has(targetRestaurantId))) {
+    throw new Error('CART_RESTAURANT_MISMATCH');
+  }
+
+  const itemIds = [...new Set(cartItems.map((item) => item._id || item.itemId))];
+  const menuItems = await menuService.getMenuItems(itemIds);
+
+  let totalPrice = 0;
+  const previewItems = [];
+  const priceUpdates = [];
+  const cartPriceUpdates = [];
+
+  for (const cartItem of cartItems) {
+    const itemId = cartItem._id || cartItem.itemId;
+    const menuItem = menuItems[itemId];
+
+    if (!menuItem || !menuItem.available) {
+      throw new Error('ITEM_UNAVAILABLE');
+    }
+
+    const qty = parseInt(cartItem.quantity);
+    if (!Number.isFinite(qty) || qty <= 0) {
+      throw new Error('INVALID_QUANTITY');
+    }
+
+    if (typeof menuItem?.stock === 'number' && menuItem.stock < qty) {
+      throw new Error('ITEM_OUT_OF_STOCK');
+    }
+
+    const currentPrice = typeof menuItem?.price === 'number' ? menuItem.price : 0;
+    const snapshotPrice = typeof cartItem.priceSnapshot === 'number'
+      ? cartItem.priceSnapshot
+      : (typeof cartItem.price === 'number' ? cartItem.price : currentPrice);
+    const priceUpdated = snapshotPrice !== currentPrice;
+
+    if (priceUpdated) {
+      priceUpdates.push({
+        itemId,
+        snapshotPrice,
+        currentPrice
+      });
+    }
+
+    const subtotal = currentPrice * qty;
+    totalPrice += subtotal;
+
+    previewItems.push({
+      ...cartItem,
+      priceSnapshot: snapshotPrice,
+      priceCurrent: currentPrice,
+      priceUpdated,
+      subtotal
+    });
+
+    cartPriceUpdates.push({
+      ...cartItem,
+      priceCurrent: currentPrice,
+      priceUpdated
+    });
+  }
+
+  if (cartPriceUpdates.length > 0) {
+    await cartService.updateCartPriceFlags(userExternalId, targetRestaurantId, cartPriceUpdates);
+  }
+
+  return {
+    restaurantId: targetRestaurantId,
+    totalPrice,
+    items: previewItems,
+    priceUpdates
+  };
 };
 
 export const getOrderDetail = async (orderExternalId) => {

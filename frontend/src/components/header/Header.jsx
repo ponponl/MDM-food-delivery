@@ -377,31 +377,43 @@ export default function Header() {
       selectedKeys.includes(item.itemKey || item.itemId)
     );
 
-    const totalValue = selectedItems.reduce(
-      (sum, item) => sum + (item.subtotal || 0),
-      0
-    );
-
     const fallbackAddress = buildFallbackAddress();
     const addresses = await loadUserAddresses();
     const mergedAddresses = addresses.length > 0
       ? addresses
       : (fallbackAddress ? [fallbackAddress] : []);
 
-    setConfirmAddresses(mergedAddresses);
-    setConfirmData({
-      restaurantId,
-      restaurantName: selectedItems[0]?.restaurantName || 'Nha hang',
-      items: selectedItems.map((item) => ({
-        ...item,
-        subtotal: formatCurrency(item.subtotal || 0)
-      })),
-      total: formatCurrency(totalValue),
-      itemKeys: selectedKeys
-    });
-    setConfirmError('');
-    setIsConfirmOpen(true);
-    setIsCartOpen(false);
+    try {
+      setIsPlacingOrder(true);
+      const previewResponse = await orderApi.previewOrder({
+        userExternalId: user?.externalId || user?.externalid || user?.userExternalId,
+        restaurantId,
+        itemKeys: selectedKeys
+      });
+      const previewPayload = previewResponse?.data ?? previewResponse;
+      const previewData = previewPayload?.data ?? previewPayload ?? {};
+      const previewItems = previewData.items || selectedItems;
+      const previewTotal = Number(previewData.totalPrice) || 0;
+
+      setConfirmAddresses(mergedAddresses);
+      setConfirmData({
+        restaurantId,
+        restaurantName: previewItems[0]?.restaurantName || 'Nha hang',
+        items: previewItems.map((item) => ({
+          ...item,
+          subtotal: formatCurrency(item.subtotal || 0)
+        })),
+        total: formatCurrency(previewTotal),
+        itemKeys: selectedKeys
+      });
+      setConfirmError('');
+      setIsConfirmOpen(true);
+      setIsCartOpen(false);
+    } catch (error) {
+      setCartError('Khong the cap nhat gia hien tai. Vui long thu lai.');
+    } finally {
+      setIsPlacingOrder(false);
+    }
   };
 
   const handleConfirmOrder = async (deliveryAddress) => {

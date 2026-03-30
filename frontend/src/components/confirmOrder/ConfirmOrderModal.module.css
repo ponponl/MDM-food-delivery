@@ -106,6 +106,19 @@
 .itemName {
   font-weight: 600;
   color: #3a2418;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.priceBadge {
+  background: #ffe6dc;
+  color: #c2410c;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
 }
 
 .itemMeta {

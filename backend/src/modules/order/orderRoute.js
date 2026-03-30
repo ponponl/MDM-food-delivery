@@ -6,6 +6,9 @@ const router = express.Router();
 // Create order (checkout)
 router.post('/', orderController.createOrder);
 
+// Preview order pricing
+router.post('/preview', orderController.previewOrder);
+
 // Get order by external ID
 router.get('/:orderExternalId', orderController.getOrderDetail);
 

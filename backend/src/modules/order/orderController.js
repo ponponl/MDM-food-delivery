@@ -130,6 +130,101 @@ export const createOrder = async (req, res, next) => {
   }
 };
 
+export const previewOrder = async (req, res, next) => {
+  try {
+    const { restaurantId, itemKeys } = req.body;
+    const userExternalId = resolveUserExternalId(req);
+
+    if (!userExternalId) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Missing authentication context',
+        code: 'UNAUTHORIZED'
+      });
+    }
+
+    const preview = await orderService.previewOrder({
+      userExternalId,
+      restaurantId,
+      itemKeys
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: preview
+    });
+
+  } catch (error) {
+    logger.error(`Error previewing order: ${error.message}`);
+
+    if (error.message === 'CART_EMPTY') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Cart is empty',
+        code: 'CART_EMPTY'
+      });
+    }
+
+    if (error.message === 'ITEM_KEYS_REQUIRED') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Selected items are required',
+        code: 'ITEM_KEYS_REQUIRED'
+      });
+    }
+
+    if (error.message === 'CART_ITEM_NOT_FOUND') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Some selected items are not found in cart',
+        code: 'CART_ITEM_NOT_FOUND'
+      });
+    }
+
+    if (error.message === 'MULTIPLE_RESTAURANTS') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Please select items from a single restaurant',
+        code: 'MULTIPLE_RESTAURANTS'
+      });
+    }
+
+    if (error.message === 'MISSING_RESTAURANT') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Restaurant is required',
+        code: 'MISSING_RESTAURANT'
+      });
+    }
+
+    if (error.message.includes('ITEM_UNAVAILABLE')) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Some items are unavailable',
+        code: 'ITEM_UNAVAILABLE'
+      });
+    }
+
+    if (error.message === 'ITEM_OUT_OF_STOCK') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Some items are out of stock',
+        code: 'ITEM_OUT_OF_STOCK'
+      });
+    }
+
+    if (error.message === 'CART_RESTAURANT_MISMATCH' || error.message === 'ITEM_RESTAURANT_MISMATCH') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Items must belong to the selected restaurant',
+        code: 'CART_RESTAURANT_MISMATCH'
+      });
+    }
+
+    next(error);
+  }
+};
+
 export const getOrderDetail = async (req, res, next) => {
   try {
     const { orderExternalId } = req.params;
