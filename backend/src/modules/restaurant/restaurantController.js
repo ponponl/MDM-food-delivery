@@ -4,6 +4,8 @@ import redisClient from '../../config/redis.js';
 
 const SUMMARY_CACHE_KEY = 'restaurants:summary:5';
 const SUMMARY_CACHE_TTL_SECONDS = 120;
+const MENU_CACHE_TTL_SECONDS = 300;
+const RESTAURANT_CACHE_TTL_SECONDS = 300;
 
 export const getRestaurant = async (req, res) => {
     try {
@@ -22,8 +24,72 @@ export const getRestaurant = async (req, res) => {
 export const getByPublicId = async (req, res) => {
     try {
         const { publicId } = req.params;
-        const restaurant = await restaurantService.getRestaurantByPublicId(publicId);
-        res.status(200).json(restaurant);
+        const infoCacheKey = `restaurants:info:${publicId}`;
+        const menuCacheKey = `restaurants:menu:${publicId}`;
+        let cachedInfo = null;
+        let cachedMenu = null;
+
+        if (redisClient.isOpen) {
+            const cachedInfoRaw = await redisClient.get(infoCacheKey);
+            if (cachedInfoRaw) {
+                try {
+                    cachedInfo = JSON.parse(cachedInfoRaw);
+                } catch (error) {
+                    cachedInfo = null;
+                }
+            }
+
+            const cachedRaw = await redisClient.get(menuCacheKey);
+            if (cachedRaw) {
+                try {
+                    cachedMenu = JSON.parse(cachedRaw);
+                } catch (error) {
+                    cachedMenu = null;
+                }
+            }
+        }
+
+        if (cachedInfo && cachedMenu) {
+            res.status(200).json({ ...cachedInfo, menu: cachedMenu });
+            return;
+        }
+
+        const restaurant = cachedInfo && !cachedMenu
+            ? await restaurantService.getRestaurantByPublicId(
+                publicId,
+                { includeMenu: true }
+            )
+            : cachedInfo
+                ? cachedInfo
+                : await restaurantService.getRestaurantByPublicId(
+                    publicId,
+                    { includeMenu: !cachedMenu }
+                );
+
+        const restaurantData = restaurant?.toObject ? restaurant.toObject() : restaurant;
+
+        if (!cachedMenu && redisClient.isOpen) {
+            await redisClient.setEx(
+                menuCacheKey,
+                MENU_CACHE_TTL_SECONDS,
+                JSON.stringify(restaurantData.menu || [])
+            );
+        }
+
+        if (!cachedInfo && redisClient.isOpen) {
+            const { menu, ...infoPayload } = restaurantData || {};
+            await redisClient.setEx(
+                infoCacheKey,
+                RESTAURANT_CACHE_TTL_SECONDS,
+                JSON.stringify(infoPayload)
+            );
+        }
+
+        const responsePayload = cachedMenu
+            ? { ...restaurantData, menu: cachedMenu }
+            : restaurantData;
+
+        res.status(200).json(responsePayload);
     } catch (error) {
         res.status(404).json({ message: error.message });
     }
