@@ -15,7 +15,6 @@ const FoodReviewPage = () => {
     const fetchReviews = async () => {
       setLoadingReviews(true);
       try {
-        console.log("Fetching reviews for food ID:", id);
         const response = await reviewApi.getReviewsByItemId(id);
         setReviews(response?.data || response || []);
       } catch (error) {

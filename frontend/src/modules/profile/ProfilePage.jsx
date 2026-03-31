@@ -114,6 +114,11 @@ export default function ProfilePage() {
   return (
     <div className={styles.profileContainer}>
       <h1 className={styles.pageTitle}>Tài khoản của tôi</h1>
+      {userProfile.name && (
+        <p style={{ textAlign: "center", color: "#6b7280", marginBottom: "20px" }}>
+          Xin chào, <strong>{userProfile.name}</strong>!
+        </p>
+      )}
 
       <div className={styles.layout}>
         <section className={styles.card}>

@@ -1,7 +1,4 @@
-import { ReviewRepository } from '../repositories/reviewRepo.js';
-import { getRestaurantByPublicId } from '../services/restaurantService.js';
-
-const reviewRepo = new ReviewRepository();
+import { reviewService } from './reviewService.js';
 
 export const getReviewsByItemId = async (req, res) => {
   try {
@@ -11,7 +8,7 @@ export const getReviewsByItemId = async (req, res) => {
       return res.status(400).json({ error: 'itemId is required' });
     }
 
-    const reviews = await reviewRepo.findReviewsByItemId(itemId);
+    const reviews = await reviewService.getReviewsByItemId(itemId);
     
     return res.status(200).json({
       status: 'success',
@@ -31,21 +28,7 @@ export const getReviewsByRestaurantId = async (req, res) => {
       return res.status(400).json({ error: 'restaurantId is required' });
     }
 
-    let resolvedId = restaurantId;
-    
-
-    if (!/^[a-fA-F0-9]{24}$/.test(restaurantId)) {
-      try {
-        const restaurant = await getRestaurantByPublicId(restaurantId);
-        if (restaurant && restaurant._id) {
-          resolvedId = restaurant._id.toString();
-        }
-      } catch (err) {
-        console.warn('Could not resolve publicId to _id', err.message);
-      }
-    }
-
-    const reviews = await reviewRepo.findReviewsByRestaurantId(resolvedId);
+    const reviews = await reviewService.getReviewsByRestaurantId(restaurantId);
     
     return res.status(200).json({
       status: 'success',

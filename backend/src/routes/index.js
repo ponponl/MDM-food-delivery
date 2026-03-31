@@ -5,7 +5,7 @@ import categoryRoute from '../modules/category/categoryRoute.js';
 import cartRoute from '../modules/cart/cartRoute.js';
 import orderRoute from '../modules/order/orderRoute.js';
 import searchRoute from '../modules/search/searchRoute.js'
-import reviewRoute from './reviewRoute.js';
+import reviewRoute from '../modules/review/reviewRoute.js';
 const router = express.Router();
 
 router.use('/users', userRoute); 

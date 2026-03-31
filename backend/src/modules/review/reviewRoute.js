@@ -1,5 +1,5 @@
 import express from 'express';
-import { getReviewsByItemId, getReviewsByRestaurantId } from '../controllers/reviewController.js';
+import { getReviewsByItemId, getReviewsByRestaurantId } from './reviewController.js';
 
 const router = express.Router();
 

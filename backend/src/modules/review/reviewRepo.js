@@ -1,4 +1,4 @@
-import pgPool from '../config/postgres.js';
+import pgPool from '../../config/postgres.js';
 
 export class ReviewRepository {
   async findReviewsByItemId(itemId) {

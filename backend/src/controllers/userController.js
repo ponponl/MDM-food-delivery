@@ -64,7 +64,6 @@ class UserController {
         delete sanitized.user_id;
         delete sanitized.id;
         delete sanitized.externalid;
-        delete sanitized.name;
 
         const tokens = generateTokens({ 
             id: user.user_id, 
@@ -152,7 +151,6 @@ class UserController {
         delete sanitized.user_id;
         delete sanitized.id;
         delete sanitized.externalid;
-        delete sanitized.name;
 
         res.status(200).json({
             status: 'success',
@@ -169,9 +167,15 @@ class UserController {
 
         const user = await this.userService.getUserByUsername(req.user.username);
         
+        const sanitized = { ...user };
+        delete sanitized.password;
+        delete sanitized.user_id;
+        delete sanitized.id;
+        delete sanitized.externalid;
+
         res.status(200).json({
             status: 'success',
-            data: { user }
+            data: { user: sanitized }
         });
     });
 
@@ -182,9 +186,15 @@ class UserController {
 
         const user = await this.userService.getUserByUsername(req.user.username);
         
+        const sanitized = { ...user };
+        delete sanitized.password;
+        delete sanitized.user_id;
+        delete sanitized.id;
+        delete sanitized.externalid;
+
         res.status(200).json({
             status: 'success',
-            data: { user }
+            data: { user: sanitized }
         });
     });
 }
