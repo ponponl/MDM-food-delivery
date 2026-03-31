@@ -60,6 +60,12 @@ class UserController {
 
         const user = await this.userService.loginUser(username, password);
 
+        const sanitized = { ...user };
+        delete sanitized.user_id;
+        delete sanitized.id;
+        delete sanitized.externalid;
+        delete sanitized.name;
+
         const tokens = generateTokens({ 
             id: user.user_id, 
             username: user.username,
@@ -71,7 +77,7 @@ class UserController {
             .cookie('refreshToken', tokens.refreshToken, buildCookieOptions(7 * 24 * 60 * 60 * 1000))
             .status(200).json({
             status: 'success',
-            data: { user }
+            data: { user: sanitized }
         });
     });
 
@@ -140,10 +146,17 @@ class UserController {
 
     getMe = catchAsync(async (req, res, next) => {
         const user = await this.userService.getUserByUsername(req.user.username);
-        
+
+        const sanitized = { ...user };
+        delete sanitized.password;
+        delete sanitized.user_id;
+        delete sanitized.id;
+        delete sanitized.externalid;
+        delete sanitized.name;
+
         res.status(200).json({
             status: 'success',
-            data: { user }
+            data: { user: sanitized }
         });
     });
 

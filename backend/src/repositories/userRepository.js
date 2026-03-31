@@ -11,8 +11,17 @@ class UserRepository {
         
         const row = result.rows[0];
         if (!row) return null;
+        let addresses = row.addresses;
+        if (typeof addresses === 'string') {
+            try {
+                addresses = JSON.parse(addresses);
+            } catch (error) {
+                addresses = [];
+            }
+        }
         return {
             ...row,
+            addresses: Array.isArray(addresses) ? addresses : [],
             externalId: row.externalid
         };
     }

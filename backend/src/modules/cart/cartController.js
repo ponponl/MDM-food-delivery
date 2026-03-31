@@ -1,5 +1,5 @@
-import * as cartService from '../services/cartService.js';
-import logger from '../config/logger.js';
+import * as cartService from './cartService.js';
+import logger from '../../config/logger.js';
 
 const resolveUserExternalId = (req) =>
   req.user?.externalId ||

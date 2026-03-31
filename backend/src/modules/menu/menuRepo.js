@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
-import logger from '../config/logger.js';
-import Restaurant from '../models/restaurantModel.js';
+import logger from '../../config/logger.js';
+import Restaurant from '../restaurant/restaurantModel.js';
 
 const normalizeMenuItem = (menuItem, restaurantId, restaurantName) => {
   if (!menuItem) return null;

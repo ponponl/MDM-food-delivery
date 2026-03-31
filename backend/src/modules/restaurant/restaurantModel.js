@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import menuItemSchema from './menuModel.js';
+import menuItemSchema from '../menu/menuModel.js';
 
 const restaurantSchema = new mongoose.Schema({
     slug: String,

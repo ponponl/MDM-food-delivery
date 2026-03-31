@@ -7,8 +7,10 @@
 
 .content {
     flex: 1;
-    padding: 20px 0px 20px 20px;
+    padding: 20px;
     margin-left: 190px;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
 .menuItems {
@@ -47,7 +49,9 @@
 .menuCard {
     display: flex;
     flex-direction: row;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+    max-width: 100%;
+    overflow-x: hidden;
     margin-top: 4px;
     gap: 20px;
 }
@@ -60,4 +64,13 @@
 
 .cardWrapper {
     cursor: pointer;
+    flex: 0 0 calc((100% - 80px) / 5);
+    max-width: calc((100% - 80px) / 5);
+}
+
+@media (max-width: 1024px) {
+    .content {
+        margin-left: 0;
+        padding-right: 20px;
+    }
 }

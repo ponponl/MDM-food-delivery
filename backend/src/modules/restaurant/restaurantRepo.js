@@ -1,4 +1,4 @@
-import Restaurant from '../models/restaurantModel.js'
+import Restaurant from './restaurantModel.js'
 
 const CATEGORY_MAP = {
     'burger': 'Burger',
@@ -78,8 +78,14 @@ export class RestaurantRepository {
         return await Restaurant.find(query).limit(limit);
     }
 
-    async findByPublicId(publicId) {
-        return await Restaurant.findOne({ publicId });
+    async findByPublicId(publicId, { includeMenu = true } = {}) {
+        const query = Restaurant.findOne({ publicId });
+
+        if (!includeMenu) {
+            query.select('-menu');
+        }
+
+        return await query;
     }
 
     async search(query, limit = 20) {

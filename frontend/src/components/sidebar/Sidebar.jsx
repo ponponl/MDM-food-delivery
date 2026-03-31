@@ -1,6 +1,6 @@
 import styles from './Sidebar.module.css';
-import { useState } from 'react';
-import { House, LogOut, UserPlus} from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { House, List, UserPlus} from 'lucide-react';
 import { HamburgerIcon, PizzaIcon, BowlFoodIcon, BowlSteamIcon, CoffeeIcon, CakeIcon, PintGlassIcon, OrangeIcon, BreadIcon } from "@phosphor-icons/react";
 import { useLocation, Link} from 'react-router-dom';
 
@@ -18,7 +18,7 @@ const sidebar = [
 ]
 
 export default function Sidebar() {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const { user, logoutUser } = useAuth();
     const location = useLocation();
 
   return (
@@ -41,9 +41,9 @@ export default function Sidebar() {
             )
         })}
         <hr style={{ marginLeft: '20px', marginRight:'20px' }}/>
-        {isLoggedIn ? (
+        {user ? (
           <div>
-            <li className={styles.sidebarItem}><LogOut size={20}/><span className={styles.sidebarLabel}>Đăng xuất</span></li>
+            <li className={styles.sidebarItem}><List size={20}/><span className={styles.sidebarLabel}>Đơn hàng</span></li>
           </div>
         ) : (
           <>

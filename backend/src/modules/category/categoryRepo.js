@@ -1,4 +1,4 @@
-import Category from '../models/categoryModel.js';
+import Category from './categoryModel.js';
 
 export class CategoryRepository {
     async findAll() {

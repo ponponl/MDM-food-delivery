@@ -1,15 +1,18 @@
 import styles from './Header.module.css';
-import { Search, Bell, ShoppingCart, ChevronDown, MapPin, User } from 'lucide-react';
+import { Search, Bell, ShoppingCart, ChevronDown, MapPin, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import { FishSimpleIcon, UserCircleIcon, SignOutIcon } from '@phosphor-icons/react';
 import { useEffect, useState, useRef } from 'react';
 import { AddressContext } from '../../context/AddressContext';
 import { useContext } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { logout as logoutService } from '../../services/authService';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import cartApi from '../../api/cartApi';
+import orderApi from '../../api/orderApi';
+import userApi from '../../api/userApi';
 import searchApi from '../../api/searchApi';
 import CartModal from '../cartModal/CartModal';
+import ConfirmOrderModal from '../confirmOrder/ConfirmOrderModal';
 
 export default function Header() {
   const {address} = useContext(AddressContext);
@@ -18,6 +21,12 @@ export default function Header() {
   const [cartItems, setCartItems] = useState([]);
   const [cartLoading, setCartLoading] = useState(false);
   const [cartError, setCartError] = useState('');
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [confirmError, setConfirmError] = useState('');
+  const [confirmData, setConfirmData] = useState(null);
+  const [confirmAddresses, setConfirmAddresses] = useState([]);
+  const [isLoadingAddresses, setIsLoadingAddresses] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -31,7 +40,7 @@ export default function Header() {
       setIsProfileOpen(false);
       await logoutService();
       logoutUser();
-      navigate('/auth');
+      // navigate('/auth');
     } catch (error) {
       console.error("Đăng xuất thất bại:", error);
     }
@@ -133,6 +142,54 @@ export default function Header() {
   };
 
   const formatCurrency = (value) => `${Number(value || 0).toLocaleString('vi-VN')}đ`;
+
+  const buildFallbackAddress = () => {
+    if (address && address.receiver && address.phone && address.address) {
+      return address;
+    }
+
+    let addressText = '';
+    if (typeof address === 'string') {
+      addressText = address;
+    } else if (address?.full) {
+      addressText = address.full;
+    } else if (address?.address) {
+      addressText = address.address;
+    } else if (address?.value) {
+      addressText = address.value;
+    }
+
+    if (!addressText) {
+      return null;
+    }
+
+    return {
+      receiver: user?.name || user?.username || user?.email || 'Khach hang',
+      phone: user?.phone || user?.phoneNumber || user?.mobile || '',
+      address: addressText
+    };
+  };
+
+  const loadUserAddresses = async () => {
+    if (!user) return [];
+
+    if (Array.isArray(user?.addresses) && user.addresses.length > 0) {
+      return user.addresses;
+    }
+
+    try {
+      setIsLoadingAddresses(true);
+      const response = await userApi.getMe();
+      const payload = response?.data ?? response;
+      const userData = payload?.data?.user || payload?.user || payload || {};
+      const addresses = Array.isArray(userData.addresses) ? userData.addresses : [];
+      return addresses;
+    } catch (error) {
+      return [];
+    } finally {
+      setIsLoadingAddresses(false);
+    }
+  };
 
   const loadCart = async (silent = false) => {
     if (!user) {
@@ -287,10 +344,118 @@ export default function Header() {
     }
   };
 
+  const handlePlaceOrder = async ({ restaurantId, selectedItemIds }) => {
+    if (!user) {
+      setCartError('Vui lòng đăng nhập để đặt hàng.');
+      return;
+    }
+
+    if (!restaurantId) {
+      setCartError('Vui lòng chọn nhà hàng để đặt hàng.');
+      return;
+    }
+
+    const restaurantItems = cartItems.filter(
+      (item) => (item.restaurantId || 'unknown') === restaurantId
+    );
+
+    if (!restaurantItems.length) {
+      setCartError('Giỏ hàng của nhà hàng này đang trống.');
+      return;
+    }
+
+    if (!selectedItemIds?.length) {
+      setCartError('Vui lòng chọn món để đặt hàng.');
+      return;
+    }
+
+    const selectedKeys = restaurantItems
+      .filter((item) => selectedItemIds.includes(item.itemKey || item.itemId))
+      .map((item) => item.itemKey || item.itemId);
+
+    if (!selectedKeys.length) {
+      setCartError('Vui lòng chọn món hợp lệ để đặt hàng.');
+      return;
+    }
+
+    const selectedItems = restaurantItems.filter((item) =>
+      selectedKeys.includes(item.itemKey || item.itemId)
+    );
+
+    const fallbackAddress = buildFallbackAddress();
+    const addresses = await loadUserAddresses();
+    const mergedAddresses = addresses.length > 0
+      ? addresses
+      : (fallbackAddress ? [fallbackAddress] : []);
+
+    try {
+      setIsPlacingOrder(true);
+      const previewResponse = await orderApi.previewOrder({
+        userExternalId: user?.externalId || user?.externalid || user?.userExternalId,
+        restaurantId,
+        itemKeys: selectedKeys
+      });
+      const previewPayload = previewResponse?.data ?? previewResponse;
+      const previewData = previewPayload?.data ?? previewPayload ?? {};
+      const previewItems = previewData.items || selectedItems;
+      const previewTotal = Number(previewData.totalPrice) || 0;
+
+      setConfirmAddresses(mergedAddresses);
+      setConfirmData({
+        restaurantId,
+        restaurantName: previewItems[0]?.restaurantName || 'Nha hang',
+        items: previewItems.map((item) => ({
+          ...item,
+          subtotal: formatCurrency(item.subtotal || 0)
+        })),
+        total: formatCurrency(previewTotal),
+        itemKeys: selectedKeys
+      });
+      setConfirmError('');
+      setIsConfirmOpen(true);
+      setIsCartOpen(false);
+    } catch (error) {
+      setCartError('Khong the cap nhat gia hien tai. Vui long thu lai.');
+    } finally {
+      setIsPlacingOrder(false);
+    }
+  };
+
+  const handleConfirmOrder = async (deliveryAddress) => {
+    if (!confirmData) return;
+    try {
+      setIsPlacingOrder(true);
+      setConfirmError('');
+      await orderApi.createOrder({
+        userExternalId: user?.externalId || user?.externalid || user?.userExternalId,
+        restaurantId: confirmData.restaurantId,
+        deliveryAddress,
+        paymentMethod: 'cash',
+        itemKeys: confirmData.itemKeys
+      });
+      await loadCart(true);
+      setIsConfirmOpen(false);
+      setConfirmData(null);
+      window.alert('Đặt hàng thành công!');
+    } catch (error) {
+      setConfirmError('Không thể đặt hàng. Vui lòng thử lại.');
+    } finally {
+      setIsPlacingOrder(false);
+    }
+  };
+
   return (
     <>
     <div className={styles.header}>
-        <div className={styles.logo}>FOODLY</div>
+        <Link className={styles.logo} to="/"> FOODLY </Link>
+        <div className={styles.chevronGroup}>
+          <button className={styles.chevronButton} type="button" aria-label="Back">
+            <ChevronLeft size={18} />
+          </button>
+          <button className={styles.chevronButton} type="button" aria-label="Forward">
+            <ChevronRight size={18} />
+          </button>
+        </div>
         {address &&
           <div className={styles.withAddress}>
             <div className={styles.searchBar}> 
@@ -374,11 +539,26 @@ export default function Header() {
       items={cartItems}
       isLoading={cartLoading}
       error={cartError}
+      isPlacingOrder={isPlacingOrder}
       onIncrease={handleIncrease}
       onDecrease={handleDecrease}
       onRemoveItem={handleRemoveItem}
       onRemoveRestaurant={handleRemoveRestaurant}
+      onPlaceOrder={handlePlaceOrder}
       formatCurrency={formatCurrency}
+    />
+    <ConfirmOrderModal
+      isOpen={isConfirmOpen}
+      onClose={() => setIsConfirmOpen(false)}
+      restaurantName={confirmData?.restaurantName}
+      items={confirmData?.items}
+      total={confirmData?.total}
+      addresses={confirmAddresses}
+      defaultReceiver={user?.name || user?.username || user?.email || ''}
+      defaultPhone={user?.phone || user?.phoneNumber || user?.mobile || ''}
+      isSubmitting={isPlacingOrder}
+      error={confirmError}
+      onConfirm={handleConfirmOrder}
     />
     </>
   );

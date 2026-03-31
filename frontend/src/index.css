@@ -3,6 +3,8 @@
   --secondary-color: #f7f7f7;
   --hover-color: #e55b2c;
   --text-color: #333;
+  --light-gray-color: #f2f2f2;
+  --hover-gray-color: #e0e0e0;
 }
 
 * {
