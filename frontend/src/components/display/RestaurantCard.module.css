@@ -35,6 +35,12 @@
     gap: 4px;
 }
 
+.cardContent h4 {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .cardInfo {
     display: flex;
     align-items: center;
