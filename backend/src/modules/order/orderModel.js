@@ -29,7 +29,8 @@ export const mapOrderSummaryRow = (row) => ({
     restaurantId: row.restaurantid,
     status: row.status,
     totalPrice: parseFloat(row.totalprice),
-    createdAt: row.created_at
+    createdAt: row.created_at,
+    items: row.items || []
 });
 
 export const buildOrdersPagination = (rows, limit, offset) => {

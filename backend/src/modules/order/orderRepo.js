@@ -117,8 +117,16 @@ export class OrderRepository {
         o.status,
         o.totalPrice,
         o.created_at,
-        COUNT(*) OVER() as total_count
+        COUNT(*) OVER() as total_count,
+        json_agg(
+          json_build_object(
+            'itemId', oi.itemId,
+            'quantity', oi.quantity,
+            'price', oi.price
+          ) ORDER BY oi.itemId
+        ) FILTER (WHERE oi.orderId IS NOT NULL) as items
       FROM orders o
+      LEFT JOIN order_items oi ON oi.orderId = o.id
       WHERE o.userId = $1
     `;
 
@@ -129,7 +137,10 @@ export class OrderRepository {
       params.push(status);
     }
 
-    query += ` ORDER BY o.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+    query += ` GROUP BY o.id
+      ORDER BY o.created_at DESC 
+      LIMIT $${params.length + 1} 
+      OFFSET $${params.length + 2}`;
     params.push(limit, offset);
 
     const result = await pgPool.query(query, params);
