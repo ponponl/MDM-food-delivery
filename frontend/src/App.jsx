@@ -11,6 +11,8 @@ import ProfilePage from './modules/profile/ProfilePage.jsx';
 import { AddressProvider } from './context/AddressContext.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { Toaster } from 'react-hot-toast';
+import OrderHistoryPage from './modules/order/OrderHistoryPage.jsx';
+import OrderDetailPage from './modules/order/OrderDetailPage.jsx';
 import './App.css';
 
 function App() {
@@ -21,6 +23,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Homepage />} />
           <Route element={<ClientLayout />}>
+            <Route path="/orderHistory" element={<OrderHistoryPage />}/>
+            <Route path="/orderDetail" element={<OrderDetailPage />}/>
             <Route path="/category/:categoryName" element={<CategoryPage />} />
             <Route path="/search/:keyword" element={<SearchResultPage />} />
             <Route path="/restaurant/:slugAndId" element={<RestaurantPage />} />
