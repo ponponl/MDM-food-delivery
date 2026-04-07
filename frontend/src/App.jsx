@@ -7,6 +7,7 @@ import RestaurantPage from './modules/restaurant/RestaurantPage.jsx';
 import ClientLayout from './layouts/ClientLayout/ClientLayout.jsx';
 import FoodReviewPage from './modules/review/foodreview/FoodReviewPage.jsx';
 import RestaurantReviewPage from './modules/review/restaurantreview/RestaurantReviewPage.jsx';
+import OrderReviewPage from './modules/review/orderreview/OrderReviewPage.jsx';
 import ProfilePage from './modules/profile/ProfilePage.jsx';
 import { AddressProvider } from './context/AddressContext.jsx';
 import { AuthProvider } from './context/AuthContext.jsx';
@@ -30,6 +31,7 @@ function App() {
             <Route path="/restaurant/:slugAndId" element={<RestaurantPage />} />
             <Route path="/food/:id" element={<FoodReviewPage />} />
             <Route path="/restaurant/:id/reviews" element={<RestaurantReviewPage />} />
+            <Route path="/order/:orderId/review" element={<OrderReviewPage />} />
             <Route path="/profile" element={<ProfilePage />} />
           </Route>
           <Route path="/auth" element={<AuthPage />} />

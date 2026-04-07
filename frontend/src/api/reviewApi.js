@@ -8,6 +8,10 @@ const reviewApi = {
     getReviewsByRestaurantId: (restaurantId) => {
         const url = `/reviews/restaurant/${restaurantId}`;
         return axiosClient.get(url);
+    },
+    createReviews: (payload) => {
+        const url = `/reviews/`;
+        return axiosClient.post(url, payload);
     }
 };
 

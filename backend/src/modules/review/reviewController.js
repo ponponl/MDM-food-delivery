@@ -39,3 +39,23 @@ export const getReviewsByRestaurantId = async (req, res) => {
     return res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
+export const createReview = async (req, res, next) => {
+  try {
+    const userId = req.user.id; 
+    
+    const result = await reviewService.createFullReview(userId, req.body);
+
+    return res.status(201).json({
+      status: 'success',
+      message: 'Đánh giá đã được ghi nhận!',
+      data: result
+    });
+  } catch (error) {
+    console.error('Controller Review Error:', error.message);
+    return res.status(400).json({ 
+      status: 'error',
+      error: error.message 
+    });
+  }
+};

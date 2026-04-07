@@ -1,8 +1,10 @@
 import express from 'express';
-import { getReviewsByItemId, getReviewsByRestaurantId } from './reviewController.js';
+import { getReviewsByItemId, getReviewsByRestaurantId, createReview } from './reviewController.js';
+import authMiddleware from '../../middlewares/auth.js';
 
 const router = express.Router();
 
+router.post('/', authMiddleware.verifyToken, createReview);
 router.get('/:itemId', getReviewsByItemId);
 router.get('/restaurant/:restaurantId', getReviewsByRestaurantId);
 
