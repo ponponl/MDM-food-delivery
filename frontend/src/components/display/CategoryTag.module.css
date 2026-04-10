@@ -6,7 +6,7 @@
     border-radius: 50px;
     justify-content: center;
     padding: 10px 15px 10px 15px;
-    margin-right: 12px;
+    margin-right: 8px;
     color: black;
 }
 
@@ -24,6 +24,7 @@
 .categoryText {
     line-height: 1;
     font-size: 0.9rem;
+    font-weight: 500;
 }
 
 .categoryIcon {

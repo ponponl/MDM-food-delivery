@@ -117,6 +117,15 @@ export default function CartModal({
     });
   };
 
+  const handleDecrease = (item) => {
+    if (!item) return;
+    if (item.quantity <= 1) {
+      requestRemoveItem(item);
+      return;
+    }
+    onDecrease?.(item);
+  };
+
   const requestRemoveItem = (item) => {
     setConfirmAction({
       type: 'item',
@@ -235,7 +244,7 @@ export default function CartModal({
                             <button
                               type="button"
                               className={styles.qtyButton}
-                              onClick={() => onDecrease(item)}
+                              onClick={() => handleDecrease(item)}
                               aria-label="Decrease quantity"
                             >
                               <Minus size={14} />
