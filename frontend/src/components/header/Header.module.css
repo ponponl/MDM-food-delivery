@@ -136,6 +136,14 @@
     border-bottom: none;
 }
 
+.noResults {
+    padding: 20px 16px;
+    text-align: center;
+    color: #999;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
 .suggestText {
     flex: 1;
     font-weight: 500;

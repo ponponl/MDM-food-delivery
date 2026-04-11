@@ -33,6 +33,7 @@ export default function Header() {
   const [searchResult, setSearchResult] = useState([]);
   const searchTimeoutRef = useRef(null);
   const { user, logoutUser } = useAuth();
+  const searchContainerRef = useRef(null);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -124,6 +125,28 @@ export default function Header() {
     setQuery('');
     setSearchResult([]);
   };
+
+  const handleSubmit = (e) => {
+    e.preventDefault(); 
+    
+    if (query.trim()) {
+      handleSelectKeyword(query); 
+    }
+  };
+  
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+        setSearchResult([]); 
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const getSuggestClassName = (type) => {
     const typeMap = {
@@ -448,19 +471,19 @@ export default function Header() {
     <>
     <div className={styles.header}>
         <Link className={styles.logo} to="/"> FOODLY </Link>
-        <div className={styles.chevronGroup}>
-          <button className={styles.chevronButton} type="button" aria-label="Back">
-            <ChevronLeft size={18} />
-          </button>
-          <button className={styles.chevronButton} type="button" aria-label="Forward">
-            <ChevronRight size={18} />
-          </button>
-        </div>
         {address &&
           <div className={styles.withAddress}>
-            <div className={styles.searchBar}> 
+            <div className={styles.chevronGroup}>
+              <button className={styles.chevronButton} type="button" aria-label="Back">
+                <ChevronLeft size={18} />
+              </button>
+              <button className={styles.chevronButton} type="button" aria-label="Forward">
+                <ChevronRight size={18} />
+              </button>
+            </div>
+            <div className={styles.searchBar} ref={searchContainerRef}> 
               <Search size={16} />
-              <form className={styles.searchForm}>
+              <form className={styles.searchForm} onSubmit={handleSubmit}>
                               <input 
                                 className={styles.searchInput}
                                 type="text"
@@ -490,6 +513,12 @@ export default function Header() {
                                 ))}
                               </div>
                             )}
+                            
+                            {!loading && query.trim() && searchResult.length === 0 && (
+                              <div className={styles.searchResult}>
+                                <p className={styles.noResults}>Không tìm thấy kết quả</p>
+                              </div>
+                            )}
             </div>
             <button className={styles.addressHolder}><MapPin size={17}/><span  style={{marginLeft: '5px', marginRight: '5px', marginTop: '2px'}}>{address}</span><ChevronDown size={17}/></button>
             <button className={styles.notificationIcon}><Bell size={17} /></button>
@@ -497,20 +526,20 @@ export default function Header() {
               <ShoppingCart size={17} />
               <span style={{marginTop: '3px'}}>{cartItemCount}</span>
             </button>
+            <div className={styles.authButton}>
+              {user ? 
+                (
+                  <button className={styles.bthProfile} onClick={handleOpenProfile}>
+                    <User size={17}/>
+                    <span style={{marginLeft: '5px', marginTop: '3px'}}>Hồ sơ</span>
+                  </button>
+                ) :
+                (<>
+                  <button className={styles.bthSignIn} onClick={() => navigate('/auth')}>Đăng nhập</button>
+                </>)}
+            </div>
           </div>
         }
-        <div className={styles.authButton}>
-          {user ? 
-            (
-              <button className={styles.bthProfile} onClick={handleOpenProfile}>
-                <User size={17}/>
-                <span style={{marginLeft: '5px', marginTop: '3px'}}>Hồ sơ</span>
-              </button>
-            ) :
-            (<>
-              <button className={styles.bthSignIn} onClick={() => navigate('/auth')}>Đăng nhập</button>
-            </>)}
-        </div>
     </div>
     {isProfileOpen && (
       <div className={styles.profileOverlay} onClick={handleCloseProfile}>

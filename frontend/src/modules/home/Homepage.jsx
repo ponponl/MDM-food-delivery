@@ -8,6 +8,7 @@ import MenuPage from '../menu/menuPage.jsx';
 import ClientLayout from '../../layouts/ClientLayout/ClientLayout.jsx';
 import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const CARDS = [
     {
@@ -42,6 +43,7 @@ const STATS = [
 function HomeWithoutAddress() {
     const [address, setAddress] = useState('');
     const {updateAddress} = useContext(AddressContext);
+    const { user, logoutUser } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = (e) => {
@@ -72,7 +74,10 @@ function HomeWithoutAddress() {
                         />
                         <button className={styles.inputBtn} type="submit"><ArrowRight size={18} color="white"/></button>
                     </form>
-                    <button className={styles.addressBtn}><User size={18}/><span>Đăng nhập để dùng địa chỉ đã lưu</span></button>
+                    {user ? (<p className={styles.paraAdrress}>Chưa có địa chỉ - nhập địa chỉ để tiếp tục mua sắm</p>) 
+                        : (                    
+                        <button className={styles.addressBtn} onClick={() => navigate('/auth')}><User size={18}/><span>Đăng nhập để dùng địa chỉ đã lưu</span></button>
+                    )}
                 </div>
             </div>
 
