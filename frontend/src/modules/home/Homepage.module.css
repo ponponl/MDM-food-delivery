@@ -64,6 +64,11 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); 
 }
 
+.paraAdrress {
+    margin-top: 20px;
+    font-weight: 600;
+}
+
 .inputField {
     flex: 1;                   
     background-color: transparent; 
