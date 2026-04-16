@@ -30,3 +30,7 @@ export const getRestaurantsSummary = async (categories = [], limit = 5) => {
 
     return Object.fromEntries(summaryEntries);
 };
+
+export const getNearestRestaurants = async (lng, lat, maxDistance) => {
+    return await repo.findNearest(lng, lat, maxDistance);
+};

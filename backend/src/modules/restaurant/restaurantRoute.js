@@ -7,6 +7,8 @@ router.get('/', restaurantController.getRestaurant);
 
 router.get('/summary', restaurantController.getSummary);
 
+router.get('/nearest', restaurantController.getNearest);
+
 router.get('/:publicId', restaurantController.getByPublicId);
 
 export default router;

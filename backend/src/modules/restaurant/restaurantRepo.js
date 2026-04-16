@@ -106,4 +106,18 @@ export class RestaurantRepository {
             }
         ).limit(limit);
     }
+
+    async findNearest(lng, lat, maxDistance = 5000) { // maxDistance tính bằng mét (ví dụ 10km)
+        return await Restaurant.find({
+            "address.location": {
+                $near: {
+                    $geometry: {
+                        type: "Point",
+                        coordinates: [lng, lat] // [kinh độ, vĩ độ]
+                    },
+                    $maxDistance: maxDistance
+                }
+            }
+        });
+    }
 }

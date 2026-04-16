@@ -20,6 +20,10 @@ const restaurantApi = {
     searchByCategory: (category) => {
         const url = '/restaurants';
         return axiosClient.get(url, { params: { category } });
+    },
+    getNearest: (lng, lat, distance = 5000) => {
+        const url = '/restaurants/nearest';
+        return axiosClient.get(url, { params: { lng, lat, distance } });
     }
 };
 

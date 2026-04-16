@@ -13,9 +13,10 @@ import userApi from '../../api/userApi';
 import searchApi from '../../api/searchApi';
 import CartModal from '../cartModal/CartModal';
 import ConfirmOrderModal from '../confirmOrder/ConfirmOrderModal';
+import axios from 'axios';
 
 export default function Header() {
-  const {address} = useContext(AddressContext);
+  const {address, updateAddress} = useContext(AddressContext);
   const [cartItemCount, setCartItemCount] = useState(0);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState([]);
@@ -35,6 +36,80 @@ export default function Header() {
   const { user, logoutUser } = useAuth();
   const searchContainerRef = useRef(null);
   const navigate = useNavigate();
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
+  const [addressInput, setAddressInput] = useState('');
+  const [addressSuggestions, setAddressSuggestions] = useState([]);
+  const addressTimeoutRef = useRef(null);
+  const addressContainerRef = useRef(null);
+  const [activeAddressIndex, setActiveAddressIndex] = useState(-1);
+
+  const handleAddressSearch = async (val) => {
+    setActiveAddressIndex(-1); // Reset index về -1
+    if (addressTimeoutRef.current) clearTimeout(addressTimeoutRef.current);
+    if (!val || val.trim().length < 3) {
+      setAddressSuggestions([]);
+      return;
+    }
+
+    addressTimeoutRef.current = setTimeout(async () => {
+      try {
+        const LIQ_KEY = import.meta.env.VITE_LOCATIONIQ_TOKEN;
+        const res = await axios.get(
+          `https://api.locationiq.com/v1/autocomplete?key=${LIQ_KEY}&q=${val}&limit=5&dedupe=1&countrycodes=vn&accept-language=vi`
+        );
+        setAddressSuggestions(res.data);
+      } catch (error) {
+        console.error("Lỗi tìm địa chỉ:", error);
+      }
+    }, 500);
+  };
+
+  const handleAddressKeyDown = (e) => {
+    if (addressSuggestions.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault(); // Ngăn con trỏ nhảy về cuối dòng
+      setActiveAddressIndex(prev => 
+        prev < addressSuggestions.length - 1 ? prev + 1 : prev
+      );
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveAddressIndex(prev => (prev > 0 ? prev - 1 : 0));
+    } else if (e.key === 'Enter') {
+      if (activeAddressIndex >= 0) {
+        e.preventDefault();
+        handleSelectAddress(addressSuggestions[activeAddressIndex]);
+      }
+    } else if (e.key === 'Escape') {
+      setIsEditingAddress(false);
+      setAddressSuggestions([]);
+      setActiveAddressIndex(-1);
+    }
+  };
+
+  const handleSelectAddress = (item) => {
+    updateAddress({
+      fullAddress: item.display_name,
+      location: { 
+        type: 'Point', 
+        location: [parseFloat(item.lon), parseFloat(item.lat)] 
+      }
+    });
+    setIsEditingAddress(false);
+    setAddressSuggestions([]);
+    setAddressInput('');
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (addressContainerRef.current && !addressContainerRef.current.contains(event.target)) {
+        setIsEditingAddress(false);
+        setAddressSuggestions([]);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -174,6 +249,8 @@ export default function Header() {
     let addressText = '';
     if (typeof address === 'string') {
       addressText = address;
+    } else if (address?.fullAddress) { 
+    addressText = address.fullAddress;
     } else if (address?.full) {
       addressText = address.full;
     } else if (address?.address) {
@@ -470,76 +547,97 @@ export default function Header() {
   return (
     <>
     <div className={styles.header}>
-        <Link className={styles.logo} to="/"> FOODLY </Link>
-        {address &&
-          <div className={styles.withAddress}>
-            <div className={styles.chevronGroup}>
-              <button className={styles.chevronButton} type="button" aria-label="Back">
-                <ChevronLeft size={18} />
-              </button>
-              <button className={styles.chevronButton} type="button" aria-label="Forward">
-                <ChevronRight size={18} />
-              </button>
-            </div>
-            <div className={styles.searchBar} ref={searchContainerRef}> 
-              <Search size={16} />
-              <form className={styles.searchForm} onSubmit={handleSubmit}>
-                              <input 
-                                className={styles.searchInput}
-                                type="text"
-                                placeholder="Tìm nhà hàng hoặc món ăn..."
-                                value={query}
-                                onChange={(e) => {
-                                  const nextQuery = e.target.value;
-                                  setQuery(nextQuery);
-                                  handleSearch(nextQuery);
-                                }}
-                              />
-                            </form>
-                            {loading && <p className={styles.searchLoading}>Đang tìm kiếm...</p>}
-              
-                            {searchResult.length > 0 && (
-                              <div className={styles.searchResult}>
-                                {searchResult.map((item, index) => (
-                                  <div 
-                                    className={getSuggestClassName(item.type)}
-                                    key={index}
-                                    onClick={() => handleSelectKeyword(item)}
-                                  >
-                                    <Search size={14} />
-                                    <span className={styles.suggestText}>{item.text}</span>
-                                    {item.type === 'category' && <span className={styles.badge}>Danh mục</span>}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                            
-                            {!loading && query.trim() && searchResult.length === 0 && (
-                              <div className={styles.searchResult}>
-                                <p className={styles.noResults}>Không tìm thấy kết quả</p>
-                              </div>
-                            )}
-            </div>
-            <button className={styles.addressHolder}><MapPin size={17}/><span  style={{marginLeft: '5px', marginRight: '5px', marginTop: '2px'}}>{address}</span><ChevronDown size={17}/></button>
+      {/* Group 1: Logo */}
+      <Link className={styles.logo} to="/"> FOODLY </Link>
+
+      {address && (
+        <div className={styles.withAddress}>
+          {/* Group 2: Navigation (Ẩn trên mobile) */}
+          <div className={styles.navGroup}>
+            <button className={styles.chevronButton} type="button"><ChevronLeft size={18} /></button>
+            <button className={styles.chevronButton} type="button"><ChevronRight size={18} /></button>
+          </div>
+
+          {/* Group 3: Search Bar (Co giãn linh hoạt) */}
+          <div className={styles.searchBar} ref={searchContainerRef}> 
+            <Search size={16} />
+            <form className={styles.searchForm} onSubmit={handleSubmit}>
+              <input 
+                className={styles.searchInput}
+                type="text"
+                placeholder="Tìm kiếm..." // Rút gọn placeholder cho mobile
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  handleSearch(e.target.value);
+                }}
+              />
+            </form>
+            {/* Kết quả search giữ nguyên */}
+          </div>
+
+          {/* Group 4: Address & Actions */}
+          <div className={styles.actionGroup}>
+            <div className={styles.addressEditWrapper} ref={addressContainerRef}>
+                {!isEditingAddress ? (
+                  <button 
+                    className={styles.addressHolder} 
+                    onClick={() => {
+                      setIsEditingAddress(true);
+                      setAddressInput(address?.fullAddress || '');
+                    }}
+                  >
+                    <MapPin size={17}/>
+                    <span className={styles.addressText}>{address?.fullAddress}</span>
+                    <ChevronDown size={15} className={styles.hideMobile}/>
+                  </button>
+                ) : (
+                  <div className={styles.addressInputActive}>
+                    <input 
+                      autoFocus
+                      className={styles.addressInputInline}
+                      value={addressInput}
+                      onChange={(e) => {
+                        setAddressInput(e.target.value);
+                        handleAddressSearch(e.target.value);
+                      }}
+                      onKeyDown={handleAddressKeyDown}
+                      placeholder="Nhập địa chỉ"
+                    />
+                    {addressSuggestions.length > 0 && (
+                      <ul className={styles.addressSuggestList}>
+                        {addressSuggestions.map((s, idx) => (
+                          <li key={idx} onClick={() => handleSelectAddress(s)} className={`${styles.addressSuggestItem} ${idx === activeAddressIndex ? styles.addressSuggestActive : ''}`}>
+                            <MapPin size={14} />
+                            <span>{s.display_name}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
+            
             <button className={styles.notificationIcon}><Bell size={17} /></button>
+            
             <button className={styles.cartIcon} onClick={handleOpenCart}>
               <ShoppingCart size={17} />
-              <span style={{marginTop: '3px'}}>{cartItemCount}</span>
+              <span className={styles.cartCount}>{cartItemCount}</span>
             </button>
+
             <div className={styles.authButton}>
-              {user ? 
-                (
-                  <button className={styles.bthProfile} onClick={handleOpenProfile}>
-                    <User size={17}/>
-                    <span style={{marginLeft: '5px', marginTop: '3px'}}>Hồ sơ</span>
-                  </button>
-                ) :
-                (<>
-                  <button className={styles.bthSignIn} onClick={() => navigate('/auth')}>Đăng nhập</button>
-                </>)}
+              {user ? (
+                <button className={styles.bthProfile} onClick={handleOpenProfile}>
+                  <User size={17}/>
+                  <span className={styles.profileBtnText}>Hồ sơ</span>
+                </button>
+              ) : (
+                <button className={styles.bthSignIn} onClick={() => navigate('/auth')}>Đăng nhập</button>
+              )}
             </div>
           </div>
-        }
+        </div>
+      )}
     </div>
     {isProfileOpen && (
       <div className={styles.profileOverlay} onClick={handleCloseProfile}>

@@ -1,5 +1,5 @@
-import {User, MapPin, ArrowRight} from 'lucide-react';
-import { useState } from 'react';
+import {User, MapPin, ArrowRight, Navigation} from 'lucide-react';
+import { useState, useRef } from 'react';
 import styles from './Homepage.module.css';
 import homeBanner from '../../assets/home-banner.png';
 import Header from '../../components/header/Header.jsx';
@@ -10,6 +10,7 @@ import ClientLayout from '../../layouts/ClientLayout/ClientLayout.jsx';
 import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import axios from 'axios';
 
 const CARDS = [
     {
@@ -45,15 +46,133 @@ function HomeWithoutAddress() {
     const [address, setAddress] = useState('');
     const {updateAddress} = useContext(AddressContext);
     const { user, logoutUser } = useAuth();
+    const [suggestions, setSuggestions] = useState([]);
     const navigate = useNavigate();
+    const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
+    const typingTimeoutRef = useRef(null);
+
+    // const handleSubmit = (e) => {
+    //     e.preventDefault();
+    //     if (address.trim() !== ''){
+    //         updateAddress(address);
+    //         navigate('/');
+    //     }
+    //     console.log('Đã gửi địa chỉ:', address);
+    // };
+
+    const selectSuggestion = (suggestion) => {
+        const lng = parseFloat(suggestion.lon);
+        const lat = parseFloat(suggestion.lat);
+
+        updateAddress({
+            fullAddress: suggestion.display_name,
+            location: { type: 'Point', coordinates: [lng, lat] }
+        });
+        setAddress(suggestion.display_name.split(',')[0]);
+        setSuggestions([]);
+        setActiveSuggestionIndex(-1);
+    };
+
+    const handleKeyDown = (e) => {
+        // Nếu không có gợi ý nào thì không làm gì
+        if (suggestions.length === 0) return;
+
+        if (e.key === "ArrowDown") {
+            // Nhấn xuống: tăng index
+            setActiveSuggestionIndex((prev) => 
+                prev < suggestions.length - 1 ? prev + 1 : prev
+            );
+        } else if (e.key === "ArrowUp") {
+            // Nhấn lên: giảm index
+            setActiveSuggestionIndex((prev) => (prev > 0 ? prev - 1 : 0));
+        } else if (e.key === "Enter") {
+            // Nhấn Enter: Nếu đang chọn một gợi ý thì chốt gợi ý đó
+            if (activeSuggestionIndex >= 0) {
+                e.preventDefault(); // Ngăn form submit ngay lập tức
+                handleSelectSuggestion(suggestions[activeSuggestionIndex]);
+            }
+        } else if (e.key === "Escape") {
+            // Nhấn Esc: Đóng danh sách
+            setSuggestions([]);
+            setActiveSuggestionIndex(-1);
+        }
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (address.trim() !== ''){
-            updateAddress(address);
+        if (address.trim() !== '') {
+            updateAddress({
+                fullAddress: address,
+                location: { type: 'Point', coordinates: [0, 0] } 
+            });
             navigate('/');
         }
-        console.log('Đã gửi địa chỉ:', address);
+    };
+
+    const handleInputChange = async (e) => {
+        const value = e.target.value;
+        setAddress(value);
+        setActiveSuggestionIndex(-1);
+
+        if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current);
+        }
+
+        if (value.length > 2) {
+            typingTimeoutRef.current = setTimeout(async () => {
+                const LIQ_KEY = import.meta.env.VITE_LOCATIONIQ_TOKEN;
+                try {
+                    const res = await axios.get(
+                        `https://api.locationiq.com/v1/autocomplete?key=${LIQ_KEY}&q=${value}&limit=5&dedupe=1&countrycodes=vn&accept-language=vi`
+                    );
+                    setSuggestions(res.data);
+                } catch (err) {
+                    console.error("LocationIQ Error:", err);
+                }
+            }, 500);
+        } else {
+            setSuggestions([]);
+        }
+    };
+
+    const handleSelectSuggestion = async (suggestion) => {
+        const lng = parseFloat(suggestion.lon);
+        const lat = parseFloat(suggestion.lat);
+
+        updateAddress({
+            fullAddress: suggestion.display_name,
+            location: { 
+                type: 'Point', 
+                coordinates: [lng, lat] 
+            }
+        });
+    
+        // Hiển thị tên ngắn gọn lên input (ví dụ: lấy phần đầu của địa chỉ)
+        setAddress(suggestion.display_name.split(',')[0]); 
+        setSuggestions([]);
+        setActiveSuggestionIndex(-1);
+    };
+
+    const handleDetectLocation = () => {
+        if (!navigator.geolocation) return alert("Browser does not support geolocation");
+
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            const { latitude, longitude } = position.coords;
+            const LIQ_KEY = import.meta.env.VITE_LOCATIONIQ_TOKEN;
+
+            try {
+                const res = await axios.get(`https://us1.locationiq.com/v1/reverse?key=${LIQ_KEY}&lat=${latitude}&lon=${longitude}&format=json`);
+                const displayAddr = res.data.display_name;
+
+                updateAddress({
+                    fullAddress: displayAddr,
+                    location: { type: 'Point', coordinates: [longitude, latitude] }
+                });
+                setAddress(displayAddr);
+            } catch (error) {
+                console.error("Location error", error);
+            }
+        });
     };
 
     return (
@@ -64,17 +183,39 @@ function HomeWithoutAddress() {
                 <div className={styles.bannerContent}>
                     <h3>FOODLY</h3>
                     <h1>MÓN NGON, GIAO NHANH</h1>
-                    <form className={styles.addressInput} onSubmit={handleSubmit}>
-                        <MapPin size={18} />
-                        <input 
-                            className={styles.inputField}
-                            type="text" 
-                            placeholder="Nhập địa chỉ giao hàng" 
-                            value={address}
-                            onChange={(e) => setAddress(e.target.value)}
-                        />
-                        <button className={styles.inputBtn} type="submit"><ArrowRight size={18} color="white"/></button>
-                    </form>
+                    <div className={styles.searchContainer}>
+                        <form className={styles.addressInput} onSubmit={handleSubmit}>
+                            <MapPin size={18} />
+                            <input 
+                                className={styles.inputField}
+                                type="text" 
+                                placeholder="Nhập địa chỉ giao hàng" 
+                                value={address}
+                                onChange={handleInputChange}
+                                onKeyDown={handleKeyDown}
+                            />
+                            {/* Nút định vị */}
+                            <button type="button" className={styles.detectBtn} onClick={handleDetectLocation}>
+                                <Navigation size={18} color="#FF6B35" />
+                            </button>
+                            
+                            <button className={styles.inputBtn} type="submit">
+                                <ArrowRight size={18} color="white"/>
+                            </button>
+                        </form>
+
+                        {/* HIỂN THỊ GỢI Ý ĐỊA CHỈ */}
+                        {suggestions.length > 0 && (
+                            <ul className={styles.suggestionList}>
+                                {suggestions.map((s, index) => (
+                                    <li key={s.place_id ||index} onClick={() => handleSelectSuggestion(s)} className={index === activeSuggestionIndex ? styles.activeSuggestion : ''}>
+                                        <strong>{s.display_place || s.display_name.split(',')[0]}</strong>
+                                        <p>{s.display_name}</p>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
                     {user ? (<p className={styles.paraAdrress}>Chưa có địa chỉ - nhập địa chỉ để tiếp tục mua sắm</p>) 
                         : (                    
                         <button className={styles.addressBtn} onClick={() => navigate('/auth')}><User size={18}/><span>Đăng nhập để dùng địa chỉ đã lưu</span></button>

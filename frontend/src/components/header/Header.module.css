@@ -4,7 +4,7 @@
     align-items: center;
     flex-direction: row;
     top: 0;
-    padding: 10px 20px;
+    padding: 0px 15px;
     border-bottom: 1px solid rgb(223, 220, 220);
     position: fixed;
     width: 100%;
@@ -183,6 +183,101 @@
     flex: 1;
     justify-content: center;
     align-items: center;
+    gap: 8px;
+}
+
+.addressEditWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.addressInputActive {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    width: 250px; /* Độ rộng khi đang sửa */
+}
+
+.addressInputInline {
+    height: 32px;
+    border-radius: 50px;
+    border: 1px solid var(--primary-color);
+    padding: 0 15px;
+    font-size: 0.85rem;
+    outline: none;
+    background: white;
+    width: 100%;
+}
+
+.addressSuggestList {
+    position: absolute;
+    top: 110%;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    list-style: none;
+    padding: 5px 0;
+    z-index: 1500;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.addressSuggestList li {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    color: #333;
+}
+
+.addressSuggestList li:hover {
+    background-color: #fff5f2;
+    color: var(--primary-color);
+}
+
+.addressSuggestList li span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.addressSuggestItem {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+    color: #333;
+    transition: background-color 0.2s;
+}
+
+.addressSuggestItem:hover,
+.addressSuggestActive {
+    background-color: #fff5f2 !important; /* Màu cam nhạt đặc trưng của Foodly */
+    color: var(--primary-color) !important;
+}
+
+.addressSuggestList li:last-child {
+    border-bottom: none;
+}
+
+.navGroup {
+    display: flex;
+    gap: 5px;
+}
+
+.actionGroup {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .notificationIcon {
@@ -238,13 +333,12 @@
 }
 
 .authButton {
-    top: 0;
-    right: 20px;
     display: flex;
     justify-content: flex-end;
     align-items: center;
     gap: 10px;
     height: 32px;
+    flex-shrink: 0;
 }
 
 .bthProfile {
@@ -268,19 +362,36 @@
 
 .bthSignUp, .bthSignIn {
     background-color: var(--primary-color);
-    border: none;
-    padding: 5px 10px;
+    color: white;
+    padding: 0 16px; /* Dùng padding ngang rộng hơn một chút */
     border-radius: 50px;
     cursor: pointer;
     font-weight: bold;
     border: 2px solid var(--primary-color);
-    color: white;
     height: 32px;
+    white-space: nowrap; /* QUAN TRỌNG: Giữ chữ trên 1 dòng */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    line-height: 1;
+    transition: all 0.2s;
 }
 
 .bthSignIn:hover {
     background-color: var(--hover-color);
     border: 2px solid var(--hover-color);
+}
+
+.addressText {
+    margin-left: 5px;
+    margin-right: 5px;
+    margin-top: 2px;
+    white-space: nowrap;      
+    overflow: hidden;         
+    text-overflow: ellipsis;
+    display: block;
+    max-width: 300px;
 }
 
 .addressHolder {
@@ -387,4 +498,103 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+}
+
+
+@media (max-width: 1024px) {
+    .navGroup {
+        display: none; /* Ẩn cụm mũi tên tới/lui */
+    }
+    .addressText {
+        max-width: 120px;
+    }
+}
+
+/* 2. Màn hình Mobile lớn (Dưới 768px) */
+@media (max-width: 768px) {
+    .logo {
+        margin-right: 15px;
+        font-size: 1.2rem; /* Thu nhỏ logo */
+    }
+
+    .addressText {
+        display: none; /* Ẩn chữ địa chỉ, chỉ giữ icon MapPin */
+    }
+
+    .addressHolder {
+        padding: 5px; /* Thu nhỏ holder lại */
+        width: 32px;
+        justify-content: center;
+    }
+
+    .profileBtnText {
+        display: none; /* Ẩn chữ "Hồ sơ", chỉ giữ icon User */
+    }
+
+    .bthProfile {
+        width: 32px;
+        padding: 0;
+    }
+
+    .searchBar {
+        margin: 0 5px;
+    }
+
+    .btnSignUp, .bthSignIn {
+        padding: 0 10px; 
+        font-size: 0.8rem; 
+        height: 28px; 
+    }
+}
+
+/* 3. Màn hình Mobile nhỏ (Dưới 480px) */
+@media (max-width: 480px) {
+    .header {
+        padding: 0 10px;
+    }
+
+    .logo {
+        display: none; /* Ẩn logo chữ, hoặc thay bằng icon nhỏ nếu có */
+    }
+
+    .notificationIcon {
+        display: none; /* Ẩn thông báo để ưu tiên giỏ hàng */
+    }
+
+    .searchInput {
+        font-size: 0.75rem;
+    }
+
+    .cartIcon {
+        padding: 0 8px;
+    }
+    
+    .cartCount {
+        font-size: 0.75rem;
+    }
+
+    .authButton {
+        gap: 5px;
+    }
+
+    .btnSignUp, .bthSignIn {
+        padding: 0 8px;
+        font-size: 0.75rem;
+    }
+}
+
+/* Helper class để ẩn nhanh */
+.hideMobile {
+    display: block;
+}
+@media (max-width: 768px) {
+    .hideMobile {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .addressInputActive {
+        width: 180px;
+    }
 }

@@ -20,7 +20,15 @@ const restaurantSchema = new mongoose.Schema({
                 enum: ['Point'],
                 default: 'Point'
             },
-            coordinates: [Number]
+            coordinates: {
+                type: [Number],
+                validate: {
+                    validator: function(v) {
+                        return v.length === 2;
+                    },
+                    message: 'Tọa độ phải bao gồm [kinh độ, vĩ độ]'
+                }
+            }
         }
     },
     phone: String,
@@ -44,5 +52,7 @@ const restaurantSchema = new mongoose.Schema({
         }
     }
 });
+
+restaurantSchema.index({ "address.location": "2dsphere" });
 
 export default mongoose.model('Restaurant', restaurantSchema, 'restaurant');

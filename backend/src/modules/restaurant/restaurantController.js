@@ -121,3 +121,23 @@ export const getSummary = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+export const getNearest = async (req, res) => {
+    try {
+        const { lng, lat, distance } = req.query;
+
+        if (!lng || !lat) {
+            return res.status(400).json({ message: "Not enough infomation." });
+        }
+
+        const restaurants = await restaurantService.getNearestRestaurants(
+            parseFloat(lng),
+            parseFloat(lat),
+            distance ? parseInt(distance) : undefined
+        );
+
+        res.status(200).json(restaurants);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
