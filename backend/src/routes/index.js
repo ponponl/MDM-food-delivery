@@ -6,8 +6,10 @@ import cartRoute from '../modules/cart/cartRoute.js';
 import orderRoute from '../modules/order/orderRoute.js';
 import searchRoute from '../modules/search/searchRoute.js'
 import reviewRoute from '../modules/review/reviewRoute.js';
+import authRoute from './authRoute.js';
 const router = express.Router();
 
+router.use('/auth', authRoute);
 router.use('/users', userRoute); 
 router.use('/restaurants', restaurantRoute);
 router.use('/categories', categoryRoute);

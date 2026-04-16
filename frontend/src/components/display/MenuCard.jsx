@@ -30,7 +30,10 @@ const MenuCard = ({ item, isUnavailable, statusLabel, onAddToCart }) => (
                 className={styles.addBtn}
                 type="button"
                 aria-label={`Add ${item?.name} to cart`}
-                onClick={() => onAddToCart?.(item)}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    onAddToCart?.(item);
+                }}
                 disabled={isUnavailable}
             >
                 <Plus size={18} strokeWidth={3} />

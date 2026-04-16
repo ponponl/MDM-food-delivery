@@ -11,8 +11,6 @@ const OrderHistoryPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [filterStatus, setFilterStatus] = useState('all');
-  const [ratingModal, setRatingModal] = useState(null);
-  const [ratingForm, setRatingForm] = useState({ stars: 0, comment: '' });
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -165,26 +163,6 @@ const OrderHistoryPage = () => {
 
   const handleViewDetails = (order) => {
     navigate(`/orderDetail`, { state: { orderExternalId: order.orderExternalId } });
-  };
-
-  const handleOpenRating = (order) => {
-    setRatingModal(order.orderId);
-    setRatingForm({ stars: order.rating || 0, comment: order.comment || '' });
-  };
-
-  const handleSubmitRating = () => {
-    if (ratingForm.stars === 0) {
-      toast.error('Vui lòng chọn số sao để đánh giá');
-      return;
-    }
-    setOrders(orders.map(order =>
-      order.orderId === ratingModal
-        ? { ...order, rating: ratingForm.stars, comment: ratingForm.comment }
-        : order
-    ));
-    setRatingModal(null);
-    setRatingForm({ stars: 0, comment: '' });
-    toast.success('Cảm ơn bạn đã đánh giá!');
   };
 
   const getStatusColor = (status) => {
@@ -341,7 +319,7 @@ const OrderHistoryPage = () => {
                     ) : (
                       <button
                         className={styles.btnRate}
-                        onClick={() => handleOpenRating(order)}
+                        onClick={() => navigate(`/order/${order.orderExternalId || order.orderId}/review`)}
                       >
                         Đánh giá
                       </button>
@@ -362,18 +340,6 @@ const OrderHistoryPage = () => {
         )}
       </div>
 
-      {/* Rating Modal */}
-      {ratingModal && (
-        <RatingModal
-          onClose={() => {
-            setRatingModal(null);
-            setRatingForm({ stars: 0, comment: '' });
-          }}
-          onSubmit={handleSubmitRating}
-          form={ratingForm}
-          setForm={setRatingForm}
-        />
-      )}
     </div>
   );
 };
@@ -459,64 +425,6 @@ const ItemsCarousel = ({ items, totalQuantity }) => {
           <ChevronRight size={20} />
         </button>
       )}
-    </div>
-  );
-};
-
-const RatingModal = ({ onClose, onSubmit, form, setForm }) => {
-  return (
-    <div className={styles.modalOverlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.modalHeader}>
-          <h2>Đánh Giá Đơn Hàng</h2>
-          <button className={styles.btnClose} onClick={onClose}>
-            <X size={24} />
-          </button>
-        </div>
-
-        <div className={styles.modalBody}>
-          <div className={styles.starsSection}>
-            <p className={styles.label}>Đánh giá của bạn</p>
-            <div className={styles.starsContainer}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  size={40}
-                  className={styles.starIcon}
-                  style={{
-                    cursor: 'pointer',
-                    fill: form.stars >= star ? 'gold' : 'none',
-                    color: form.stars >= star ? 'gold' : '#ddd'
-                  }}
-                  onClick={() => setForm({ ...form, stars: star })}
-                />
-              ))}
-            </div>
-            {form.stars > 0 && <p className={styles.starsText}>{form.stars} sao</p>}
-          </div>
-
-          <div className={styles.commentSection}>
-            <label className={styles.label}>Nhận xét (tùy chọn)</label>
-            <textarea
-              className={styles.textarea}
-              placeholder="Chia sẻ trải nghiệm của bạn..."
-              value={form.comment}
-              onChange={(e) => setForm({ ...form, comment: e.target.value })}
-              maxLength={500}
-            />
-            <p className={styles.charCount}>{form.comment.length}/500</p>
-          </div>
-        </div>
-
-        <div className={styles.modalFooter}>
-          <button className={styles.btnCancel} onClick={onClose}>
-            Hủy
-          </button>
-          <button className={styles.btnSubmit} onClick={onSubmit}>
-            Gửi Đánh Giá
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

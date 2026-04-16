@@ -4,6 +4,7 @@ import styles from './Homepage.module.css';
 import homeBanner from '../../assets/home-banner.png';
 import Header from '../../components/header/Header.jsx';
 import {AddressContext} from '../../context/AddressContext.jsx';
+import Footer from '../../components/footer/Footer.jsx';
 import MenuPage from '../menu/menuPage.jsx';
 import ClientLayout from '../../layouts/ClientLayout/ClientLayout.jsx';
 import { useContext } from 'react';
@@ -107,9 +108,7 @@ function HomeWithoutAddress() {
                 </div>
             </div>
 
-            <footer className={styles.footer}>
-                © 2026 <span>Foodly</span> — Mang niềm vui đến từng bữa ăn.
-            </footer>
+            <Footer />
         </div>
     );
 }

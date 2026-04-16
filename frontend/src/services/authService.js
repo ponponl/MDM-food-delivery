@@ -60,4 +60,22 @@ const updateAddresses = async (addresses) => {
     }
 };
 
-export { register, login, logout, fetchCurrentUser, updateProfile, updateAddresses };
+const registerMerchant = async (merchantData) => {
+    try {
+        const response = await api.post('/auth/merchant/register', merchantData);
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || new Error('Lỗi mạng');
+    }
+};
+
+const loginMerchant = async (credentials) => {
+    try {
+        const response = await api.post('/auth/merchant/login', credentials);
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || new Error('Lỗi mạng');
+    }
+};
+
+export { register, login, logout, fetchCurrentUser, updateProfile, updateAddresses, registerMerchant, loginMerchant };

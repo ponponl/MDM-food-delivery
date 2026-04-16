@@ -1,0 +1,259 @@
+.dashboardContainer {
+    display: flex;
+    height: 100vh;
+    background-color: #f8f9fa;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 260px;
+    background: #ffffff;
+    border-right: 1px solid #e9ecef;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+}
+
+.sidebarLogo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 2.5rem;
+    padding: 0 10px;
+}
+
+.sidebarLogo img {
+    height: 35px;
+    object-fit: contain;
+}
+
+.sidebarLogo span {
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #2d3436;
+}
+
+.navMenu {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.navItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    text-decoration: none;
+    color: #636e72;
+    border-radius: 10px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.navItem:hover {
+    background-color: #f1f2f6;
+    color: #2d3436;
+}
+
+.navItem.active {
+    background-color: #FF6B35;
+    color: #ffffff;
+}
+
+.badge {
+    background-color: #FF6B35;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    margin-left: auto;
+}
+
+.navItem.active .badge {
+    background-color: white;
+    color: #FF6B35;
+}
+
+.sidebarFooter {
+    margin-top: auto;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.logoutBtn {
+    width: 100%;
+    padding: 12px;
+    background: #f1f2f6;
+    color: #FF6B35;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.logoutBtn:hover {
+    background: #e4e8eb;
+}
+
+.mainContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.header {
+    height: 70px;
+    background: #ffffff;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.header h2 {
+    font-size: 1.3rem;
+    color: #2d3436;
+    margin: 0;
+}
+
+.userProfile {
+    display: flex;
+    align-items: center;
+}
+
+.greeting {
+    font-size: 0.95rem;
+    color: #636e72;
+}
+
+.greeting strong {
+    color: #2d3436;
+    margin-left: 5px;
+}
+
+.content {
+    padding: 2rem;
+    flex: 1;
+}
+
+.restaurantBanner {
+    background: linear-gradient(135deg, #2d3436 0%, #636e72 100%);
+    border-radius: 16px;
+    padding: 2.5rem;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.restaurantInfo h1 {
+    font-size: 2.2rem;
+    margin: 0 0 10px 0;
+}
+
+.restaurantType {
+    display: inline-block;
+    background: rgba(255,255,255,0.2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    backdrop-filter: blur(5px);
+}
+
+.restaurantAddress, .restaurantPhone {
+    margin: 5px 0;
+    opacity: 0.9;
+    font-size: 0.95rem;
+}
+
+.restaurantActions {
+    display: flex;
+    gap: 15px;
+}
+
+.primaryBtn {
+    background: #FF6B35;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.primaryBtn:hover {
+    background: #FF3D00;
+}
+
+.secondaryBtn {
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    backdrop-filter: blur(5px);
+}
+
+.secondaryBtn:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+}
+
+.statCard {
+    background: #ffffff;
+    padding: 1.5rem;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    border: 1px solid #e9ecef;
+}
+
+.statIcon {
+    font-size: 2rem;
+    background: #f8f9fa;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+}
+
+.statDetails h3 {
+    margin: 0 0 5px 0;
+    font-size: 0.85rem;
+    color: #636e72;
+    font-weight: 600;
+}
+
+.statValue {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #2d3436;
+}

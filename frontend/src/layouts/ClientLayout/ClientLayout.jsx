@@ -1,7 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import Header from '../../components/header/Header';
 import Sidebar from '../../components/sidebar/Sidebar';
-// import Footer from '../../components/footer/Footer';
+import Footer from '../../components/footer/Footer';
 import styles from './ClientLayout.module.css';
 
 const ClientLayout = ({ children }) => {
@@ -14,7 +14,7 @@ const ClientLayout = ({ children }) => {
             <main className={styles.main}>
                 {children ?? <Outlet />}
             </main>
-            {/* {location.pathname !== '/checkout' && <Footer />} */}
+            <Footer />
         </div>
     )
 };

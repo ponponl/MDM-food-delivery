@@ -9,6 +9,7 @@ import restaurantApi from '../../api/restaurantApi';
 import cartApi from '../../api/cartApi';
 import reviewApi from '../../api/reviewApi';
 import styles from './RestaurantPage.module.css';
+import { toast } from 'react-hot-toast';
 
 export default function RestaurantPage() {
     const navigate = useNavigate();
@@ -92,7 +93,7 @@ export default function RestaurantPage() {
         const itemId = item?._id ?? item?.itemId;
 
         if (!user || !itemId) {
-            window.alert('Vui lòng đăng nhập để thêm món vào giỏ.');
+            toast.error('Vui lòng đăng nhập để thêm món vào giỏ.');
             return;
         }
 
@@ -115,10 +116,11 @@ export default function RestaurantPage() {
             } else {
                 window.dispatchEvent(new CustomEvent('cart:updated', { detail: {} }));
             }
+            toast.success('Đã thêm món vào giỏ hàng.');
         } catch (err) {
             window.dispatchEvent(new CustomEvent('cart:updated', { detail: { deltaQty: -optimisticDelta } }));
             console.error('Add to cart failed:', err);
-            window.alert('Không thể thêm món vào giỏ. Vui lòng thử lại.');
+            toast.error('Không thể thêm món vào giỏ. Vui lòng thử lại.');
         }
     };
 

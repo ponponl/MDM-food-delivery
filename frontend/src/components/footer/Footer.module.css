@@ -1,0 +1,113 @@
+.footer {
+    background-color: #000000;
+    border-top: 1px solid #2d3436;
+    padding: 4rem 2rem 1.5rem 2rem;
+    color: #f5f6fa;
+    margin-left: 180px;
+    width: auto;
+}
+
+.footerContainer {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 2rem;
+}
+
+.footerSection h4 {
+    color: #ffffff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.footerSection ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footerSection ul li {
+    margin-bottom: 0.8rem;
+}
+
+.footerSection ul li a {
+    text-decoration: none;
+    color: #a4b0be;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+}
+
+.footerSection ul li a:hover {
+    color: #FF6B35;
+}
+
+.merchantLoginBtn {
+    display: inline-block;
+    margin-top: 0.5rem;
+    padding: 8px 16px;
+    background-color: transparent;
+    border: 1.5px solid #4CAF50;
+    color: #4CAF50 !important;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease !important;
+}
+
+.merchantLoginBtn:hover {
+    background-color: #4CAF50;
+    color: #000000 !important;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+}
+
+.logo {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0 0 1rem 0;
+}
+
+.logo span {
+    color: #FF6B35;
+}
+
+.slogan {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #a4b0be;
+    max-width: 250px;
+}
+
+.footerBottom {
+    max-width: 1200px;
+    margin: 3rem auto 0 auto;
+    padding-top: 1.5rem;
+    border-top: 1px solid #2d3436;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #636e72;
+}
+
+.footerBottom span {
+    color: #FF6B35;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .footer {
+        margin-left: 0;
+    }
+    .footerContainer {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer {
+        margin-left: 0;
+    }
+    .footerContainer {
+        grid-template-columns: 1fr;
+    }
+}

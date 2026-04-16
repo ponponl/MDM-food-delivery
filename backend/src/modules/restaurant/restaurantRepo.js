@@ -1,6 +1,6 @@
 import Restaurant from './restaurantModel.js'
 
-const CATEGORY_MAP = {
+export const CATEGORY_MAP = {
     'burger': 'Burger',
     'pizza': 'Pizza',
     'com': 'Cơm',
