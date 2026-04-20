@@ -46,7 +46,38 @@ export default function RestaurantReviewPage() {
   };
 
   if (loading)
-    return <div className={styles.loading}>Đang tải đánh giá...</div>;
+    return (
+      <div className={styles.reviewPage}>
+        <header className={styles.header}>
+          <div className={styles.skeletonButton} />
+          <div className={styles.skeletonTitle} />
+          <div className={styles.skeletonRatingRow}>
+            <div className={styles.skeletonBigRating} />
+            <div className={styles.skeletonStarsCol}>
+              <div className={styles.skeletonLine} />
+              <div className={styles.skeletonLineShort} />
+            </div>
+          </div>
+        </header>
+
+        <main className={styles.reviewList}>
+          {[...Array(4)].map((_, index) => (
+            <div key={index} className={styles.reviewCard}>
+              <div className={styles.skeletonAvatar} />
+              <div className={styles.skeletonContent}>
+                <div className={styles.skeletonHeaderRow}>
+                  <div className={styles.skeletonName} />
+                  <div className={styles.skeletonRatingChip} />
+                </div>
+                <div className={styles.skeletonLineShort} />
+                <div className={styles.skeletonLine} />
+                <div className={styles.skeletonLine} />
+              </div>
+            </div>
+          ))}
+        </main>
+      </div>
+    );
 
   const totalReviews = reviews.length;
   const avgRatingNumber =

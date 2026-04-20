@@ -157,7 +157,52 @@ const OrderDetailPage = () => {
 
       {loading ? (
         <div className={styles.content}>
-          <p>Đang tải dữ liệu...</p>
+          <div className={styles.section}>
+            <div className={styles.skeletonStatusRow}>
+              <div className={`${styles.skeletonShimmer} ${styles.skeletonCircle}`} />
+              <div className={styles.skeletonTextCol}>
+                <div className={`${styles.skeletonShimmer} ${styles.skeletonLine}`} />
+                <div className={`${styles.skeletonShimmer} ${styles.skeletonLineShort}`} />
+                <div className={`${styles.skeletonShimmer} ${styles.skeletonLineShort}`} />
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.section}>
+            <div className={`${styles.skeletonShimmer} ${styles.skeletonSectionTitle}`} />
+            {[...Array(3)].map((_, index) => (
+              <div key={index} className={styles.skeletonRow}>
+                <div className={`${styles.skeletonShimmer} ${styles.skeletonCircleSmall}`} />
+                <div className={styles.skeletonTextCol}>
+                  <div className={`${styles.skeletonShimmer} ${styles.skeletonLine}`} />
+                  <div className={`${styles.skeletonShimmer} ${styles.skeletonLineShort}`} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className={styles.section}>
+            <div className={`${styles.skeletonShimmer} ${styles.skeletonSectionTitle}`} />
+            {[...Array(3)].map((_, index) => (
+              <div key={index} className={styles.skeletonItemRow}>
+                <div className={`${styles.skeletonShimmer} ${styles.skeletonThumb}`} />
+                <div className={styles.skeletonTextCol}>
+                  <div className={`${styles.skeletonShimmer} ${styles.skeletonLine}`} />
+                  <div className={`${styles.skeletonShimmer} ${styles.skeletonLineShort}`} />
+                </div>
+                <div className={`${styles.skeletonShimmer} ${styles.skeletonAmount}`} />
+              </div>
+            ))}
+          </div>
+
+          <div className={styles.section}>
+            <div className={`${styles.skeletonShimmer} ${styles.skeletonSectionTitle}`} />
+            <div className={styles.skeletonBlock}>
+              <div className={`${styles.skeletonShimmer} ${styles.skeletonLine}`} />
+              <div className={`${styles.skeletonShimmer} ${styles.skeletonLine}`} />
+              <div className={`${styles.skeletonShimmer} ${styles.skeletonLineShort}`} />
+            </div>
+          </div>
         </div>
       ) : !order ? (
         <div className={styles.content}>

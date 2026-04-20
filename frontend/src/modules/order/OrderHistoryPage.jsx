@@ -186,7 +186,7 @@ const OrderHistoryPage = () => {
     <div className={styles.orderHistoryContainer}>
       <div className={styles.header}>
         <h1>Lịch Sử Đơn Hàng</h1>
-        <p>Quản lý và xem chi tiết các đơn hàng của bạn</p>
+        {/* <p>Quản lý và xem chi tiết các đơn hàng của bạn</p> */}
       </div>
 
       {/* Status Tabs */}
@@ -243,9 +243,33 @@ const OrderHistoryPage = () => {
 
       <div className={styles.ordersList}>
         {loading ? (
-          <div className={styles.emptyState}>
-            <p>Đang tải dữ liệu...</p>
-          </div>
+          [...Array(3)].map((_, index) => (
+            <div key={index} className={styles.skeletonCard}>
+              <div className={styles.skeletonHeaderRow}>
+                <div className={styles.skeletonRestaurant}>
+                  <div className={`${styles.skeletonShimmer} ${styles.skeletonAvatar}`} />
+                  <div className={styles.skeletonTextCol}>
+                    <div className={`${styles.skeletonShimmer} ${styles.skeletonLine}`} />
+                    <div className={`${styles.skeletonShimmer} ${styles.skeletonLineShort}`} />
+                  </div>
+                </div>
+                <div className={`${styles.skeletonShimmer} ${styles.skeletonBadge}`} />
+              </div>
+
+              <div className={styles.skeletonCarousel}>
+                <div className={`${styles.skeletonShimmer} ${styles.skeletonThumb}`} />
+                <div className={styles.skeletonTextCol}>
+                  <div className={`${styles.skeletonShimmer} ${styles.skeletonLine}`} />
+                  <div className={`${styles.skeletonShimmer} ${styles.skeletonLineShort}`} />
+                </div>
+              </div>
+
+              <div className={styles.skeletonFooterRow}>
+                <div className={`${styles.skeletonShimmer} ${styles.skeletonPrice}`} />
+                <div className={`${styles.skeletonShimmer} ${styles.skeletonButton}`} />
+              </div>
+            </div>
+          ))
         ) : filteredOrders.length === 0 ? (
           <div className={styles.emptyState}>
             <ShoppingCart size={48} />

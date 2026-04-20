@@ -3,24 +3,23 @@
 }
 
 .header {
-  margin-bottom: 30px;
+  /* margin-bottom: 30px; */
   padding-bottom: 20px;
-  border-bottom: 2px solid #f0f0f0;
 }
 
 .header h1 {
   font-size: 28px;
   font-weight: 700;
   color: #333;
-  margin-bottom: 8px;
-  margin-top: 0;
+  /* margin-bottom: 8px;
+  margin-top: 0; */
 }
 
-.header p {
+/* .header p {
   font-size: 14px;
   color: #888;
   margin: 0;
-}
+} */
 
 /* Tabs */
 .tabs {
@@ -347,6 +346,116 @@
 
 .btnReorder:hover {
   background: #e0e0e0;
+}
+
+.skeletonCard {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.skeletonShimmer {
+  position: relative;
+  overflow: hidden;
+  background: #f3f4f6;
+  border-radius: 10px;
+}
+
+.skeletonShimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, rgba(243, 244, 246, 0) 0%, rgba(255, 255, 255, 0.7) 50%, rgba(243, 244, 246, 0) 100%);
+  animation: shimmer 1.4s infinite;
+}
+
+.skeletonHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.skeletonRestaurant {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.skeletonAvatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+}
+
+.skeletonTextCol {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.skeletonLine {
+  height: 14px;
+  width: 100%;
+}
+
+.skeletonLineShort {
+  height: 12px;
+  width: 60%;
+}
+
+.skeletonBadge {
+  width: 90px;
+  height: 24px;
+  border-radius: 999px;
+}
+
+.skeletonCarousel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f8f8f8;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.skeletonThumb {
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
+}
+
+.skeletonFooterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.skeletonPrice {
+  width: 140px;
+  height: 18px;
+}
+
+.skeletonButton {
+  width: 120px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 /* Modal */

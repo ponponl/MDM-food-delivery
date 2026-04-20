@@ -63,7 +63,52 @@ export default function RestaurantPage() {
         setActiveCategory(firstCategory || '');
     }, [restaurant]);
 
-    if (isRestaurantLoading || isReviewsLoading || isRestaurantError || !restaurant) return null;
+    if (isRestaurantLoading || isReviewsLoading) {
+        return (
+            <div className={styles.restaurantPage}>
+                <main className={styles.mainContent}>
+                    <section className={`${styles.heroSection} ${styles.skeletonShimmer} ${styles.skeletonHero}`}>
+                        <div className={styles.skeletonHeroOverlay}>
+                            <div className={styles.skeletonHeroInfo}>
+                                <div className={`${styles.skeletonShimmer} ${styles.skeletonTitle}`} />
+                                <div className={`${styles.skeletonShimmer} ${styles.skeletonMeta}`} />
+                                <div className={`${styles.skeletonShimmer} ${styles.skeletonMetaShort}`} />
+                                <div className={`${styles.skeletonShimmer} ${styles.skeletonRating}`} />
+                            </div>
+                        </div>
+                    </section>
+
+                    <div className={styles.twoColumnLayout}>
+                        <aside className={styles.columnLeft}>
+                            <div className={styles.skeletonSidebar}>
+                                {[...Array(6)].map((_, index) => (
+                                    <div
+                                        key={index}
+                                        className={`${styles.skeletonShimmer} ${styles.skeletonSidebarItem}`}
+                                    />
+                                ))}
+                            </div>
+                        </aside>
+
+                        <section className={styles.columnRight}>
+                            <div className={styles.skeletonMenuGrid}>
+                                {[...Array(6)].map((_, index) => (
+                                    <div key={index} className={styles.skeletonMenuCard}>
+                                        <div className={`${styles.skeletonShimmer} ${styles.skeletonMenuHeader}`} />
+                                        <div className={`${styles.skeletonShimmer} ${styles.skeletonLine}`} />
+                                        <div className={`${styles.skeletonShimmer} ${styles.skeletonLineShort}`} />
+                                        <div className={`${styles.skeletonShimmer} ${styles.skeletonMenuFooter}`} />
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    </div>
+                </main>
+            </div>
+        );
+    }
+
+    if (isRestaurantError || !restaurant) return null;
 
     const totalReviews = restaurant.reviews?.length || 0;
     const avgRating = totalReviews > 0 
