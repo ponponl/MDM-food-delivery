@@ -35,7 +35,9 @@ const restaurantSchema = new mongoose.Schema({
     images: [String],
     menu: [menuItemSchema],
     openTime: String,
-    closeTime: String
+    closeTime: String,
+    totalReview: Number,
+    avgRating: Number
 }, {
     toJSON: {
         versionKey: false,

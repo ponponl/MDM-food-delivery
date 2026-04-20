@@ -14,10 +14,12 @@
     "@tanstack/react-query": "^5.95.2",
     "axios": "^1.13.5",
     "framer-motion": "^12.36.0",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.563.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-hot-toast": "^2.6.0",
+    "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.13.1"
   },
   "devDependencies": {

@@ -24,7 +24,7 @@
     background: linear-gradient(145deg, #FF6B35, #4CAF50);
     color: white;
     padding: 3rem;
-    display: flex;
+    display: relative;
     flex-direction: column;
     justify-content: space-between;
     position: relative;
@@ -218,6 +218,17 @@
     box-shadow: 0 0 0 4px rgba(255, 71, 87, 0.1);
 }
 
+.inputGroup input[type="time"] {
+    cursor: pointer;
+    position: relative;
+    background-image: none; 
+}
+
+.inputGroup input[type="time"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: invert(48%) sepia(82%) opacity(0.7); /* Chỉnh icon đồng hồ sang màu cam nhạt */
+}
+
 .selectInput {
     cursor: pointer;
     appearance: none;
@@ -300,6 +311,232 @@ textarea {
 
 .secondaryButton:hover {
     background: #e4e8eb;
+}
+
+.addressSearchBox {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+}
+
+.addressSearchBox input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.addressSearchBox input:focus {
+  border-color: #FF6B35; /* Màu thương hiệu Foodly */
+  outline: none;
+}
+
+.mapTriggerBtn {
+  background: none;
+  border: none;
+  color: #FF6B35;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+}
+
+.mapTriggerBtn:hover {
+  text-decoration: underline;
+  opacity: 0.8;
+}
+
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6); /* Làm mờ nền phía sau */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000; /* Luôn nằm trên cùng */
+  padding: 20px;
+}
+
+.modalContent {
+  background: white;
+  width: 100%;
+  max-width: 600px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.modalHeader {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  border-radius: 16px 16px 0 0
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.modalHeader > button {
+  background: #f5f5f5;
+  border: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+
+.modalHeader > button:hover {
+  background: #ffeded;
+  color: #e74c3c;
+}
+
+.mapWrapper {
+  width: 100%;
+  height: 350px; /* Chiều cao bắt buộc cho Leaflet */
+  position: relative;
+}
+
+.modalFooter {
+  padding: 20px;
+  background: #fafafa;
+  border-top: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.modalFooter p {
+  margin: 0;
+  font-size: 13px;
+  color: #666;
+  font-style: italic;
+}
+
+.primaryButton {
+  background-color: #FF6B35;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s, background 0.2s;
+}
+
+.primaryButton:hover:not(:disabled) {
+  background-color: #e55a2b;
+}
+
+.primaryButton:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.primaryButton:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.suggestionList {
+    position: absolute;
+    top: 105%;
+    left: 0;
+    width: 100%;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    list-style: none;
+    padding: 10px 0;
+    max-height: 300px;
+    overflow-y: auto;
+    color: #333;
+    z-index: 999;
+}
+
+.suggestionList li {
+    padding: 10px 20px;
+    cursor: pointer;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.suggestionList li:hover {
+    background-color: #fff5f2;
+}
+
+.suggestionList li strong {
+    display: block;
+    font-size: 0.9rem;
+}
+
+.suggestionList li p {
+    font-size: 0.75rem;
+    color: #777;
+    margin: 0;
+}
+
+.activeSuggestion {
+    background-color: #fff5f2 !important; /* Màu cam nhạt giống màu Foodly */
+    border-left: 4px solid #FF6B35; /* Thêm gờ màu cam bên trái cho chuyên nghiệp */
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* Khoảng cách giữa nút Định vị và nút X */
+}
+
+/* Định nghĩa thêm cho nút định vị bên trong headerActions để trông đẹp hơn */
+.detectLocationBtn {
+  background-color: #fff5f2; /* Nền cam cực nhạt */
+  color: #FF6B35; /* Màu cam Foodly */
+  border: 1px solid #ffdecb;
+  padding: 8px 16px;
+  border-radius: 30px; /* Bo góc dạng viên thuốc (pill) */
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px; /* Khoảng cách icon và chữ */
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 2px 4px rgba(255, 107, 53, 0.1); /* Đổ bóng nhẹ */
+}
+
+.detectLocationBtn:hover {
+  background-color: #FF6B35;
+  color: white;
+  border-color: #FF6B35;
+  box-shadow: 0 4px 8px rgba(255, 107, 53, 0.2);
+  transform: translateY(-1px); /* Hiệu ứng nhấc nhẹ khi hover */
+}
+
+.detectLocationBtn:active {
+  transform: translateY(1px); /* Hiệu ứng nhấn xuống */
+  box-shadow: 0 1px 2px rgba(255, 107, 53, 0.1);
 }
 
 @media (max-width: 900px) {
