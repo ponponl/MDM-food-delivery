@@ -1,6 +1,5 @@
 .orderHistoryContainer {
-  padding: 80px 30px 20px 210px;
-  margin: 0 auto;
+  padding: 1.5rem;
 }
 
 .header {
@@ -51,8 +50,8 @@
 }
 
 .tabActive {
-  color: #1565c0;
-  border-bottom-color: #1565c0;
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
 }
 
 .ordersList {
@@ -81,8 +80,6 @@
   border: 1px solid #e0e0e0;
   border-radius: 12px;
   padding: 30px;
-  margin-left: 20px;
-  margin-right: 20px;
   transition: box-shadow 0.3s ease;
 }
 
@@ -141,7 +138,7 @@
 
 .statusArriving {
   background: #e3f2fd;
-  color: #1565c0;
+  color: var(--primary-color);
 }
 
 .statusCancelled {
@@ -239,7 +236,7 @@
 }
 
 .dotActive {
-  background: #1565c0;
+  background: var(--primary-color);
   width: 12px;
   border-radius: 3px;
 }
@@ -255,7 +252,7 @@
 .quantityBadge {
   display: inline-block;
   padding: 6px 12px;
-  color: #1565c0;
+  color: var(--primary-color);
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
@@ -272,15 +269,14 @@
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: #1565c0;
+  color: var(--primary-color);
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
 }
 
 .btnViewOrder:hover {
-  background: #f0f7ff;
-  border-color: #1565c0;
+  border-color: var(--primary-color);
 }
 
 /* Total Price */

@@ -1,7 +1,6 @@
 .reviewPage {
     max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
+    margin: 2rem;
     font-family: 'Inter', sans-serif;
     color: #1F2933;
 }

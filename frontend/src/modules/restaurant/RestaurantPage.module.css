@@ -1,8 +1,6 @@
 .restaurantPage {
-    --header-height: 64px;
-    --sidebar-width: 180px;
     min-height: 100vh;
-    background-color: #FFFDFB;
+    background-color: #FFF;
 }
 
 .pageBody {
