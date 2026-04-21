@@ -5,6 +5,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-reac
 import styles from '../order/OrderHistoryPage.module.css';
 import orderApi from '../../api/orderApi';
 import { useAuth } from '../../context/AuthContext';
+import ConfirmModal from '../../components/common/ConfirmModal';
 
 const MerchantOrdersPage = () => {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ const MerchantOrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updatingMap, setUpdatingMap] = useState({});
+  const [confirmOrder, setConfirmOrder] = useState(null);
 
   useEffect(() => {
     if (user?.restaurantInfo) {
@@ -176,6 +178,17 @@ const MerchantOrdersPage = () => {
     }
   };
 
+  const openCancelConfirm = (order) => {
+    if (!order) return;
+    setConfirmOrder(order);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!confirmOrder) return;
+    await cancelOrder(confirmOrder);
+    setConfirmOrder(null);
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -312,18 +325,10 @@ const MerchantOrdersPage = () => {
                         color: '#999'
                       }}
                     >
-                      {order.restaurantImage ? (
-                        <img
-                          src={order.restaurantImage}
-                          alt={order.restaurantName || 'Restaurant'}
-                          style={{ width: '100%', height: '100%', borderRadius: '8px', objectFit: 'cover' }}
-                        />
-                      ) : (
-                        <ShoppingCart size={24} />
-                      )}
+                      <ShoppingCart size={24} />
                     </div>
                     <div>
-                      <h3>{order.restaurantName || `Đơn hàng #${order.orderId}`}</h3>
+                      <h3>Đơn #{order.orderExternalId}</h3>
                       <p className={styles.orderDate}>{order.orderDate}</p>
                     </div>
                   </div>
@@ -340,7 +345,11 @@ const MerchantOrdersPage = () => {
                     </div>
                     <button
                       className={styles.btnViewOrder}
-                      onClick={() => navigate('/orderDetail', { state: { orderExternalId: order.orderExternalId } })}
+                      onClick={() =>
+                        navigate('/merchant/order-detail', {
+                          state: { orderExternalId: order.orderExternalId }
+                        })
+                      }
                     >
                       Xem chi tiết <ArrowRight size={16} />
                     </button>
@@ -366,7 +375,7 @@ const MerchantOrdersPage = () => {
                     {(canCancel && !isUpdating) && (
                       <button
                         className={styles.btnCancelOrder}
-                        onClick={() => cancelOrder(order)}
+                        onClick={() => openCancelConfirm(order)}
                       >
                         Hủy đơn
                       </button>
@@ -378,6 +387,17 @@ const MerchantOrdersPage = () => {
           })
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={Boolean(confirmOrder)}
+        title="Xác nhận hủy đơn"
+        message={`Bạn chắc chắn muốn hủy đơn #${confirmOrder?.orderExternalId}?`}
+        confirmText="Hủy đơn"
+        cancelText="Quay lại"
+        isLoading={confirmOrder ? Boolean(updatingMap[confirmOrder.orderExternalId]) : false}
+        onClose={() => setConfirmOrder(null)}
+        onConfirm={handleConfirmCancel}
+      />
     </div>
   );
 };
