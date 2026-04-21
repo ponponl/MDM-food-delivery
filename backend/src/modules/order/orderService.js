@@ -388,6 +388,20 @@ export const getUserOrders = async ({ userExternalId, status, limit, offset }) =
   }
 };
 
+export const getRestaurantOrders = async ({ restaurantId, status, limit, offset }) => {
+  try {
+    return await orderRepository.getRestaurantOrdersByRestaurantId({
+      restaurantId,
+      status,
+      limit,
+      offset
+    });
+  } catch (error) {
+    logger.error(`Error getting restaurant orders: ${error.message}`);
+    throw error;
+  }
+};
+
 export const confirmOrder = async (orderExternalId, estimatedPrepTime) => {
   const client = await pgPool.connect();
 

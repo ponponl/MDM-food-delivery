@@ -284,6 +284,39 @@ export const getUserOrders = async (req, res, next) => {
   }
 };
 
+export const getRestaurantOrders = async (req, res, next) => {
+  try {
+    const { restaurantId, status, limit = 20, offset = 0 } = req.query;
+
+    if (!restaurantId) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Missing required parameter: restaurantId',
+        code: 'MISSING_PARAMETER'
+      });
+    }
+
+    const parsedLimit = Math.min(parseInt(limit) || 20, 100);
+    const parsedOffset = Math.max(parseInt(offset) || 0, 0);
+
+    const result = await orderService.getRestaurantOrders({
+      restaurantId,
+      status,
+      limit: parsedLimit,
+      offset: parsedOffset
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: result
+    });
+
+  } catch (error) {
+    logger.error(`Error getting restaurant orders: ${error.message}`);
+    next(error);
+  }
+};
+
 export const confirmOrder = async (req, res, next) => {
   try {
     const { orderExternalId } = req.params;
@@ -317,16 +350,8 @@ export const startDelivery = async (req, res, next) => {
     const { orderExternalId } = req.params;
     const { driverId, estimatedDeliveryTime } = req.body;
 
-    if (!driverId) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Missing required field: driverId',
-        code: 'MISSING_FIELDS'
-      });
-    }
-
     const result = await orderService.startDelivery(orderExternalId, {
-      driverId,
+      driverId: driverId || 'merchant',
       estimatedDeliveryTime
     });
 

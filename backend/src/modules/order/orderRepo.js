@@ -151,6 +151,56 @@ export class OrderRepository {
     };
   }
 
+  async getRestaurantOrdersByRestaurantId({ restaurantId, status, limit, offset }) {
+    if (!restaurantId) {
+      return {
+        orders: [],
+        pagination: { total: 0, limit, offset, hasMore: false }
+      };
+    }
+
+    let query = `
+      SELECT
+        o.id,
+        o.externalId,
+        o.restaurantId,
+        o.status,
+        o.totalPrice,
+        o.created_at,
+        COUNT(*) OVER() as total_count,
+        json_agg(
+          json_build_object(
+            'itemId', oi.itemId,
+            'quantity', oi.quantity,
+            'price', oi.price
+          ) ORDER BY oi.itemId
+        ) FILTER (WHERE oi.orderId IS NOT NULL) as items
+      FROM orders o
+      LEFT JOIN order_items oi ON oi.orderId = o.id
+      WHERE o.restaurantId = $1
+    `;
+
+    const params = [restaurantId];
+
+    if (status) {
+      query += ` AND o.status = $${params.length + 1}`;
+      params.push(status);
+    }
+
+    query += ` GROUP BY o.id
+      ORDER BY o.created_at DESC 
+      LIMIT $${params.length + 1} 
+      OFFSET $${params.length + 2}`;
+    params.push(limit, offset);
+
+    const result = await pgPool.query(query, params);
+
+    return {
+      orders: result.rows.map(mapOrderSummaryRow),
+      pagination: buildOrdersPagination(result.rows, limit, offset)
+    };
+  }
+
   async updateOrderStatus(client, { orderExternalId, fromStatuses, toStatus }) {
     const statusList = Array.isArray(fromStatuses) ? fromStatuses : [fromStatuses];
     const result = await client.query(

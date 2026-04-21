@@ -17,6 +17,7 @@ import OrderDetailPage from './modules/order/OrderDetailPage.jsx';
 import MerchantRegisterPage from './modules/merchant/MerchantRegisterPage.jsx';
 import MerchantLoginPage from './modules/merchant/MerchantLoginPage.jsx';
 import MerchantDashboardPage from './modules/merchant/MerchantDashboardPage.jsx';
+import MerchantOrdersPage from './modules/merchant/MerchantOrdersPage.jsx';
 import MerchantLayout from './layouts/MerchantLayout/MerchantLayout.jsx';
 import './App.css';
 
@@ -43,6 +44,7 @@ function App() {
           <Route path="/merchant/login" element={<MerchantLoginPage />} />
           <Route element={<MerchantLayout />}>
             <Route path="/merchant/dashboard" element={<MerchantDashboardPage />} />
+            <Route path="/merchant/orders" element={<MerchantOrdersPage />} />
           </Route>
         </Routes>
 

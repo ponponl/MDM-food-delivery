@@ -135,6 +135,21 @@
   color: #2e7d32;
 }
 
+.statusPlaced {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.statusConfirmed {
+  background: #fff8e1;
+  color: #ef6c00;
+}
+
+.statusDelivering {
+  background: #ede7f6;
+  color: #5e35b1;
+}
+
 .statusArriving {
   background: #e3f2fd;
   color: var(--primary-color);
@@ -303,6 +318,13 @@
   justify-content: space-between;
 }
 
+.actionGroup {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-left: auto;
+}
+
 .ratingDisplay {
   display: flex;
   align-items: center;
@@ -346,6 +368,55 @@
 
 .btnReorder:hover {
   background: #e0e0e0;
+}
+
+.btnNextStatus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #1565c0;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btnNextStatus:hover {
+  background: #0d47a1;
+}
+
+.btnNextStatus:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnCancelOrder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  background: #fff;
+  color: #c62828;
+  border: 1px solid #c62828;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btnCancelOrder:hover {
+  background: #ffebee;
+}
+
+.btnCancelOrder:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .skeletonCard {
@@ -664,10 +735,20 @@
     gap: 10px;
   }
 
+  .actionGroup {
+    width: 100%;
+    flex-direction: column;
+  }
+
   .btnReorder {
     width: 100%;
     margin-left: 0;
     justify-content: center;
+  }
+
+  .btnNextStatus,
+  .btnCancelOrder {
+    width: 100%;
   }
 
   .modal {
