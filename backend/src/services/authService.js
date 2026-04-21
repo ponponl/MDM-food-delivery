@@ -6,7 +6,7 @@ import { CATEGORY_MAP } from '../modules/restaurant/restaurantRepo.js';
 
 class AuthService {
     async registerMerchant(payload) {
-        const { email, password, username, name, type, phone, address } = payload;
+        const { email, password, username, name, type, phone, address, openTime, closeTime } = payload;
 
         if (!email || !password || !username || !name || !type) {
             throw new AppError('Vui lòng cung cấp đầy đủ thông tin yêu cầu', 400);
@@ -44,8 +44,16 @@ class AuthService {
                 type: mappedType,
                 phone,
                 address: {
-                    full: address
-                }
+                    street: address.street,
+                    ward: address.ward,
+                    city: address.city,
+                    full: address.full,
+                    location: address.location
+                },
+                openTime,
+                closeTime,
+                totalReview: 0,
+                avgRating: 0.0
             });
 
             await newRestaurant.save();
