@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { ArrowRight, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react';
+import { ArrowRight, ShoppingCart } from 'lucide-react';
 import styles from '../order/OrderHistoryPage.module.css';
 import orderApi from '../../api/orderApi';
 import { useAuth } from '../../context/AuthContext';
@@ -45,14 +45,7 @@ const MerchantOrdersPage = () => {
         return;
       }
 
-      const menuItems = restaurantInfo?.menu || restaurantInfo?.items || [];
-      const menuItemMap = {};
-      menuItems.forEach((item) => {
-        menuItemMap[item._id] = item;
-      });
-
       const transformedOrders = data.orders.map((order) => ({
-        orderId: order.orderId,
         orderExternalId: order.orderExternalId,
         restaurantId: order.restaurantId,
         restaurantName: restaurantInfo?.name || `Nhà hàng #${order.restaurantId}`,
@@ -60,17 +53,7 @@ const MerchantOrdersPage = () => {
         status: order.status,
         statusText: getStatusText(order.status),
         totalPrice: order.totalPrice || 0,
-        items: (order.items || []).map((item) => {
-          const menuItem = menuItemMap[item.itemId];
-          return {
-            itemId: item.itemId,
-            name: menuItem?.name || `Món #${item.itemId}`,
-            image: menuItem?.image || menuItem?.images?.[0] || null,
-            quantity: item.quantity || 1,
-            price: item.price || 0,
-            description: menuItem?.description || ''
-          };
-        }),
+        totalItems: Number.isFinite(order.totalItems) ? order.totalItems : 0,
         orderDate: formatDate(order.createdAt),
         createdAt: order.createdAt
       }));
@@ -218,8 +201,6 @@ const MerchantOrdersPage = () => {
     }
   };
 
-  const getTotalQuantity = (items) => items.reduce((sum, item) => sum + item.quantity, 0);
-
   const filteredOrders = filterStatus === 'all'
     ? orders
     : orders.filter((order) => order.status === filterStatus);
@@ -310,7 +291,7 @@ const MerchantOrdersPage = () => {
             const canCancel = ['placed', 'confirmed'].includes(order.status);
 
             return (
-              <div key={order.orderId} className={styles.orderCard}>
+              <div key={order.orderExternalId} className={styles.orderCard}>
                 <div className={styles.orderHeader}>
                   <div className={styles.restaurantInfo}>
                     <div
@@ -337,11 +318,10 @@ const MerchantOrdersPage = () => {
                   </div>
                 </div>
 
-                <div className={styles.itemsSlider}>
-                  <ItemsCarousel items={order.items} totalQuantity={getTotalQuantity(order.items)} />
-                  <div className={styles.sliderInfo}>
+                <div className={styles.orderBody}>
+                  <div className={styles.orderBodyLeft}>
                     <div className={styles.quantityBadge}>
-                      {getTotalQuantity(order.items)} món
+                      {order.totalItems} món
                     </div>
                     <button
                       className={styles.btnViewOrder}
@@ -354,32 +334,30 @@ const MerchantOrdersPage = () => {
                       Xem chi tiết <ArrowRight size={16} />
                     </button>
                   </div>
-                </div>
-
-                <div className={styles.totalPrice}>
-                  <span>Tổng tiền:</span>
-                  <span className={styles.price}>{order.totalPrice.toLocaleString('vi-VN')}đ</span>
-                </div>
-
-                <div className={styles.actions}>
-                  <div className={styles.actionGroup}>
-                    {nextStatus && (
-                      <button
-                        className={styles.btnNextStatus}
-                        onClick={() => updateOrderStatus(order)}
-                        disabled={isUpdating}
-                      >
-                        {getNextStatusLabel(nextStatus)}
-                      </button>
-                    )}
-                    {(canCancel && !isUpdating) && (
-                      <button
-                        className={styles.btnCancelOrder}
-                        onClick={() => openCancelConfirm(order)}
-                      >
-                        Hủy đơn
-                      </button>
-                    )}
+                  <div className={styles.orderBodyRight}>
+                    <div className={styles.totalPrice}>
+                      <span>Tổng tiền:</span>
+                      <span className={styles.price}>{order.totalPrice.toLocaleString('vi-VN')}đ</span>
+                    </div>
+                    <div className={styles.orderBodyActions}>
+                      {nextStatus && (
+                        <button
+                          className={styles.btnNextStatus}
+                          onClick={() => updateOrderStatus(order)}
+                          disabled={isUpdating}
+                        >
+                          {getNextStatusLabel(nextStatus)}
+                        </button>
+                      )}
+                      {(canCancel && !isUpdating) && (
+                        <button
+                          className={styles.btnCancelOrder}
+                          onClick={() => openCancelConfirm(order)}
+                        >
+                          Hủy đơn
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -398,95 +376,6 @@ const MerchantOrdersPage = () => {
         onClose={() => setConfirmOrder(null)}
         onConfirm={handleConfirmCancel}
       />
-    </div>
-  );
-};
-
-const ItemsCarousel = ({ items }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  if (!items || items.length === 0) {
-    return (
-      <div className={styles.carousel}>
-        <div className={styles.carouselContent}>
-          <div
-            style={{
-              width: '100%',
-              height: '100%',
-              backgroundColor: '#e0e0e0',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#999'
-            }}
-          >
-            <ShoppingCart size={24} />
-          </div>
-          <div className={styles.carouselInfo}>
-            <p className={styles.carouselName}>Không có món ăn</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const currentItem = items[currentIndex] || {};
-
-  const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % items.length);
-  };
-
-  const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
-  };
-
-  return (
-    <div className={styles.carousel}>
-      {items.length > 1 && (
-        <button className={styles.carouselBtn} onClick={prevSlide}>
-          <ChevronLeft size={20} />
-        </button>
-      )}
-
-      <div className={styles.carouselContent}>
-        {currentItem.image ? (
-          <img src={currentItem.image} alt={currentItem.name || 'Item'} />
-        ) : (
-          <div
-            style={{
-              width: '100%',
-              height: '100%',
-              backgroundColor: '#e0e0e0',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#999'
-            }}
-          >
-            <ShoppingCart size={24} />
-          </div>
-        )}
-        <div className={styles.carouselInfo}>
-          <p className={styles.carouselName}>{currentItem.name || 'Món ăn'}</p>
-          <div className={styles.carouselMeta}>
-            <span>x{currentItem.quantity || 1}</span>
-            <span className={styles.dots}>
-              {items.map((_, idx) => (
-                <span
-                  key={idx}
-                  className={`${styles.dot} ${idx === currentIndex ? styles.dotActive : ''}`}
-                />
-              ))}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {items.length > 1 && (
-        <button className={styles.carouselBtn} onClick={nextSlide}>
-          <ChevronRight size={20} />
-        </button>
-      )}
     </div>
   );
 };

@@ -2,11 +2,11 @@ export const mapOrderDetailRow = (row) => {
     if (!row) return null;
 
     return {
-        orderId: row.id,
         orderExternalId: row.externalid,
         restaurantId: row.restaurantid,
         status: row.status,
         totalPrice: parseFloat(row.totalprice),
+        totalItems: row.total_items ?? null,
         deliveryAddress: row.deliveryaddress,
         items: row.items,
         payment: {
@@ -24,13 +24,12 @@ export const mapOrderDetailRow = (row) => {
 };
 
 export const mapOrderSummaryRow = (row) => ({
-    orderId: row.id,
     orderExternalId: row.externalid,
     restaurantId: row.restaurantid,
     status: row.status,
     totalPrice: parseFloat(row.totalprice),
-    createdAt: row.created_at,
-    items: row.items || []
+    totalItems: row.total_items ?? null,
+    createdAt: row.created_at
 });
 
 export const buildOrdersPagination = (rows, limit, offset) => {

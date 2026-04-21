@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, MapPin, Clock, Phone, Package, DollarSign, User, Truck} from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Phone, DollarSign, User } from 'lucide-react';
+import { SpinnerIcon, CallBellIcon, PackageIcon, CheckIcon, XIcon } from '@phosphor-icons/react';
 import toast from 'react-hot-toast';
 import styles from './OrderDetailPage.module.css';
 import orderApi from '../../api/orderApi';
@@ -31,6 +32,7 @@ const OrderDetailPage = () => {
         if (data) {
           let restaurantName = '';
           let restaurantImage = null;
+          let restaurantMenuImage = null;
           let transformedItems = data.items || [];
           
           try {
@@ -38,6 +40,7 @@ const OrderDetailPage = () => {
             const restaurant = restaurantRes?.data || restaurantRes;
             restaurantName = restaurant?.name || '';
             restaurantImage = restaurant?.images?.[0] || null;
+            restaurantMenuImage = restaurant?.menu?.[0]?.image || restaurant?.menu?.[0]?.images?.[0] || null;
             
             const menuItemMap = {};
             restaurant?.menu?.forEach(item => {
@@ -51,7 +54,7 @@ const OrderDetailPage = () => {
             transformedItems = data.items.map(item => ({
               ...item,
               name: menuItemMap[item.itemId]?.name || `Món #${item.itemId}`,
-              image: menuItemMap[item.itemId]?.image || null,
+              image: menuItemMap[item.itemId]?.image || menuItemMap[item.itemId]?.images?.[0] || null,
               description: menuItemMap[item.itemId]?.description || ''
             }));
           } catch (restaurantError) {
@@ -59,11 +62,11 @@ const OrderDetailPage = () => {
           }
 
           const transformedOrder = {
-            orderId: data.orderId,
             orderExternalId: data.orderExternalId,
             restaurantId: data.restaurantId,
             restaurantName: restaurantName || `Nhà hàng #${data.restaurantId}`,
             restaurantImage: restaurantImage,
+            restaurantMenuImage,
             status: data.status,
             statusText: getStatusText(data.status),
             totalPrice: data.totalPrice,
@@ -145,6 +148,27 @@ const OrderDetailPage = () => {
     }).replace(/\//g, '-');
   };
 
+  const getStatusClass = (status) => {
+    switch (status) {
+      case 'placed':
+        return styles.statusPlaced || '';
+      case 'confirmed':
+        return styles.statusConfirmed || '';
+      case 'preparing':
+        return styles.statusConfirmed || '';
+      case 'ready':
+        return styles.statusDelivering || '';
+      case 'delivering':
+        return styles.statusDelivering || '';
+      case 'completed':
+        return styles.statusCompleted || '';
+      case 'cancelled':
+        return styles.statusCancelled || '';
+      default:
+        return '';
+    }
+  };
+
   return (
     <div className={styles.detailContainer}>
       <div className={styles.pageHeader}>
@@ -212,13 +236,19 @@ const OrderDetailPage = () => {
         <div className={styles.content}>
           {/* Order Status */}
           <div className={styles.section}>
-            <div className={styles.orderStatus}>
+            <div className={`${styles.orderStatus} ${getStatusClass(order.status)}`}>
               <div className={styles.statusBadge}>
-                {order.status === 'completed' && <span className={styles.completed}>✔</span>}
+                {order.status === 'placed' && <SpinnerIcon size={20} color="#ffffff" />}
+                {order.status === 'confirmed' && <CallBellIcon size={20} color="#ffffff" />}
+                {order.status === 'preparing' && <PackageIcon size={20} color="#ffffff" />}
+                {order.status === 'ready' && <PackageIcon size={20} color="#ffffff" />}
+                {order.status === 'delivering' && <PackageIcon size={20} color="#ffffff" />}
+                {order.status === 'completed' && <CheckIcon size={20} color="#ffffff" />}
+                {order.status === 'cancelled' && <XIcon size={20} color="#ffffff" />}
               </div>
               <div className={styles.statusInfo}>
                 <h2>{order.statusText}</h2>
-                <p>Mã đơn: #{order.orderId}</p>
+                <p>Mã đơn: #{order.orderExternalId}</p>
                 <p>{order.orderDate}</p>
                 {order.status === 'delivering' && order.driver && (
                   <p style={{ color: '#1565c0', fontWeight: 'bold', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -230,6 +260,41 @@ const OrderDetailPage = () => {
                   <p className={styles.statusMessage}>{getStatusMessage(order.status)}</p>
                 )}
               </div>
+            </div>
+          </div>
+
+          {(order.restaurantMenuImage || order.restaurantImage) && (
+            <div className={styles.sectionRestaurant}>
+              <img
+                src={order.restaurantImage}
+                alt={order.restaurantName || 'Restaurant'}
+              />
+              <div className={styles.restaurantInfo}>
+                <h3 className={styles.sectionTitle}>Nhà hàng</h3>
+                <h3 className={styles.restaurantName}>{order.restaurantName}</h3>
+              </div>
+            </div>
+          )}
+
+          {/* Items Ordered */}
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>Các Món Đã Đặt</h3>
+            <div className={styles.itemsList}>
+              {order.items.map((item, idx) => (
+                <div key={idx} className={styles.orderItem}>
+                  {item.image && (
+                    <img src={item.image} alt={item.name || 'Menu item'} />
+                  )}
+                  <div className={styles.itemInfo}>
+                    <h4>{item.name}</h4>
+                    <p>Số lượng: {item.quantity}</p>
+                    {item.notes && <p className={styles.notes}>Ghi chú: {item.notes}</p>}
+                  </div>
+                  <div className={styles.itemPrice}>
+                    {(item.price * item.quantity).toLocaleString('vi-VN')}đ
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -256,25 +321,6 @@ const OrderDetailPage = () => {
                 <p className={styles.addressLabel}>Giao đến</p>
                 <p className={styles.addressText}>{order.deliveryAddress}</p>
               </div>
-            </div>
-          </div>
-
-          {/* Items Ordered */}
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>Các Món Đã Đặt</h3>
-            <div className={styles.itemsList}>
-              {order.items.map((item, idx) => (
-                <div key={idx} className={styles.orderItem}>
-                  <div className={styles.itemInfo}>
-                    <h4>{item.name}</h4>
-                    <p>Số lượng: {item.quantity}</p>
-                    {item.notes && <p className={styles.notes}>Ghi chú: {item.notes}</p>}
-                  </div>
-                  <div className={styles.itemPrice}>
-                    {(item.price * item.quantity).toLocaleString('vi-VN')}đ
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
 

@@ -42,6 +42,7 @@ const MerchantOrderDetailPage = () => {
 
         let restaurantName = '';
         let restaurantImage = null;
+        let restaurantMenuImage = null;
         let transformedItems = data.items || [];
         const menuItemMap = {};
 
@@ -57,12 +58,14 @@ const MerchantOrderDetailPage = () => {
           });
           restaurantName = restaurantInfo?.name || '';
           restaurantImage = restaurantInfo?.images?.[0] || null;
+          restaurantMenuImage = menuItems?.[0]?.image || menuItems?.[0]?.images?.[0] || null;
         } else {
           try {
             const restaurantRes = await restaurantApi.getById(data.restaurantId);
             const restaurant = restaurantRes?.data || restaurantRes;
             restaurantName = restaurant?.name || '';
             restaurantImage = restaurant?.images?.[0] || null;
+            restaurantMenuImage = restaurant?.menu?.[0]?.image || restaurant?.menu?.[0]?.images?.[0] || null;
 
             restaurant?.menu?.forEach((item) => {
               menuItemMap[item._id] = {
@@ -79,16 +82,16 @@ const MerchantOrderDetailPage = () => {
         transformedItems = (data.items || []).map((item) => ({
           ...item,
           name: menuItemMap[item.itemId]?.name || `Món #${item.itemId}`,
-          image: menuItemMap[item.itemId]?.image || null,
+          image: menuItemMap[item.itemId]?.image || menuItemMap[item.itemId]?.images?.[0] || null,
           description: menuItemMap[item.itemId]?.description || ''
         }));
 
         const transformedOrder = {
-          orderId: data.orderId,
           orderExternalId: data.orderExternalId,
           restaurantId: data.restaurantId,
           restaurantName: restaurantName || `Nhà hàng #${data.restaurantId}`,
           restaurantImage: restaurantImage,
+          restaurantMenuImage,
           status: data.status,
           statusText: getStatusText(data.status),
           totalPrice: data.totalPrice || 0,
@@ -300,23 +303,20 @@ const MerchantOrderDetailPage = () => {
         </div>
       ) : (
         <div className={styles.content}>
-          <div className={styles.section}>
-            <h3 className={styles.sectionTitle}>Các Món Đã Đặt</h3>
-            <div className={styles.itemsList}>
-              {order.items.map((item, idx) => (
-                <div key={idx} className={styles.orderItem}>
-                  <div className={styles.itemInfo}>
-                    <h4>{item.name}</h4>
-                    <p>Số lượng: {item.quantity}</p>
-                    {item.notes && <p className={styles.notes}>Ghi chú: {item.notes}</p>}
-                  </div>
-                  <div className={styles.itemPrice}>
-                    {(item.price * item.quantity).toLocaleString('vi-VN')}đ
-                  </div>
+          {/* {(order.restaurantMenuImage || order.restaurantImage) && (
+            <div className={styles.section}>
+              <h3 className={styles.sectionTitle}>Nhà hàng</h3>
+              <div className={styles.restaurantCard}>
+                <img
+                  src={order.restaurantImage}
+                  alt={order.restaurantName || 'Restaurant'}
+                />
+                <div className={styles.restaurantInfo}>
+                  <h4>{order.restaurantName}</h4>
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
+          )} */}
 
           <div className={styles.section}>
             <div className={`${styles.orderStatus} ${getStatusClass(order.status)}`}>
@@ -330,7 +330,7 @@ const MerchantOrderDetailPage = () => {
               </div>
               <div className={styles.statusInfo}>
                 <h2>{order.statusText}</h2>
-                <p>Mã đơn: #{order.orderId}</p>
+                <p>Mã đơn: #{order.orderExternalId}</p>
                 <p>{order.orderDate}</p>
                 {order.status === 'delivering' && order.driver && (
                   <p
@@ -370,6 +370,29 @@ const MerchantOrderDetailPage = () => {
               </div>
             </div>
           </div>
+
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>Các Món Đã Đặt</h3>
+            <div className={styles.itemsList}>
+              {order.items.map((item, idx) => (
+                <div key={idx} className={styles.orderItem}>
+                  {item.image && (
+                    <img src={item.image} alt={item.name || 'Menu item'} />
+                  )}
+                  <div className={styles.itemInfo}>
+                    <h4>{item.name}</h4>
+                    <p>Số lượng: {item.quantity}</p>
+                    {item.notes && <p className={styles.notes}>Ghi chú: {item.notes}</p>}
+                  </div>
+                  <div className={styles.itemPrice}>
+                    {(item.price * item.quantity).toLocaleString('vi-VN')}đ
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+
 
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>Thông Tin Thanh Toán</h3>

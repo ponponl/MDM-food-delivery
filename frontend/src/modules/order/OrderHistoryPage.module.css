@@ -95,6 +95,36 @@
   border-bottom: 1px solid #f0f0f0;
 }
 
+.orderBody {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.orderBodyLeft {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.orderBodyRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  min-width: 220px;
+}
+
+.orderBodyActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .restaurantInfo {
   display: flex;
   align-items: center;
@@ -265,7 +295,7 @@
 
 .quantityBadge {
   display: inline-block;
-  padding: 6px 12px;
+  padding: 6px 0px;
   color: var(--primary-color);
   border-radius: 6px;
   font-size: 13px;
@@ -279,7 +309,7 @@
   gap: 6px;
   padding: 8px 14px;
   background: white;
-  border: 1px solid #ddd;
+  border: 1px solid var(--primary-color);
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
@@ -290,7 +320,8 @@
 }
 
 .btnViewOrder:hover {
-  border-color: var(--primary-color);
+  background: var(--primary-color);
+  color: #fff;
 }
 
 /* Total Price */
@@ -299,7 +330,7 @@
   justify-content: flex-end;
   gap: 5px;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 0;
   font-size: 16px;
   font-weight: 600;
   color: #333;
@@ -334,6 +365,12 @@
   flex: 1;
 }
 
+.ratingRow {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
 .btnRate {
   padding: 8px 14px;
   background: white;
@@ -363,7 +400,6 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-left: auto;
 }
 
 .btnReorder:hover {
