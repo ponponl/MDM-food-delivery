@@ -35,7 +35,7 @@
 }
 
 .heroInfo {
-    max-width: 420px;
+    max-width: 600px;
     text-align: left;
     color: #ffffff;
     display: flex;
@@ -233,7 +233,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    width: min(420px, 80%);
+    width: min(600px, 80%);
 }
 
 .skeletonTitle {

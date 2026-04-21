@@ -52,7 +52,7 @@
     border-radius: 8px;
     overflow: hidden;
     flex-shrink: 0;
-    background: #f3f3f3;
+    /* background: #f3f3f3; */
 }
 
 .foodImage {

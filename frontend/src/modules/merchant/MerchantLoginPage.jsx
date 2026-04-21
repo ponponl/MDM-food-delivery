@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { loginMerchant } from '../../services/authService';
@@ -52,7 +52,8 @@ const MerchantLoginPage = () => {
                 <div className={styles.leftPanel}>
                     <div className={styles.branding}>
                         <img src="/src/assets/logo.png" alt="Foodly Logo" className={styles.logo} onError={(e) => e.target.style.display='none'} />
-                        <h2>Foodly cho Đối Tác</h2>
+                        <Link to="/" className={styles.brandLink}>Foodly</Link>
+                        <h2> cho Đối Tác</h2>
                     </div>
                     <div className={styles.editorialContent}>
                         <h1>Chào mừng trở lại!</h1>

@@ -5,7 +5,7 @@ import { logout as logoutService } from '../../services/authService';
 import styles from './MerchantHeader.module.css';
 
 const MerchantHeader = () => {
-    const { user, logoutUser } = useAuth();
+    const { user, logoutUser, loading } = useAuth();
     const navigate = useNavigate();
     const displayName = user?.username || user?.name || 'Doi tac';
 
@@ -25,7 +25,9 @@ const MerchantHeader = () => {
                 <Link className={styles.logo} to="/merchant/dashboard">FOODLY</Link>
             </div>
             <div className={styles.rightGroup}>
-                <span className={styles.welcome}>Xin chào, {displayName}</span>
+                <span className={styles.welcome} aria-live="polite">
+                    Xin chào, {loading ? <span className={styles.welcomeSkeleton} aria-hidden="true" /> : displayName}
+                </span>
                 <button className={styles.logoutButton} type="button" onClick={handleLogout} aria-label="Dang xuat">
                     <SignOutIcon size={18} weight="bold" />
                 </button>
