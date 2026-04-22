@@ -65,7 +65,15 @@ const orderApi = {
     axiosClient.patch(`/orders/${orderExternalId}/cancel`, {
       reason,
       cancelledBy
-    })
+    }),
+  getRevenueStats: ({ restaurantId, granularity = 'DAY', timePartition }) => {
+    const params = new URLSearchParams({
+      restaurantId,
+      granularity,
+      timePartition
+    });
+    return axiosClient.get(`/orders/stats/revenue?${params.toString()}`);
+  }
 };
 
 export default orderApi;

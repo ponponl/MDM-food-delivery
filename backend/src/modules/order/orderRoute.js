@@ -30,4 +30,7 @@ router.patch('/:orderExternalId/complete', orderController.completeOrder);
 // Update order status - Cancel
 router.patch('/:orderExternalId/cancel', orderController.cancelOrder);
 
+// Revenue report
+router.get('/stats/revenue', orderController.getRevenueStats);
+
 export default router;

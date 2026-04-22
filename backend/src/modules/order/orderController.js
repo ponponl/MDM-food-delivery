@@ -1,6 +1,8 @@
 import { messageQueue } from '../../config/queue.js';
 import * as orderService from './orderService.js';
 import logger from '../../config/logger.js';
+import { cassandraClient } from '../../config/cassandra.js';
+import moment from 'moment';
 
 const resolveUserExternalId = (req) =>
   req.user?.externalId ||
@@ -444,6 +446,56 @@ export const cancelOrder = async (req, res, next) => {
       });
     }
 
+    next(error);
+  }
+};
+
+export const getRevenueStats = async (req, res, next) => {
+  try {
+    const { restaurantId } = req.query;
+    const granularity = (req.query.granularity || 'DAY').toUpperCase();
+    
+    let { timePartition } = req.query;
+
+    if (!timePartition) {
+      if (granularity === 'DAY') timePartition = moment().format('YYYY-MM-DD'); // Ví dụ: 2026-04-22
+      else if (granularity === 'MONTH') timePartition = moment().format('YYYY-MM'); // Ví dụ: 2026-04
+      else if (granularity === 'YEAR') timePartition = moment().format('YYYY'); // Ví dụ: 2026
+    } else {
+      if (granularity === 'DAY' && timePartition.length > 10) {
+        timePartition = timePartition.substring(0, 10); // Convert to YYYY-MM-DD
+      } else if (granularity === 'MONTH' && timePartition.length > 7) {
+        timePartition = timePartition.substring(0, 7); // Convert to YYYY-MM
+      } else if (granularity === 'YEAR' && timePartition.length > 4) {
+        timePartition = timePartition.substring(0, 4); // Convert to YYYY
+      }
+    }
+
+    if (!restaurantId) {
+      return res.status(400).json({ status: 'error', message: 'Thiếu restaurantId rồi m ơi!' });
+    }
+
+    const query = `
+      SELECT * FROM foodly_tracking.restaurant_revenue_stats 
+      WHERE restaurant_id = ? AND granularity = ? AND time_partition = ?
+    `;
+
+    const result = await cassandraClient.execute(
+      query, 
+      [restaurantId, granularity, timePartition], 
+      { prepare: true }
+    );
+    
+    console.log('Query result rows:', result.rows.length);
+    const sortedData = result.rows.sort((a, b) => a.time_value.localeCompare(b.time_value));
+
+    res.status(200).json({
+      status: 'success',
+      data: sortedData
+    });
+
+  } catch (error) {
+    console.error('Lỗi lấy thống kê:', error);
     next(error);
   }
 };
