@@ -14,9 +14,9 @@ import { AuthProvider } from './context/AuthContext.jsx';
 import { Toaster } from 'react-hot-toast';
 import OrderHistoryPage from './modules/order/OrderHistoryPage.jsx';
 import OrderDetailPage from './modules/order/OrderDetailPage.jsx';
-import MerchantRegisterPage from './modules/merchant/MerchantRegisterPage.jsx';
-import MerchantLoginPage from './modules/merchant/MerchantLoginPage.jsx';
-import MerchantDashboardPage from './modules/merchant/MerchantDashboardPage.jsx';
+import MerchantRegisterPage from './modules/merchant/merchantRegister/MerchantRegisterPage.jsx';
+import MerchantLoginPage from './modules/merchant/merchantRegister/MerchantLoginPage.jsx';
+import MerchantDashboardPage from './modules/merchant/merchantDashboard/MerchantDashboardPage.jsx';
 import './App.css';
 
 function App() {

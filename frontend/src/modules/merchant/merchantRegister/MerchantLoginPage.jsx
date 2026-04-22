@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { loginMerchant } from '../../services/authService';
-import { useAuth } from '../../context/AuthContext';
+import { loginMerchant } from '../../../services/authService';
+import { useAuth } from '../../../context/AuthContext';
 import styles from './MerchantRegisterPage.module.css';
 
 const MerchantLoginPage = () => {
