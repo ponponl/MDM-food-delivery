@@ -186,11 +186,12 @@ export class OrderRepository {
   }
 
   async updateOrderStatus(client, { orderExternalId, fromStatuses, toStatus }) {
-    const statusList = Array.isArray(fromStatuses) ? fromStatuses : [fromStatuses];
+    const statusList = (Array.isArray(fromStatuses) ? fromStatuses : [fromStatuses])
+      .map((status) => (typeof status === 'string' ? status.toLowerCase() : status));
     const result = await client.query(
       `UPDATE orders
        SET status = $1
-       WHERE externalId = $2 AND status = ANY($3)
+       WHERE externalId = $2 AND LOWER(status::text) = ANY($3)
        RETURNING id, status`,
       [toStatus, orderExternalId, statusList]
     );

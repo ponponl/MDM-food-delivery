@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Star, ShoppingCart, ArrowRight } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import styles from './OrderHistoryPage.module.css';
 import orderApi from '../../api/orderApi';
 import restaurantApi from '../../api/restaurantApi';
@@ -11,8 +12,9 @@ import ConfirmModal from '../../components/common/ConfirmModal';
 const OrderHistoryPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [filterStatus, setFilterStatus] = useState('all');
-  const [orders, setOrders] = useState([]);
+  const [ordersRaw, setOrdersRaw] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updatingMap, setUpdatingMap] = useState({});
   const [confirmOrder, setConfirmOrder] = useState(null);
@@ -40,60 +42,43 @@ const OrderHistoryPage = () => {
 
       if (!data || !Array.isArray(data.orders)) {
         console.log('No orders data');
-        setOrders([]);
+        setOrdersRaw([]);
         return;
       }
 
-      // Get unique restaurant IDs
-      const uniqueRestaurantIds = [...new Set(data.orders.map(o => o.restaurantId))];
-      
-      // Fetch all restaurants in parallel
-      const restaurantPromises = uniqueRestaurantIds.map(id =>
-        restaurantApi.getById(id).catch(err => {
-          console.warn(`Error fetching restaurant ${id}:`, err);
-          return null;
-        })
-      );
-      
-      const restaurantResponses = await Promise.all(restaurantPromises);
-      
-      // Build restaurant map
-      const restaurantMap = {};
-      uniqueRestaurantIds.forEach((id, idx) => {
-        const restaurant = restaurantResponses[idx]?.data || restaurantResponses[idx];
-        restaurantMap[id] = restaurant;
-      });
-
-      // Transform orders with restaurant details only
-      const transformedOrders = data.orders.map(order => {
-        const restaurant = restaurantMap[order.restaurantId];
-
-        return {
-          orderExternalId: order.orderExternalId,
-          restaurantId: order.restaurantId,
-          restaurantName: restaurant?.name || `Nhà hàng #${order.restaurantId}`,
-          restaurantImage: restaurant?.images?.[0] || null,
-          status: order.status,
-          statusText: getStatusText(order.status),
-          totalPrice: order.totalPrice || 0,
-          totalItems: Number.isFinite(order.totalItems) ? order.totalItems : 0,
-          orderDate: formatDate(order.createdAt),
-          createdAt: order.createdAt,
-          rating: order.rating || null,
-          comment: order.comment || ''
-        };
-      });
-
-      console.log('Transformed Orders with details:', transformedOrders);
-      setOrders(transformedOrders);
+      setOrdersRaw(data.orders);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast.error('Lỗi tải lịch sử đơn hàng');
-      setOrders([]);
+      setOrdersRaw([]);
     } finally {
       setLoading(false);
     }
   };
+
+  const restaurantIds = useMemo(() => {
+    const ids = ordersRaw.map((order) => order.restaurantId).filter(Boolean);
+    return [...new Set(ids)].sort();
+  }, [ordersRaw]);
+
+  const { data: restaurantsBulk, isLoading: isRestaurantsLoading } = useQuery({
+    queryKey: ['restaurants-bulk', restaurantIds],
+    queryFn: async () => {
+      const response = await restaurantApi.getBulk(restaurantIds);
+      return response?.data?.restaurants || response?.restaurants || {};
+    },
+    enabled: restaurantIds.length > 0,
+    staleTime: 5 * 60 * 1000
+  });
+
+  useEffect(() => {
+    if (!restaurantsBulk) return;
+    Object.entries(restaurantsBulk).forEach(([publicId, restaurant]) => {
+      if (restaurant) {
+        queryClient.setQueryData(['restaurant', publicId], restaurant);
+      }
+    });
+  }, [restaurantsBulk, queryClient]);
 
   const getStatusText = (status) => {
     const statusMap = {
@@ -120,9 +105,32 @@ const OrderHistoryPage = () => {
     }).replace(/\//g, '-');
   };
 
-  const filteredOrders = filterStatus === 'all' 
-    ? orders 
+  const orders = useMemo(() => {
+    const restaurantMap = restaurantsBulk || {};
+    return ordersRaw.map((order) => {
+      const restaurant = restaurantMap[order.restaurantId];
+      return {
+        orderExternalId: order.orderExternalId,
+        restaurantId: order.restaurantId,
+        restaurantName: restaurant?.name || `Nhà hàng #${order.restaurantId}`,
+        restaurantImage: restaurant?.images?.[0] || null,
+        status: order.status,
+        statusText: getStatusText(order.status),
+        totalPrice: order.totalPrice || 0,
+        totalItems: Number.isFinite(order.totalItems) ? order.totalItems : 0,
+        orderDate: formatDate(order.createdAt),
+        createdAt: order.createdAt,
+        rating: order.rating || null,
+        comment: order.comment || ''
+      };
+    });
+  }, [ordersRaw, restaurantsBulk]);
+
+  const filteredOrders = filterStatus === 'all'
+    ? orders
     : orders.filter(order => order.status === filterStatus);
+
+  const isPageLoading = loading || (restaurantIds.length > 0 && isRestaurantsLoading);
 
   const handleReorder = async (order) => {
     try {
@@ -146,6 +154,12 @@ const OrderHistoryPage = () => {
           note: null
         });
       }
+
+      const cartResponse = await cartApi.getCart();
+      const cartPayload = cartResponse?.data ?? cartResponse;
+      const cartData = cartPayload?.data ?? cartPayload ?? {};
+      const totalQty = Number(cartData.totalQty ?? 0);
+      window.dispatchEvent(new CustomEvent('cart:updated', { detail: { totalQty } }));
       
       toast.success(`Đã thêm các món từ ${restaurantName} vào giỏ hàng`);
     } catch (error) {
@@ -172,10 +186,10 @@ const OrderHistoryPage = () => {
         cancelledBy: 'customer'
       });
 
-      setOrders((prev) =>
+      setOrdersRaw((prev) =>
         prev.map((item) =>
           item.orderExternalId === order.orderExternalId
-            ? { ...item, status: 'cancelled', statusText: getStatusText('cancelled') }
+            ? { ...item, status: 'cancelled' }
             : item
         )
       );
@@ -281,7 +295,7 @@ const OrderHistoryPage = () => {
       </div>
 
       <div className={styles.ordersList}>
-        {loading ? (
+        {isPageLoading ? (
           [...Array(3)].map((_, index) => (
             <div key={index} className={styles.skeletonCard}>
               <div className={styles.skeletonHeaderRow}>

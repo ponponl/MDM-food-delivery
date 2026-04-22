@@ -41,19 +41,7 @@ export default function RestaurantPage() {
         staleTime: 5 * 60 * 1000
     });
 
-    const {
-        data: reviewsData,
-        isLoading: isReviewsLoading
-    } = useQuery({
-        queryKey: ['restaurant-reviews', publicId],
-        queryFn: () => reviewApi.getReviewsByRestaurantId(publicId).catch(() => []),
-        enabled: Boolean(publicId)
-    });
-
-    const realReviews = reviewsData?.data || reviewsData || [];
-    const restaurant = restaurantData
-        ? { ...restaurantData, reviews: realReviews }
-        : null;
+    const restaurant = restaurantData ? { ...restaurantData } : null;
 
     useEffect(() => {
         if (!restaurant?.menu?.length) return;
@@ -63,7 +51,7 @@ export default function RestaurantPage() {
         setActiveCategory(firstCategory || '');
     }, [restaurant]);
 
-    if (isRestaurantLoading || isReviewsLoading) {
+    if (isRestaurantLoading) {
         return (
             <div className={styles.restaurantPage}>
                 <main className={styles.mainContent}>
@@ -109,11 +97,6 @@ export default function RestaurantPage() {
     }
 
     if (isRestaurantError || !restaurant) return null;
-
-    const totalReviews = restaurant.reviews?.length || 0;
-    const avgRating = totalReviews > 0 
-        ? (restaurant.reviews.reduce((acc, rev) => acc + rev.rating, 0) / totalReviews).toFixed(1)
-        : '0.0';
 
     const groupedMenu = (restaurant.menu || []).reduce((acc, item) => {
         if (!acc[item.category]) acc[item.category] = [];
@@ -165,25 +148,25 @@ export default function RestaurantPage() {
         }
     };
 
-    const maskUserName = (name) => {
-        if (!name) return 'Ẩn danh';
-        const [first] = name.trim().split(' ');
-        if (!first) return 'Ẩn danh';
-        return `${first.slice(0, 3)}***`;
-    };
+    // const maskUserName = (name) => {
+    //     if (!name) return 'Ẩn danh';
+    //     const [first] = name.trim().split(' ');
+    //     if (!first) return 'Ẩn danh';
+    //     return `${first.slice(0, 3)}***`;
+    // };
 
-    const formatReviewTime = (value) => {
-        if (!value) return '';
-        const normalized = String(value).replace(' ', 'T');
-        const parsed = new Date(normalized);
-        if (Number.isNaN(parsed.getTime())) return '';
-        const day = String(parsed.getDate()).padStart(2, '0');
-        const month = String(parsed.getMonth() + 1).padStart(2, '0');
-        const year = parsed.getFullYear();
-        const hours = String(parsed.getHours()).padStart(2, '0');
-        const minutes = String(parsed.getMinutes()).padStart(2, '0');
-        return `${day}/${month}/${year} ${hours}:${minutes}`;
-    };
+    // const formatReviewTime = (value) => {
+    //     if (!value) return '';
+    //     const normalized = String(value).replace(' ', 'T');
+    //     const parsed = new Date(normalized);
+    //     if (Number.isNaN(parsed.getTime())) return '';
+    //     const day = String(parsed.getDate()).padStart(2, '0');
+    //     const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    //     const year = parsed.getFullYear();
+    //     const hours = String(parsed.getHours()).padStart(2, '0');
+    //     const minutes = String(parsed.getMinutes()).padStart(2, '0');
+    //     return `${day}/${month}/${year} ${hours}:${minutes}`;
+    // };
 
     return (
         <div className={styles.restaurantPage}>
@@ -208,9 +191,9 @@ export default function RestaurantPage() {
                                 className={styles.heroRatingBtn}
                                 onClick={handleViewReviews}
                             >
-                                <span className={styles.heroRatingValue}>{avgRating}</span>
+                                <span className={styles.heroRatingValue}>{restaurant.avgRating}</span>
                                 <Star size={16} fill="#ffffff" color="#ffffff" />
-                                <span className={styles.heroRatingCount}>({restaurant.reviews.length} reviews)</span>
+                                <span className={styles.heroRatingCount}>({restaurant.totalReview} reviews)</span>
                             </button>
                         </div>
                     </div>

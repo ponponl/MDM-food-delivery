@@ -1,8 +1,9 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, MapPin, Clock, Phone, DollarSign, User } from 'lucide-react';
 import { SpinnerIcon, CallBellIcon, PackageIcon, CheckIcon, XIcon } from '@phosphor-icons/react';
 import toast from 'react-hot-toast';
+import { useQuery } from '@tanstack/react-query';
 import styles from './OrderDetailPage.module.css';
 import orderApi from '../../api/orderApi';
 import restaurantApi from '../../api/restaurantApi';
@@ -10,7 +11,7 @@ import restaurantApi from '../../api/restaurantApi';
 const OrderDetailPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [order, setOrder] = useState(null);
+  const [orderData, setOrderData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,60 +31,7 @@ const OrderDetailPage = () => {
         const data = response?.data;
         
         if (data) {
-          let restaurantName = '';
-          let restaurantImage = null;
-          let restaurantMenuImage = null;
-          let transformedItems = data.items || [];
-          
-          try {
-            const restaurantRes = await restaurantApi.getById(data.restaurantId);
-            const restaurant = restaurantRes?.data || restaurantRes;
-            restaurantName = restaurant?.name || '';
-            restaurantImage = restaurant?.images?.[0] || null;
-            restaurantMenuImage = restaurant?.menu?.[0]?.image || restaurant?.menu?.[0]?.images?.[0] || null;
-            
-            const menuItemMap = {};
-            restaurant?.menu?.forEach(item => {
-              menuItemMap[item._id] = {
-                name: item.name,
-                image: item.image || item.images?.[0] || null,
-                description: item.description
-              };
-            });
-            
-            transformedItems = data.items.map(item => ({
-              ...item,
-              name: menuItemMap[item.itemId]?.name || `Món #${item.itemId}`,
-              image: menuItemMap[item.itemId]?.image || menuItemMap[item.itemId]?.images?.[0] || null,
-              description: menuItemMap[item.itemId]?.description || ''
-            }));
-          } catch (restaurantError) {
-            console.warn('Error fetching restaurant details:', restaurantError);
-          }
-
-          const transformedOrder = {
-            orderExternalId: data.orderExternalId,
-            restaurantId: data.restaurantId,
-            restaurantName: restaurantName || `Nhà hàng #${data.restaurantId}`,
-            restaurantImage: restaurantImage,
-            restaurantMenuImage,
-            status: data.status,
-            statusText: getStatusText(data.status),
-            totalPrice: data.totalPrice,
-            items: transformedItems,
-            deliveryAddress: data.deliveryAddress?.address || '',
-            receiver: data.deliveryAddress?.receiver || '',
-            phone: data.deliveryAddress?.phone || '',
-            paymentMethod: data.payment?.method || 'cash',
-            paymentStatus: data.payment?.status === 'completed' ? 'Đã thanh toán' : 'Chưa thanh toán',
-            orderDate: formatDate(data.createdAt),
-            createdAt: data.createdAt,
-            userName: data.user?.name,
-            userPhone: data.user?.phone,
-            driver: getDriverInfo(data.status)
-          };
-          
-          setOrder(transformedOrder);
+          setOrderData(data);
         } else {
           toast.error('Không tìm thấy thông tin đơn hàng');
         }
@@ -98,30 +46,89 @@ const OrderDetailPage = () => {
     fetchOrderDetail();
   }, [location.state]);
 
-  const getStatusText = (status) => {
+  const restaurantId = orderData?.restaurantId;
+
+  const { data: restaurantData, isLoading: isRestaurantLoading } = useQuery({
+    queryKey: ['restaurant', restaurantId],
+    queryFn: async () => {
+      const response = await restaurantApi.getById(restaurantId);
+      return response?.data || response;
+    },
+    enabled: Boolean(restaurantId),
+    staleTime: 5 * 60 * 1000
+  });
+
+  const order = useMemo(() => {
+    if (!orderData) return null;
+
+    const restaurant = restaurantData || {};
+    const restaurantName = restaurant?.name || `Nhà hàng #${orderData.restaurantId}`;
+    const restaurantImage = restaurant?.images?.[0] || null;
+    const restaurantMenuImage = restaurant?.menu?.[0]?.image || restaurant?.menu?.[0]?.images?.[0] || null;
+
+    const menuItemMap = {};
+    restaurant?.menu?.forEach((item) => {
+      menuItemMap[item._id] = {
+        name: item.name,
+        image: item.image || item.images?.[0] || null,
+        description: item.description
+      };
+    });
+
+    const transformedItems = (orderData.items || []).map((item) => ({
+      ...item,
+      name: menuItemMap[item.itemId]?.name || `Món #${item.itemId}`,
+      image: menuItemMap[item.itemId]?.image || menuItemMap[item.itemId]?.images?.[0] || null,
+      description: menuItemMap[item.itemId]?.description || ''
+    }));
+
+    return {
+      orderExternalId: orderData.orderExternalId,
+      restaurantId: orderData.restaurantId,
+      restaurantName,
+      restaurantImage,
+      restaurantMenuImage,
+      status: orderData.status,
+      statusText: getStatusText(orderData.status),
+      totalPrice: orderData.totalPrice,
+      items: transformedItems,
+      deliveryAddress: orderData.deliveryAddress?.address || '',
+      receiver: orderData.deliveryAddress?.receiver || '',
+      phone: orderData.deliveryAddress?.phone || '',
+      paymentMethod: orderData.payment?.method || 'cash',
+      paymentStatus: orderData.payment?.status === 'completed' ? 'Đã thanh toán' : 'Chưa thanh toán',
+      orderDate: formatDate(orderData.createdAt),
+      createdAt: orderData.createdAt,
+      userName: orderData.user?.name,
+      userPhone: orderData.user?.phone,
+      driver: getDriverInfo(orderData.status)
+    };
+  }, [orderData, restaurantData]);
+
+  function getStatusText(status) {
     const statusMap = {
       'placed': 'Đã đặt',
       'confirmed': 'Xác nhận',
-      'preparing': 'Đang chuẩn bị',
-      'ready': 'Sẵn sàng',
+      // 'preparing': 'Đang chuẩn bị',
+      // 'ready': 'Sẵn sàng',
       'delivering': 'Đang giao',
       'completed': 'Đã hoàn thành',
       'cancelled': 'Đã hủy'
     };
     return statusMap[status] || status;
-  };
+  }
 
-  const getStatusMessage = (status) => {
+  function getStatusMessage(status) {
     const messageMap = {
       'placed': 'Đợi quán ăn xác nhận',
-      'confirmed': 'Tài xế đang lấy đơn',
+      'confirmed': 'Đơn của bạn đã được xác nhận',
       'preparing': 'Đơn của bạn đang được chuẩn bị',
       'delivering': 'Tài xế đang giao đến bạn'
     };
     return messageMap[status] || '';
-  };
+  }
 
-  const getDriverInfo = (status) => {
+  function getDriverInfo(status) {
     // Mock driver data - sẽ được cập nhật khi có dữ liệu thực từ API
     const shouldShowDriver = ['confirmed', 'preparing', 'delivering', 'completed', 'cancelled'].includes(status);
     
@@ -134,9 +141,9 @@ const OrderDetailPage = () => {
       image: 'https://i.pravatar.cc/150?img=12',
       estimatedTime: '15-20 phút'
     };
-  };
+  }
 
-  const formatDate = (dateString) => {
+  function formatDate(dateString) {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleString('vi-VN', {
@@ -146,9 +153,9 @@ const OrderDetailPage = () => {
       hour: '2-digit',
       minute: '2-digit'
     }).replace(/\//g, '-');
-  };
+  }
 
-  const getStatusClass = (status) => {
+  function getStatusClass(status) {
     switch (status) {
       case 'placed':
         return styles.statusPlaced || '';
@@ -167,7 +174,7 @@ const OrderDetailPage = () => {
       default:
         return '';
     }
-  };
+  }
 
   return (
     <div className={styles.detailContainer}>
@@ -179,7 +186,7 @@ const OrderDetailPage = () => {
         <div style={{ width: 24 }}></div>
       </div>
 
-      {loading ? (
+      {loading || (restaurantId && isRestaurantLoading) ? (
         <div className={styles.content}>
           <div className={styles.section}>
             <div className={styles.skeletonStatusRow}>

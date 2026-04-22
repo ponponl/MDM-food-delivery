@@ -34,3 +34,8 @@ export const getRestaurantsSummary = async (categories = [], limit = 5) => {
 export const getNearestRestaurants = async (lng, lat, maxDistance) => {
     return await repo.findNearest(lng, lat, maxDistance);
 };
+
+export const getRestaurantsByPublicIds = async (publicIds = [], { includeMenu = false } = {}) => {
+    const restaurants = await repo.findByPublicIds(publicIds, { includeMenu });
+    return restaurants;
+};
