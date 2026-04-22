@@ -102,6 +102,32 @@ class AuthService {
             restaurantInfo: restaurant || null
         };
     }
+
+    async getMerchantById(accountId) {
+        if (!accountId) {
+            throw new AppError('Merchant account id is required', 400);
+        }
+
+        const result = await pool.query(
+            "SELECT * FROM accounts WHERE id = $1 AND role = 'merchant'",
+            [accountId]
+        );
+
+        const user = result.rows[0];
+        if (!user) {
+            throw new AppError('Merchant account not found', 404);
+        }
+
+        const restaurant = await Restaurant.findOne({ accountId: user.id });
+        delete user.password;
+        delete user.id;
+        delete user.user_id;
+
+        return {
+            ...user,
+            restaurantInfo: restaurant || null
+        };
+    }
 }
 
 export const authService = new AuthService();

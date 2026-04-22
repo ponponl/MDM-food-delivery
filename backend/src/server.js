@@ -8,8 +8,10 @@ import cookieParser from 'cookie-parser';
 import connectMongo from './config/mongodb.js';
 import redisClient from './config/redis.js';
 import neo4jDriver from './config/neo4j.js';
+import { cassandraClient } from './config/cassandra.js'; 
 import pgPool from './config/postgres.js';
 import apiRoutes from './routes/index.js';
+import './workers/startWorker.js';
 
 const app = express();
 app.use(cors({

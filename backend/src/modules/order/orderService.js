@@ -110,6 +110,7 @@ export const createOrder = async ({
     const menuItems = await menuService.getMenuItems(itemIds);
 
     let totalPrice = 0;
+    let totalItems = 0;
     const orderItems = [];
     const priceUpdates = [];
     const cartPriceUpdates = [];
@@ -154,6 +155,7 @@ export const createOrder = async ({
       const subtotal = price * qty;
 
       totalPrice += subtotal;
+      totalItems += qty;
       orderItems.push({
         itemId,
         quantity: qty,
@@ -175,6 +177,7 @@ export const createOrder = async ({
       userId,
       restaurantId: targetRestaurantId,
       totalPrice,
+      totalItems,
       status: 'placed',
       deliveryAddress: resolvedDeliveryAddress
     });
@@ -221,10 +224,10 @@ export const createOrder = async ({
     // emitOrderEvent('order:created', { orderId, orderExternalId, status: 'placed' });
 
     return {
-      orderId,
       orderExternalId,
       status: 'placed',
       totalPrice,
+      totalItems,
       items: orderItems,
       paymentMethod: paymentMethod,
       paymentStatus: 'pending',
@@ -388,6 +391,20 @@ export const getUserOrders = async ({ userExternalId, status, limit, offset }) =
   }
 };
 
+export const getRestaurantOrders = async ({ restaurantId, status, limit, offset }) => {
+  try {
+    return await orderRepository.getRestaurantOrdersByRestaurantId({
+      restaurantId,
+      status,
+      limit,
+      offset
+    });
+  } catch (error) {
+    logger.error(`Error getting restaurant orders: ${error.message}`);
+    throw error;
+  }
+};
+
 export const confirmOrder = async (orderExternalId, estimatedPrepTime) => {
   const client = await pgPool.connect();
 
@@ -422,7 +439,7 @@ export const confirmOrder = async (orderExternalId, estimatedPrepTime) => {
     logger.info(`Order ${orderId} confirmed`);
 
     return {
-      orderId,
+      orderExternalId,
       status: 'confirmed',
       estimatedPrepTime
     };
@@ -471,7 +488,7 @@ export const startDelivery = async (orderExternalId, { driverId, estimatedDelive
     logger.info(`Order ${orderId} delivery started by driver ${driverId}`);
 
     return {
-      orderId,
+      orderExternalId,
       status: 'delivering',
       driverId,
       estimatedDeliveryTime
@@ -505,10 +522,11 @@ export const completeOrder = async (orderExternalId, { completedBy, signature })
     const orderId = updated.id;
 
     // Update payment status (COD paid)
+    const paidAt = new Date();
     await orderRepository.updatePaymentStatus(client, {
       orderId,
       status: 'paid',
-      paidAt: new Date()
+      paidAt
     });
 
     await client.query('COMMIT');
@@ -525,11 +543,11 @@ export const completeOrder = async (orderExternalId, { completedBy, signature })
     logger.info(`Order ${orderId} completed`);
 
     return {
-      orderId,
+      orderExternalId,
       status: 'completed',
       payment: {
         status: 'paid',
-        paidAt: new Date()
+        paidAt
       }
     };
 
@@ -548,10 +566,10 @@ export const cancelOrder = async (orderExternalId, { reason, cancelledBy }) => {
   try {
     await client.query('BEGIN');
 
-    // Can only cancel if status is 'placed' or 'confirmed'
+    // Can only cancel if status is 'placed'
     const updated = await orderRepository.updateOrderStatus(client, {
       orderExternalId,
-      fromStatuses: ['placed', 'confirmed'],
+      fromStatuses: ['placed'],
       toStatus: 'cancelled'
     });
 
@@ -584,7 +602,7 @@ export const cancelOrder = async (orderExternalId, { reason, cancelledBy }) => {
     logger.info(`Order ${orderId} cancelled. Reason: ${reason}`);
 
     return {
-      orderId,
+      orderExternalId,
       status: 'cancelled',
       reason
     };

@@ -6,12 +6,13 @@
     background-color: #FFFDFB;
     border: 1px solid #E5E7EB;
     box-shadow: -10px 10px 0 #FF6B35;
-    font-family: 'Georgia', serif;
+    font-family: 'Lexend', 'Segoe UI', sans-serif;
     overflow: hidden;
 }
 
 .mainArticle {
     flex: 1;
+    margin-bottom: 20px;
 }
 
 .formPart {
@@ -58,7 +59,7 @@
     border-radius: 6px;
     border: 1px solid #E5E7EB;
     background-color: #FFFDFB;
-    font-family: 'Georgia', serif;
+    font-family: inherit;
     font-size: 0.95rem;
     color: #1F2933;
     transition: all 0.2s ease;
@@ -161,6 +162,17 @@
     border-right: 1px solid #E5E7EB;
 }
 
+.mastheadLink,
+.logoLink {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.mastheadLink:hover h1 {
+    color: #ff521a;
+}
+
 .masthead {
     text-align: center;
     border-bottom: 3px solid #4CAF50;
@@ -168,8 +180,7 @@
     padding-bottom: 10px;
 }
 
-.masthead h1 {
-    font-family: 'Times New Roman', serif;
+.mastheadLink {
     font-size: 3rem;
     font-weight: 900;
     margin: 0;
@@ -188,7 +199,7 @@
 }
 
 .mainLogo {
-    width: 300px;
+    width: 240px;
     height: auto;
     margin: 0 auto;
     display: block;
@@ -204,16 +215,16 @@
     transform: scale(1.02);
 }
 
-.photoCredit {
+/* .photoCredit {
     font-size: 0.55rem;
     text-align: right;
     margin-top: 5px;
     color: #9CA3AF;
-}
+} */
 
 .articleTitle {
     font-size: 1.5rem;
-    margin: 15px 0 10px 0;
+    margin: 16px 0;
     color: #1F2933;
     border-bottom: 2px solid #FF6B35;
     display: inline-block;
@@ -229,7 +240,7 @@
 .thickDivider {
     height: 4px;
     background: #FF6B35;
-    margin-bottom: 8px;
+    margin-bottom: 20px;
 }
 
 .footerQuote {

@@ -6,7 +6,7 @@
     background-color: #FFFDFB;
     border: 1px solid #E5E7EB;
     box-shadow: -10px 10px 0 #FF6B35;
-    font-family: 'Georgia', serif;
+    font-family: 'Lexend', 'Segoe UI', sans-serif;
     overflow: hidden;
 }
 
@@ -36,7 +36,7 @@
     margin-bottom: 20px;
     text-align: center;
     border-bottom: 4px double #4CAF50;
-    padding-bottom: 10px;
+    padding-bottom: 16px;
 }
 
 .formPart form {
@@ -64,7 +64,7 @@
     border-radius: 6px;
     border: 1px solid #E5E7EB;
     background-color: #FFFDFB;
-    font-family: 'Georgia', serif;
+    font-family: inherit;
     font-size: 0.95rem;
     color: #1F2933;
     transition: all 0.2s ease;
@@ -225,13 +225,12 @@
     font-size: 5rem;
     line-height: 0.85;
     padding-right: 12px;
-    font-family: 'Times New Roman', serif;
     font-weight: bold;
     color: #FF6B35;
 }
 
 .quoteText {
-    font-family: 'Georgia', serif;
+    font-family: 'Lexend', 'Segoe UI', sans-serif;
     font-size: 0.95rem;
     line-height: 1.6;
     color: #1F2933;

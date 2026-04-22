@@ -71,8 +71,8 @@ export default function MenuPage() {
     };
 
     return (
-        <div style={{backgroundColor: '#FFFDFB'}}> 
-            <div className={styles.container}>
+        <div className={styles.menuPage}> 
+            <main className={styles.container}>
                 <div className={styles.content}>
                     <div className={styles.category}>
                         <h2 style={{marginBottom: '10px'}}>Chào mừng đến với Foodly!</h2>
@@ -162,7 +162,7 @@ export default function MenuPage() {
                         );
                     })}
                 </div>
-            </div>
+            </main>
         </div>
     );
 }

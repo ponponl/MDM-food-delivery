@@ -1,5 +1,8 @@
+import { messageQueue } from '../../config/queue.js';
 import * as orderService from './orderService.js';
 import logger from '../../config/logger.js';
+import { cassandraClient } from '../../config/cassandra.js';
+import moment from 'moment';
 
 const resolveUserExternalId = (req) =>
   req.user?.externalId ||
@@ -284,6 +287,39 @@ export const getUserOrders = async (req, res, next) => {
   }
 };
 
+export const getRestaurantOrders = async (req, res, next) => {
+  try {
+    const { restaurantId, status, limit = 20, offset = 0 } = req.query;
+
+    if (!restaurantId) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Missing required parameter: restaurantId',
+        code: 'MISSING_PARAMETER'
+      });
+    }
+
+    const parsedLimit = Math.min(parseInt(limit) || 20, 100);
+    const parsedOffset = Math.max(parseInt(offset) || 0, 0);
+
+    const result = await orderService.getRestaurantOrders({
+      restaurantId,
+      status,
+      limit: parsedLimit,
+      offset: parsedOffset
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: result
+    });
+
+  } catch (error) {
+    logger.error(`Error getting restaurant orders: ${error.message}`);
+    next(error);
+  }
+};
+
 export const confirmOrder = async (req, res, next) => {
   try {
     const { orderExternalId } = req.params;
@@ -317,16 +353,8 @@ export const startDelivery = async (req, res, next) => {
     const { orderExternalId } = req.params;
     const { driverId, estimatedDeliveryTime } = req.body;
 
-    if (!driverId) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Missing required field: driverId',
-        code: 'MISSING_FIELDS'
-      });
-    }
-
     const result = await orderService.startDelivery(orderExternalId, {
-      driverId,
+      driverId: driverId || 'merchant',
       estimatedDeliveryTime
     });
 
@@ -359,6 +387,15 @@ export const completeOrder = async (req, res, next) => {
     const result = await orderService.completeOrder(orderExternalId, {
       completedBy,
       signature
+    });
+    
+    const fullOrder = await orderService.getOrderDetail(orderExternalId);
+
+    messageQueue.emit('ORDER_FINISHED', {
+       orderId: orderExternalId,
+       restaurantId: fullOrder.restaurantId, 
+       totalPrice: fullOrder.totalPrice,     
+       timestamp: new Date().toISOString()
     });
 
     res.status(200).json({
@@ -409,6 +446,56 @@ export const cancelOrder = async (req, res, next) => {
       });
     }
 
+    next(error);
+  }
+};
+
+export const getRevenueStats = async (req, res, next) => {
+  try {
+    const { restaurantId } = req.query;
+    const granularity = (req.query.granularity || 'DAY').toUpperCase();
+    
+    let { timePartition } = req.query;
+
+    if (!timePartition) {
+      if (granularity === 'DAY') timePartition = moment().format('YYYY-MM-DD'); // Ví dụ: 2026-04-22
+      else if (granularity === 'MONTH') timePartition = moment().format('YYYY-MM'); // Ví dụ: 2026-04
+      else if (granularity === 'YEAR') timePartition = moment().format('YYYY'); // Ví dụ: 2026
+    } else {
+      if (granularity === 'DAY' && timePartition.length > 10) {
+        timePartition = timePartition.substring(0, 10); // Convert to YYYY-MM-DD
+      } else if (granularity === 'MONTH' && timePartition.length > 7) {
+        timePartition = timePartition.substring(0, 7); // Convert to YYYY-MM
+      } else if (granularity === 'YEAR' && timePartition.length > 4) {
+        timePartition = timePartition.substring(0, 4); // Convert to YYYY
+      }
+    }
+
+    if (!restaurantId) {
+      return res.status(400).json({ status: 'error', message: 'Thiếu restaurantId rồi m ơi!' });
+    }
+
+    const query = `
+      SELECT * FROM foodly_tracking.restaurant_revenue_stats 
+      WHERE restaurant_id = ? AND granularity = ? AND time_partition = ?
+    `;
+
+    const result = await cassandraClient.execute(
+      query, 
+      [restaurantId, granularity, timePartition], 
+      { prepare: true }
+    );
+    
+    console.log('Query result rows:', result.rows.length);
+    const sortedData = result.rows.sort((a, b) => a.time_value.localeCompare(b.time_value));
+
+    res.status(200).json({
+      status: 'success',
+      data: sortedData
+    });
+
+  } catch (error) {
+    console.error('Lỗi lấy thống kê:', error);
     next(error);
   }
 };

@@ -115,7 +115,7 @@ const OrderReviewPage = () => {
 
     try {
       const payload = {
-        orderId: orderData.orderId,
+        orderExternalId: orderData.orderExternalId || orderId,
         restaurantReview: {
           rating: restaurantReview.rating,
           comment: restaurantReview.comment

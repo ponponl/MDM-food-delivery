@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Star, Clock, MapPin } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import MenuSidebar from '../../components/menuSideBar/menuSideBar.jsx';
@@ -15,9 +16,6 @@ export default function RestaurantPage() {
     const navigate = useNavigate();
     const { slugAndId } = useParams();
     const { user } = useAuth();
-    const [restaurant, setRestaurant] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [activeCategory, setActiveCategory] = useState('');
 
     const publicId = (slugAndId || '').includes('-')
@@ -32,42 +30,85 @@ export default function RestaurantPage() {
         });
     };
 
-   useEffect(() => {
-        const fetchRestaurantDetail = async () => {
-            try {
-                setLoading(true);
-                const [data, reviewsResponse] = await Promise.all([
-                    restaurantApi.getById(publicId),
-                    reviewApi.getReviewsByRestaurantId(publicId).catch(() => []) 
-                ]);
-                
-                const realReviews = reviewsResponse?.data || reviewsResponse || [];
-                
-                setRestaurant({
-                    ...data,
-                    reviews: realReviews
-                });
-                
-                if (data.menu && data.menu.length > 0) {
-                    const firstCategory = data.menu
-                        .map((item) => item.category)
-                        .filter((category) => category)[0];
-                    setActiveCategory(firstCategory || '');
-                }
-            } catch (err) {
-                console.error("Lỗi fetch nhà hàng:", err);
-                setError("Không thể tải dữ liệu nhà hàng. Vui lòng thử lại sau.");
-            } finally {
-                setLoading(false);
-            }
-        };
+    const {
+        data: restaurantData,
+        isLoading: isRestaurantLoading,
+        isError: isRestaurantError
+    } = useQuery({
+        queryKey: ['restaurant', publicId],
+        queryFn: () => restaurantApi.getById(publicId),
+        enabled: Boolean(publicId),
+        staleTime: 5 * 60 * 1000
+    });
 
-        if (publicId) {
-            fetchRestaurantDetail();
-        }
-    }, [publicId]);
+    const {
+        data: reviewsData,
+        isLoading: isReviewsLoading
+    } = useQuery({
+        queryKey: ['restaurant-reviews', publicId],
+        queryFn: () => reviewApi.getReviewsByRestaurantId(publicId).catch(() => []),
+        enabled: Boolean(publicId)
+    });
 
-    if (loading || error || !restaurant) return null;
+    const realReviews = reviewsData?.data || reviewsData || [];
+    const restaurant = restaurantData
+        ? { ...restaurantData, reviews: realReviews }
+        : null;
+
+    useEffect(() => {
+        if (!restaurant?.menu?.length) return;
+        const firstCategory = restaurant.menu
+            .map((item) => item.category)
+            .filter((category) => category)[0];
+        setActiveCategory(firstCategory || '');
+    }, [restaurant]);
+
+    if (isRestaurantLoading || isReviewsLoading) {
+        return (
+            <div className={styles.restaurantPage}>
+                <main className={styles.mainContent}>
+                    <section className={`${styles.heroSection} ${styles.skeletonShimmer} ${styles.skeletonHero}`}>
+                        <div className={styles.skeletonHeroOverlay}>
+                            <div className={styles.skeletonHeroInfo}>
+                                <div className={`${styles.skeletonShimmer} ${styles.skeletonTitle}`} />
+                                <div className={`${styles.skeletonShimmer} ${styles.skeletonMeta}`} />
+                                <div className={`${styles.skeletonShimmer} ${styles.skeletonMetaShort}`} />
+                                <div className={`${styles.skeletonShimmer} ${styles.skeletonRating}`} />
+                            </div>
+                        </div>
+                    </section>
+
+                    <div className={styles.twoColumnLayout}>
+                        <aside className={styles.columnLeft}>
+                            <div className={styles.skeletonSidebar}>
+                                {[...Array(6)].map((_, index) => (
+                                    <div
+                                        key={index}
+                                        className={`${styles.skeletonShimmer} ${styles.skeletonSidebarItem}`}
+                                    />
+                                ))}
+                            </div>
+                        </aside>
+
+                        <section className={styles.columnRight}>
+                            <div className={styles.skeletonMenuGrid}>
+                                {[...Array(6)].map((_, index) => (
+                                    <div key={index} className={styles.skeletonMenuCard}>
+                                        <div className={`${styles.skeletonShimmer} ${styles.skeletonMenuHeader}`} />
+                                        <div className={`${styles.skeletonShimmer} ${styles.skeletonLine}`} />
+                                        <div className={`${styles.skeletonShimmer} ${styles.skeletonLineShort}`} />
+                                        <div className={`${styles.skeletonShimmer} ${styles.skeletonMenuFooter}`} />
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    </div>
+                </main>
+            </div>
+        );
+    }
+
+    if (isRestaurantError || !restaurant) return null;
 
     const totalReviews = restaurant.reviews?.length || 0;
     const avgRating = totalReviews > 0 
@@ -148,7 +189,7 @@ export default function RestaurantPage() {
         <div className={styles.restaurantPage}>
             <main className={styles.mainContent}>
                 <section className={styles.heroSection}>
-                    <img src={restaurant.images[0]} alt={restaurant.name} className={styles.heroBgImg} />
+                    <img src={restaurant.background?.[0] || restaurant.images?.[0]} alt={restaurant.name} className={styles.heroBgImg} />
                     <div className={styles.heroOverlay}>
                         <div className={styles.heroInfo}>
                             <h1 className={styles.heroTitle}>{restaurant.name}</h1>

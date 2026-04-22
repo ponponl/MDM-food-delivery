@@ -1,8 +1,7 @@
 .footer {
-    background-color: #000000;
-    border-top: 1px solid #2d3436;
+    background-color: #f9f9f9;
     padding: 4rem 2rem 1.5rem 2rem;
-    color: #f5f6fa;
+    color: #666;
     margin-left: 180px;
     width: auto;
 }
@@ -16,7 +15,7 @@
 }
 
 .footerSection h4 {
-    color: #ffffff;
+    color: var(--primary-color);
     font-size: 1.1rem;
     font-weight: 700;
     margin-bottom: 1.5rem;
@@ -28,13 +27,17 @@
     padding: 0;
 }
 
+.footerSection p {
+    margin-bottom: 0.8rem;
+}
+
 .footerSection ul li {
     margin-bottom: 0.8rem;
 }
 
 .footerSection ul li a {
     text-decoration: none;
-    color: #a4b0be;
+    color: #666;
     transition: all 0.2s;
     font-size: 0.95rem;
 }
@@ -46,25 +49,25 @@
 .merchantLoginBtn {
     display: inline-block;
     margin-top: 0.5rem;
-    padding: 8px 16px;
+    padding: 10px 16px;
     background-color: transparent;
-    border: 1.5px solid #4CAF50;
-    color: #4CAF50 !important;
+    border: 1.5px solid var(--primary-color);
+    color: var(--primary-color) !important;
     border-radius: 8px;
     font-weight: 600;
     transition: all 0.3s ease !important;
 }
 
 .merchantLoginBtn:hover {
-    background-color: #4CAF50;
-    color: #000000 !important;
+    background-color: var(--primary-color);
+    color: #fff !important;
     box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
 }
 
 .logo {
     font-size: 1.8rem;
     font-weight: 800;
-    color: #ffffff;
+    color: var(--primary-color);
     margin: 0 0 1rem 0;
 }
 
@@ -75,7 +78,7 @@
 .slogan {
     font-size: 0.95rem;
     line-height: 1.6;
-    color: #a4b0be;
+    color: #666;
     max-width: 250px;
 }
 
@@ -83,7 +86,7 @@
     max-width: 1200px;
     margin: 3rem auto 0 auto;
     padding-top: 1.5rem;
-    border-top: 1px solid #2d3436;
+    border-top: 1px solid #ebebeb;
     text-align: center;
     font-size: 0.9rem;
     color: #636e72;

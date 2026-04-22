@@ -30,12 +30,12 @@ export class OrderRepository {
     return result.rows[0].id;
   }
 
-  async createOrder(client, { userId, restaurantId, totalPrice, status, deliveryAddress }) {
+  async createOrder(client, { userId, restaurantId, totalPrice, totalItems, status, deliveryAddress }) {
     const result = await client.query(
-      `INSERT INTO orders (userId, restaurantId, totalPrice, status, deliveryAddress, created_at)
-       VALUES ($1, $2, $3, $4, $5, NOW())
+      `INSERT INTO orders (userId, restaurantId, totalPrice, total_items, status, deliveryAddress, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, NOW())
        RETURNING id, externalId, created_at`,
-      [userId, restaurantId, totalPrice, status, JSON.stringify(deliveryAddress)]
+      [userId, restaurantId, totalPrice, totalItems, status, JSON.stringify(deliveryAddress)]
     );
     return result.rows[0];
   }
@@ -63,10 +63,10 @@ export class OrderRepository {
   async getOrderDetailByExternalId(orderExternalId) {
     const query = `
       SELECT
-        o.id,
         o.externalId,
         o.restaurantId,
         o.totalPrice,
+        o.total_items,
         o.status,
         o.deliveryAddress,
         o.created_at,
@@ -111,26 +111,60 @@ export class OrderRepository {
 
     let query = `
       SELECT
-        o.id,
         o.externalId,
         o.restaurantId,
         o.status,
         o.totalPrice,
+        o.total_items,
         o.created_at,
-        COUNT(*) OVER() as total_count,
-        json_agg(
-          json_build_object(
-            'itemId', oi.itemId,
-            'quantity', oi.quantity,
-            'price', oi.price
-          ) ORDER BY oi.itemId
-        ) FILTER (WHERE oi.orderId IS NOT NULL) as items
+        COUNT(*) OVER() as total_count
       FROM orders o
-      LEFT JOIN order_items oi ON oi.orderId = o.id
       WHERE o.userId = $1
     `;
 
     const params = [userId];
+
+    if (status) {
+      query += ` AND o.status = $${params.length + 1}`;
+      params.push(status);
+    }
+
+    query += ` GROUP BY o.id
+      ORDER BY o.created_at DESC 
+      LIMIT $${params.length + 1} 
+      OFFSET $${params.length + 2}`;
+    params.push(limit, offset);
+
+    const result = await pgPool.query(query, params);
+
+    return {
+      orders: result.rows.map(mapOrderSummaryRow),
+      pagination: buildOrdersPagination(result.rows, limit, offset)
+    };
+  }
+
+  async getRestaurantOrdersByRestaurantId({ restaurantId, status, limit, offset }) {
+    if (!restaurantId) {
+      return {
+        orders: [],
+        pagination: { total: 0, limit, offset, hasMore: false }
+      };
+    }
+
+    let query = `
+      SELECT
+        o.externalId,
+        o.restaurantId,
+        o.status,
+        o.totalPrice,
+        o.total_items,
+        o.created_at,
+        COUNT(*) OVER() as total_count
+      FROM orders o
+      WHERE o.restaurantId = $1
+    `;
+
+    const params = [restaurantId];
 
     if (status) {
       query += ` AND o.status = $${params.length + 1}`;

@@ -1,8 +1,11 @@
+.menuPage {
+    min-height: 100vh;
+    background-color: #FFF;
+}
+
 .container {
     display: flex;
     flex-direction: row;
-    margin-top: 64px;
-    margin-left: 190px;
     height: 100%;
 }
 

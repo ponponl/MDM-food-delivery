@@ -1,30 +1,32 @@
 import React, { useState, useEffect } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { login } from "../../../services/authService";
 import { useAuth } from "../../../context/AuthContext";
 import styles from "./SignInForm.module.css";
 import toast from 'react-hot-toast';
 
 const SignInEditorial = () => (
-  <div className={styles.editorialPart}>
+  <div className={styles.editorialPart}>    
     <div className={styles.masthead}>
-      <h1>FOODLY</h1>
-      <div className={styles.mastheadDetails}>
+      <Link to="/" className={styles.mastheadLink}>FOODLY</Link>
+      {/* <div className={styles.mastheadDetails}>
         <span>Từ 2024 — Từ bếp địa phương đến bàn ăn của bạn</span>
         <span>⭐ Giao hàng cao cấp ⭐</span>
-      </div>
+      </div> */}
     </div>
 
+
     <div className={styles.mainArticle}>
-      <div className={styles.mainLogoWrapper}>
-        <img 
-          src="/FOODLY-logo.png"
-          className={styles.mainLogo} 
-          alt="Logo Foodly" 
-        />
-        <div className={styles.photoCredit}>Bữa ăn tươi mỗi ngày</div>
-      </div>
+      <Link to="/" className={styles.logoLink}>
+        <div className={styles.mainLogoWrapper}>
+          <img 
+            src="/FOODLY-logo.png"
+            className={styles.mainLogo} 
+            alt="Logo Foodly" 
+          />
+        </div>
+      </Link>
       
       <div className={styles.articleSnippet}>
         <h3 className={styles.articleTitle}>Từ bếp đến tận cửa</h3>

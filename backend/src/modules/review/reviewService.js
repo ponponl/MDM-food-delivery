@@ -30,9 +30,14 @@ class ReviewService {
   }
 
 async createFullReview(userId, payload) {
-    const { orderId, restaurantReview, itemReviews } = payload;
+    const { orderId, orderExternalId, restaurantReview, itemReviews } = payload;
+    const resolvedOrderId = orderId || orderExternalId;
 
-    const order = await reviewRepo.findOrderById(orderId);
+    if (!resolvedOrderId) {
+      throw new Error('Thiếu mã đơn hàng.');
+    }
+
+    const order = await reviewRepo.findOrderById(resolvedOrderId);
     if (!order) throw new Error('Không tìm thấy đơn hàng.');
 
     if (String(order.userid) !== String(userId)) {

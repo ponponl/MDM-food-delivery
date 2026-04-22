@@ -1,83 +1,20 @@
-.dashboardContainer {
-    display: flex;
-    height: 100vh;
+.page {
+    min-height: calc(100vh - 64px);
     background-color: #f8f9fa;
-    font-family: 'Inter', 'Segoe UI', sans-serif;
-    overflow: hidden;
-    margin-top: 64px;
+    padding: 1.25rem;
 }
 
-.sidebarFooter {
-    margin-top: auto;
-    padding-top: 1rem;
-    border-top: 1px solid #e9ecef;
-}
-
-.logoutBtn {
-    width: 100%;
-    padding: 12px;
-    background: #f1f2f6;
-    color: #FF6B35;
-    border: none;
-    border-radius: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.logoutBtn:hover {
-    background: #e4e8eb;
-}
-
-.mainContent {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-}
-
-.header {
-    height: 64px; /* Khớp với Header khách hàng */
-    background: #ffffff;
-    border-bottom: 1px solid #e9ecef;
+.pageHeader {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 2rem;
-    position: fixed; /* Cố định Header trên cùng */
-    top: 0;
-    width: 100%;
-    z-index: 1100;
+    margin-bottom: 2rem;
 }
 
-.header h2 {
+.pageTitle {
     font-size: 1.3rem;
     color: #2d3436;
-    margin: 0;
-}
-
-.headerLeft {
-    display: flex;
-    align-items: center;
-    gap: 5.4rem;
-}
-
-.logo {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: #FF6B35;
-    text-decoration: none;
-    margin-left: 1.4rem;
-}
-
-.divider {
-    color: #ddd;
-    font-size: 1.2rem;
-}
-
-.userProfile {
-    display: flex;
-    align-items: center;
+    margin: 0 0 6px 0;
 }
 
 .greeting {
@@ -91,7 +28,6 @@
 }
 
 .content {
-    padding: 2rem;
     flex: 1;
 }
 
@@ -105,11 +41,54 @@
     align-items: flex-end;
     margin-bottom: 2rem;
     box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    gap: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.restaurantBackground {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.restaurantBackground img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.28;
+}
+
+.restaurantImage {
+    width: 200px;
+    height: 200px;
+    border-radius: 16px;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    position: relative;
+    z-index: 1;
+}
+
+.restaurantImage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .restaurantInfo h1 {
     font-size: 2.2rem;
     margin: 0 0 10px 0;
+}
+
+.restaurantInfo {
+    position: relative;
+    z-index: 1;
 }
 
 .restaurantType {
@@ -131,7 +110,9 @@
 
 .restaurantActions {
     display: flex;
-    gap: 15px;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
 }
 
 .primaryBtn {
@@ -205,4 +186,80 @@
     font-size: 1.4rem;
     font-weight: 700;
     color: #2d3436;
+}
+
+.skeleton {
+    position: relative;
+    overflow: hidden;
+    background: #e9ecef;
+    border-radius: 10px;
+}
+
+.skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    animation: shimmer 1.4s infinite;
+}
+
+.skeletonTitle {
+    width: min(360px, 70vw);
+    height: 36px;
+    margin-bottom: 12px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.skeletonChip {
+    width: 120px;
+    height: 24px;
+    margin-bottom: 16px;
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.skeletonLine {
+    width: min(520px, 75vw);
+    height: 16px;
+    margin-bottom: 10px;
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.skeletonLineShort {
+    width: min(320px, 60vw);
+    height: 16px;
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.skeletonButton {
+    width: 140px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.skeletonIcon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+}
+
+.skeletonLabel {
+    width: 140px;
+    height: 14px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+}
+
+.skeletonValue {
+    width: 110px;
+    height: 22px;
+    border-radius: 10px;
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
 }
