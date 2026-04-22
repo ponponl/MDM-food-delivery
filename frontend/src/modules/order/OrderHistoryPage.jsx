@@ -2,17 +2,14 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Star, ShoppingCart, ArrowRight } from 'lucide-react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
 import styles from './OrderHistoryPage.module.css';
 import orderApi from '../../api/orderApi';
-import restaurantApi from '../../api/restaurantApi';
 import cartApi from '../../api/cartApi';
 import { useAuth } from '../../context/AuthContext';
 import ConfirmModal from '../../components/common/ConfirmModal';
 const OrderHistoryPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const queryClient = useQueryClient();
   const [filterStatus, setFilterStatus] = useState('all');
   const [ordersRaw, setOrdersRaw] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -56,30 +53,6 @@ const OrderHistoryPage = () => {
     }
   };
 
-  const restaurantIds = useMemo(() => {
-    const ids = ordersRaw.map((order) => order.restaurantId).filter(Boolean);
-    return [...new Set(ids)].sort();
-  }, [ordersRaw]);
-
-  const { data: restaurantsBulk, isLoading: isRestaurantsLoading } = useQuery({
-    queryKey: ['restaurants-bulk', restaurantIds],
-    queryFn: async () => {
-      const response = await restaurantApi.getBulk(restaurantIds);
-      return response?.data?.restaurants || response?.restaurants || {};
-    },
-    enabled: restaurantIds.length > 0,
-    staleTime: 5 * 60 * 1000
-  });
-
-  useEffect(() => {
-    if (!restaurantsBulk) return;
-    Object.entries(restaurantsBulk).forEach(([publicId, restaurant]) => {
-      if (restaurant) {
-        queryClient.setQueryData(['restaurant', publicId], restaurant);
-      }
-    });
-  }, [restaurantsBulk, queryClient]);
-
   const getStatusText = (status) => {
     const statusMap = {
       'placed': 'Đã đặt',
@@ -105,32 +78,28 @@ const OrderHistoryPage = () => {
     }).replace(/\//g, '-');
   };
 
-  const orders = useMemo(() => {
-    const restaurantMap = restaurantsBulk || {};
-    return ordersRaw.map((order) => {
-      const restaurant = restaurantMap[order.restaurantId];
-      return {
-        orderExternalId: order.orderExternalId,
-        restaurantId: order.restaurantId,
-        restaurantName: restaurant?.name || `Nhà hàng #${order.restaurantId}`,
-        restaurantImage: restaurant?.images?.[0] || null,
-        status: order.status,
-        statusText: getStatusText(order.status),
-        totalPrice: order.totalPrice || 0,
-        totalItems: Number.isFinite(order.totalItems) ? order.totalItems : 0,
-        orderDate: formatDate(order.createdAt),
-        createdAt: order.createdAt,
-        rating: order.rating || null,
-        comment: order.comment || ''
-      };
-    });
-  }, [ordersRaw, restaurantsBulk]);
+  const orders = useMemo(() =>
+    ordersRaw.map((order) => ({
+      orderExternalId: order.orderExternalId,
+      restaurantId: order.restaurantId,
+      restaurantName: order.restaurantName || `Nhà hàng #${order.restaurantId}`,
+      restaurantImage: order.restaurantImageUrl || order.restaurantImage || null,
+      status: order.status,
+      statusText: getStatusText(order.status),
+      totalPrice: order.totalPrice || 0,
+      totalItems: Number.isFinite(order.totalItems) ? order.totalItems : 0,
+      orderDate: formatDate(order.createdAt),
+      createdAt: order.createdAt,
+      rating: order.rating || null,
+      comment: order.comment || ''
+    })),
+  [ordersRaw]);
 
   const filteredOrders = filterStatus === 'all'
     ? orders
     : orders.filter(order => order.status === filterStatus);
 
-  const isPageLoading = loading || (restaurantIds.length > 0 && isRestaurantsLoading);
+  const isPageLoading = loading;
 
   const handleReorder = async (order) => {
     try {

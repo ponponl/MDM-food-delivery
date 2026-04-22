@@ -103,8 +103,8 @@
 
 .groupImage,
 .groupPlaceholder {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 10px;
   display: inline-flex;
   align-items: center;
@@ -212,6 +212,31 @@
   text-align: center;
   font-weight: 600;
   color: #2b1a12;
+}
+
+.priceInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.snapshotPrice {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #6c4a3b;
+}
+
+.qtyText {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #6c4a3b;
 }
 
 .itemPrice {

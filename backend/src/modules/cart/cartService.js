@@ -22,11 +22,12 @@ const parseCartItem = (itemJson, itemKey) => {
   try {
     const parsed = JSON.parse(itemJson);
     const quantity = Number(parsed?.quantity) || 0;
-    const price = Number(parsed?.price) || 0;
+    const snapshotPrice = Number(parsed?.priceSnapshot ?? parsed?.price) || 0;
     return {
       ...parsed,
       itemKey,
-      subtotal: quantity * price
+      priceSnapshot: snapshotPrice,
+      subtotal: quantity * snapshotPrice
     };
   } catch (error) {
     logger.error(`Failed to parse cart item JSON: ${error.message}`);

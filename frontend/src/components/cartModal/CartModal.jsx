@@ -260,7 +260,13 @@ export default function CartModal({
                             </button>
                           </div>
 
-                          <div className={styles.itemPrice}>{formatCurrency(item.subtotal || 0)}</div>
+                          <div className={styles.priceInfo}>
+                            <div className={styles.priceRow}>
+                                <div className={styles.snapshotPrice}>{formatCurrency(item.snapshotPrice || item.price || 0)}</div>
+                                <div className={styles.qtyText}>x {item.quantity}</div>
+                              </div>
+                            <div className={styles.itemPrice}>{formatCurrency(item.subtotal || 0)}</div>
+                          </div>
 
                           <button
                             type="button"

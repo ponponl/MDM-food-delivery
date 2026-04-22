@@ -3,10 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, DollarSign, MapPin, Phone, User } from 'lucide-react';
 import { SpinnerIcon, CallBellIcon, PackageIcon, CheckIcon, XIcon } from "@phosphor-icons/react"; 
 import toast from 'react-hot-toast';
-import { useQuery } from '@tanstack/react-query';
 import styles from '../order/OrderDetailPage.module.css';
 import orderApi from '../../api/orderApi';
-import restaurantApi from '../../api/restaurantApi';
 import { useAuth } from '../../context/AuthContext';
 import ConfirmModal from '../../components/common/ConfirmModal';
 
@@ -52,48 +50,20 @@ const MerchantOrderDetailPage = () => {
     fetchOrderDetail();
   }, [location.state, navigate]);
 
-  const restaurantId = orderData?.restaurantId;
   const restaurantInfo = user?.restaurantInfo || null;
-  const isSameRestaurant = Boolean(
-    restaurantInfo?.publicId && restaurantInfo.publicId === restaurantId
-  );
-
-  const { data: restaurantData, isLoading: isRestaurantLoading } = useQuery({
-    queryKey: ['restaurant', restaurantId],
-    queryFn: async () => {
-      const response = await restaurantApi.getById(restaurantId);
-      return response?.data || response;
-    },
-    enabled: Boolean(restaurantId) && !isSameRestaurant,
-    staleTime: 5 * 60 * 1000
-  });
-
-  const resolvedRestaurant = isSameRestaurant ? restaurantInfo : restaurantData;
-  const isPageLoading = loading || (restaurantId && !isSameRestaurant && isRestaurantLoading);
+  const isPageLoading = loading;
 
   const order = useMemo(() => {
     if (!orderData) return null;
 
-    const restaurant = resolvedRestaurant || {};
-    const restaurantName = restaurant?.name || `Nhà hàng #${orderData.restaurantId}`;
-    const restaurantImage = restaurant?.images?.[0] || null;
-    const restaurantMenuImage = restaurant?.menu?.[0]?.image || restaurant?.menu?.[0]?.images?.[0] || null;
-    const menuItemMap = {};
-
-    const menuItems = restaurant?.menu || restaurant?.items || [];
-    menuItems.forEach((item) => {
-      menuItemMap[item._id] = {
-        name: item.name,
-        image: item.image || item.images?.[0] || null,
-        description: item.description
-      };
-    });
+    const restaurantName = orderData.restaurantName || restaurantInfo?.name || `Nhà hàng #${orderData.restaurantId}`;
+    const restaurantImage = orderData.restaurantImageUrl || restaurantInfo?.images?.[0] || null;
 
     const transformedItems = (orderData.items || []).map((item) => ({
       ...item,
-      name: menuItemMap[item.itemId]?.name || `Món #${item.itemId}`,
-      image: menuItemMap[item.itemId]?.image || menuItemMap[item.itemId]?.images?.[0] || null,
-      description: menuItemMap[item.itemId]?.description || ''
+      name: item.itemName || item.name || `Món #${item.itemId}`,
+      image: item.itemImageUrl || item.image || null,
+      description: item.description || ''
     }));
 
     return {
@@ -101,7 +71,6 @@ const MerchantOrderDetailPage = () => {
       restaurantId: orderData.restaurantId,
       restaurantName,
       restaurantImage,
-      restaurantMenuImage,
       status: orderData.status,
       statusText: getStatusText(orderData.status),
       totalPrice: orderData.totalPrice || 0,
@@ -117,9 +86,9 @@ const MerchantOrderDetailPage = () => {
       userPhone: orderData.user?.phone,
       driver: getDriverInfo(orderData.status)
     };
-  }, [orderData, resolvedRestaurant]);
+  }, [orderData, restaurantInfo]);
 
-  const getStatusText = (status) => {
+  function getStatusText(status) {
     const statusMap = {
       placed: 'Đã đặt',
       confirmed: 'Xác nhận',
@@ -128,7 +97,7 @@ const MerchantOrderDetailPage = () => {
       cancelled: 'Đã hủy'
     };
     return statusMap[status] || status;
-  };
+  }
 
   const getNextStatus = (status) => {
     switch (status) {
@@ -220,7 +189,7 @@ const MerchantOrderDetailPage = () => {
     }
   };
 
-  const getDriverInfo = (status) => {
+  function getDriverInfo(status) {
     const shouldShowDriver = ['confirmed', 'delivering', 'completed', 'cancelled'].includes(status);
     if (!shouldShowDriver) return null;
 
@@ -231,9 +200,9 @@ const MerchantOrderDetailPage = () => {
       image: 'https://i.pravatar.cc/150?img=12',
       estimatedTime: '15-20 phút'
     };
-  };
+  }
 
-  const formatDate = (dateString) => {
+  function formatDate(dateString) {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date
@@ -245,7 +214,7 @@ const MerchantOrderDetailPage = () => {
         minute: '2-digit'
       })
       .replace(/\//g, '-');
-  };
+  }
 
   const nextStatus = order ? getNextStatus(order.status) : null;
   const canCancel = order ? ['placed', 'confirmed'].includes(order.status) : false;
@@ -383,8 +352,13 @@ const MerchantOrderDetailPage = () => {
                     <p>Số lượng: {item.quantity}</p>
                     {item.notes && <p className={styles.notes}>Ghi chú: {item.notes}</p>}
                   </div>
-                  <div className={styles.itemPrice}>
-                    {(item.price * item.quantity).toLocaleString('vi-VN')}đ
+
+                  <div className={styles.priceInfo}>
+                    <div className={styles.priceRow}>
+                        <div className={styles.snapshotPrice}>{item.snapshotPrice?.toLocaleString('vi-VN') || 0}đ</div>
+                        <div className={styles.qtyText}>x {item.quantity}</div>
+                      </div>
+                    <div className={styles.itemPrice}>{((item.snapshotPrice ?? 0) * item.quantity).toLocaleString('vi-VN')}đ</div>
                   </div>
                 </div>
               ))}
@@ -407,7 +381,7 @@ const MerchantOrderDetailPage = () => {
               <div className={styles.paymentMethod}>
                 <div>
                   <p className={styles.label}>Phương thức thanh toán</p>
-                  <p>{order.paymentMethod}</p>
+                  <p className={styles.paymentMethodText}>{order.paymentMethod}</p>
                 </div>
                 <div>
                   <p className={styles.label}>Trạng thái</p>

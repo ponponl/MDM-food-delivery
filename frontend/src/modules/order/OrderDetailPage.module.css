@@ -309,14 +309,14 @@
 }
 
 .itemInfo h4 {
-  font-size: 14px;
+  font-size: 1rem;
   font-weight: 600;
   color: #333;
   margin: 0 0 4px 0;
 }
 
 .itemInfo p {
-  font-size: 12px;
+  font-size: 0.85rem;
   color: #666;
   margin: 4px 0;
 }
@@ -327,10 +327,35 @@
   font-style: italic;
 }
 
+.priceInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.priceRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.snapshotPrice {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #6c4a3b;
+}
+
+.qtyText {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #6c4a3b;
+}
+
 .itemPrice {
-  font-size: 14px;
+  font-size: 1rem;
   font-weight: 700;
-  color: #ee4949;
+  color: var(--primary-color);
   text-align: right;
   white-space: nowrap;
 }
@@ -387,8 +412,7 @@
   display: flex;
   justify-content: space-between;
   padding: 8px 0;
-  border-bottom: 1px solid #e0e0e0;
-  font-size: 13px;
+  font-size: 0.9rem;
 }
 
 .paymentRow:last-of-type {
@@ -406,13 +430,13 @@
   padding: 12px 0;
   margin-top: 8px;
   border-top: 2px solid #ddd;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
   color: #333;
 }
 
 .paymentRowTotal span:last-child {
-  color: #ee4949;
+  color: var(--primary-color);
 }
 
 .paymentMethod {
@@ -432,9 +456,15 @@
   font-weight: 600;
 }
 
+.paymentMethodText {
+  font-size: 0.85rem;
+  color: #333;
+  font-weight: 500;
+}
+
 .paid {
-  font-size: 13px;
-  color: #2e7d32;
+  font-size: 0.85rem;
+  color: rgb(209, 167, 0) ;
   font-weight: 600;
 }
 

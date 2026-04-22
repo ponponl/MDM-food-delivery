@@ -4,11 +4,13 @@ export const mapOrderDetailRow = (row) => {
     return {
         orderExternalId: row.externalid,
         restaurantId: row.restaurantid,
+        restaurantName: row.restaurantname,
+        restaurantImageUrl: row.restaurantimageurl,
         status: row.status,
         totalPrice: parseFloat(row.totalprice),
-        totalItems: row.total_items ?? null,
+        totalItems: row.totalitem ?? null,
         deliveryAddress: row.deliveryaddress,
-        items: row.items,
+        items: row.items || [],
         payment: {
             method: row.paymentmethod,
             status: row.paymentstatus,
@@ -26,9 +28,11 @@ export const mapOrderDetailRow = (row) => {
 export const mapOrderSummaryRow = (row) => ({
     orderExternalId: row.externalid,
     restaurantId: row.restaurantid,
+    restaurantName: row.restaurantname,
+    restaurantImageUrl: row.restaurantimageurl,
     status: row.status,
     totalPrice: parseFloat(row.totalprice),
-    totalItems: row.total_items ?? null,
+    totalItems: row.totalitem ?? null,
     createdAt: row.created_at
 });
 
