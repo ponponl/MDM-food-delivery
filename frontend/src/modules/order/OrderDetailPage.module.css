@@ -262,6 +262,25 @@
   color: #fff;
 }
 
+.btnReorder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--primary-color);
+  color: #fff;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnReorder:hover:not(:disabled) {
+  background: var(--hover-color);
+}
+
 .rating {
   font-size: 14px;
   font-weight: 600;

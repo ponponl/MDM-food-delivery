@@ -392,8 +392,8 @@
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
-  background: #f0f0f0;
-  color: #333;
+  background: var(--primary-color);
+  color: #fff;
   border: none;
   border-radius: 6px;
   font-size: 13px;
@@ -403,7 +403,7 @@
 }
 
 .btnReorder:hover {
-  background: #e0e0e0;
+  background: var(--hover-color);
 }
 
 .btnNextStatus {

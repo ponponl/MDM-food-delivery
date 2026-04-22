@@ -1,16 +1,20 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, MapPin, Clock, Phone, DollarSign, User } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Phone, DollarSign, User, ShoppingCart } from 'lucide-react';
 import { SpinnerIcon, CallBellIcon, PackageIcon, CheckIcon, XIcon } from '@phosphor-icons/react';
 import toast from 'react-hot-toast';
 import styles from './OrderDetailPage.module.css';
 import orderApi from '../../api/orderApi';
+import cartApi from '../../api/cartApi';
+import ConfirmModal from '../../components/common/ConfirmModal';
 
 const OrderDetailPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [orderData, setOrderData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
+  const [isCancelOpen, setIsCancelOpen] = useState(false);
 
   useEffect(() => {
     const fetchOrderDetail = async () => {
@@ -150,6 +154,75 @@ const OrderDetailPage = () => {
     }
   }
 
+  const canCancel = order ? ['placed'].includes(order.status) : false;
+
+  const cancelOrder = async (currentOrder) => {
+    if (!currentOrder) return;
+
+    if (currentOrder.status !== 'placed') {
+      toast.error('Chỉ có thể hủy đơn khi đang ở trạng thái Đã đặt');
+      return;
+    }
+
+    setUpdating(true);
+
+    try {
+      await orderApi.cancelOrder(currentOrder.orderExternalId, {
+        reason: 'Customer cancelled',
+        cancelledBy: 'customer'
+      });
+
+      setOrderData((prev) => (prev ? { ...prev, status: 'cancelled' } : prev));
+      toast.success('Đã hủy đơn hàng');
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      toast.error('Lỗi khi hủy đơn hàng');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleReorder = async (currentOrder) => {
+    if (!currentOrder) return;
+
+    setUpdating(true);
+
+    try {
+      const restaurantName = currentOrder.restaurantName || `đơn hàng #${currentOrder.orderExternalId}`;
+      const orderDetailResponse = await orderApi.getOrderDetail(currentOrder.orderExternalId);
+      const orderDetail = orderDetailResponse?.data || {};
+      const items = Array.isArray(orderDetail.items) ? orderDetail.items : [];
+
+      if (items.length === 0) {
+        toast.error('Không tìm thấy món ăn để mua lại');
+        return;
+      }
+
+      for (const item of items) {
+        await cartApi.addItem({
+          itemId: item.itemId,
+          quantity: item.quantity,
+          restaurantPublicId: currentOrder.restaurantId,
+          options: [],
+          note: null
+        });
+      }
+
+      const cartResponse = await cartApi.getCart();
+      const cartPayload = cartResponse?.data ?? cartResponse;
+      const cartData = cartPayload?.data ?? cartPayload ?? {};
+      const totalQty = Number(cartData.totalQty ?? 0);
+      window.dispatchEvent(new CustomEvent('cart:updated', { detail: { totalQty } }));
+
+      toast.success(`Đã thêm các món từ ${restaurantName} vào giỏ hàng`);
+    } catch (error) {
+      console.error('Error reordering:', error);
+      toast.error('Lỗi khi thêm vào giỏ hàng. Vui lòng thử lại.');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   return (
     <div className={styles.detailContainer}>
       <div className={styles.pageHeader}>
@@ -241,6 +314,25 @@ const OrderDetailPage = () => {
                   <p className={styles.statusMessage}>{getStatusMessage(order.status)}</p>
                 )}
               </div>
+              <div className={styles.statusActions}>
+                {canCancel && (
+                  <button
+                    className={styles.btnCancelOrder}
+                    onClick={() => setIsCancelOpen(true)}
+                    disabled={updating}
+                  >
+                    Hủy đơn
+                  </button>
+                )}
+                <button
+                  className={styles.btnReorder}
+                  onClick={() => handleReorder(order)}
+                  disabled={updating}
+                >
+                  <ShoppingCart size={16} />
+                  Mua lại
+                </button>
+              </div>
             </div>
           </div>
 
@@ -324,7 +416,7 @@ const OrderDetailPage = () => {
               <div className={styles.paymentMethod}>
                 <div>
                   <p className={styles.label}>Phương thức thanh toán</p>
-                  <p>{order.paymentMethod}</p>
+                  <p className={styles.paymentMethodText}>{order.paymentMethod}</p>
                 </div>
                 <div>
                   <p className={styles.label}>Trạng thái</p>
@@ -374,6 +466,21 @@ const OrderDetailPage = () => {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={isCancelOpen}
+        title="Xác nhận hủy đơn"
+        message={`Bạn chắc chắn muốn hủy đơn #${order?.orderExternalId}?`}
+        confirmText="Hủy đơn"
+        cancelText="Quay lại"
+        isLoading={updating}
+        onClose={() => setIsCancelOpen(false)}
+        onConfirm={async () => {
+          if (!order) return;
+          await cancelOrder(order);
+          setIsCancelOpen(false);
+        }}
+      />
     </div>
   );
 };
