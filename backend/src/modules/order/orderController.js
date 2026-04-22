@@ -1,3 +1,4 @@
+import { messageQueue } from '../../config/queue.js';
 import * as orderService from './orderService.js';
 import logger from '../../config/logger.js';
 
@@ -384,6 +385,15 @@ export const completeOrder = async (req, res, next) => {
     const result = await orderService.completeOrder(orderExternalId, {
       completedBy,
       signature
+    });
+    
+    const fullOrder = await orderService.getOrderDetail(orderExternalId);
+
+    messageQueue.emit('ORDER_FINISHED', {
+       orderId: orderExternalId,
+       restaurantId: fullOrder.restaurantId, 
+       totalPrice: fullOrder.totalPrice,     
+       timestamp: new Date().toISOString()
     });
 
     res.status(200).json({
