@@ -141,6 +141,23 @@ const OrderHistoryPage = () => {
     navigate(`/orderDetail`, { state: { orderExternalId: order.orderExternalId } });
   };
 
+  const slugify = (value) => (
+    (value ?? '')
+      .toString()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[đĐ]/g, 'd')
+      .replace(/[^a-zA-Z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+      .toLowerCase()
+  );
+
+  const handleRestaurantClick = (order) => {
+    if (!order?.restaurantId) return;
+    const slug = slugify(order.restaurantName);
+    navigate(`/restaurant/${slug}-${order.restaurantId}`);
+  };
+
   const cancelOrder = async (order) => {
     if (order.status !== 'placed') {
       toast.error('Chỉ có thể hủy đơn khi đang ở trạng thái Đã đặt');
@@ -302,7 +319,17 @@ const OrderHistoryPage = () => {
             <div key={order.orderExternalId} className={styles.orderCard}>
               {/* Header */}
               <div className={styles.orderHeader}>
-                <div className={styles.restaurantInfo}>
+                <div
+                  className={styles.restaurantInfo}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleRestaurantClick(order)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      handleRestaurantClick(order);
+                    }
+                  }}
+                >
                   <div style={{
                     width: 50,
                     height: 50,
@@ -320,7 +347,7 @@ const OrderHistoryPage = () => {
                     )}
                   </div>
                   <div>
-                    <h3>{order.restaurantName || `Đơn hàng #${order.orderExternalId}`}</h3>
+                    <h3 className={styles.restaurantName}>{order.restaurantName || `Đơn hàng #${order.orderExternalId}`}</h3>
                     <p className={styles.orderDate}>{order.orderDate}</p>
                   </div>
                 </div>

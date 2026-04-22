@@ -317,7 +317,7 @@ const MerchantOrdersPage = () => {
                       )}
                     </div>
                     <div>
-                      <h3>{order.restaurantName || `Đơn #${order.orderExternalId}`}</h3>
+                      <h3 className={styles.orderId}>Đơn #{order.orderExternalId}</h3>
                       <p className={styles.orderDate}>{order.orderDate}</p>
                     </div>
                   </div>

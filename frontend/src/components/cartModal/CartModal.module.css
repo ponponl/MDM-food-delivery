@@ -99,6 +99,18 @@
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.groupInfo:hover .groupLabel,
+.groupInfo:focus-visible .groupLabel {
+  color: var(--primary-color);
+}
+
+.groupInfo:focus-visible {
+  outline: 2px solid rgba(255, 107, 53, 0.4);
+  outline-offset: 2px;
 }
 
 .groupImage,

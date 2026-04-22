@@ -61,3 +61,12 @@
     align-items: center;
     gap: 3px;
 }
+
+.newBadge {
+    background: #ffe6d5;
+    color: #ff6b35;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.78rem;
+}

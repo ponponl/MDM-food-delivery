@@ -84,6 +84,19 @@
   font-size: 18px;
   color: #666;
   margin-top: 12px !important;
+  cursor: pointer;
+  width: fit-content;
+  border-radius: 6px;
+}
+
+.restaurantName:hover,
+.restaurantName:focus-visible {
+  color: var(--primary-color) !important;
+}
+
+.restaurantName:focus-visible {
+  outline: 2px solid rgba(255, 107, 53, 0.35);
+  outline-offset: 2px;
 }
 
 .sectionTitle {

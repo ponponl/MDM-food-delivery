@@ -168,6 +168,14 @@ export default function RestaurantPage() {
     //     return `${day}/${month}/${year} ${hours}:${minutes}`;
     // };
 
+    const totalReviews = Number.isFinite(Number(restaurant?.totalReview))
+        ? Number(restaurant.totalReview)
+        : 0;
+    const avgRatingValue = Number.isFinite(Number(restaurant?.avgRating))
+        ? Number(restaurant.avgRating)
+        : 0;
+    const displayRating = totalReviews > 0 ? avgRatingValue.toFixed(1) : '0';
+
     return (
         <div className={styles.restaurantPage}>
             <main className={styles.mainContent}>
@@ -191,9 +199,15 @@ export default function RestaurantPage() {
                                 className={styles.heroRatingBtn}
                                 onClick={handleViewReviews}
                             >
-                                <span className={styles.heroRatingValue}>{restaurant.avgRating}</span>
-                                <Star size={16} fill="#ffffff" color="#ffffff" />
-                                <span className={styles.heroRatingCount}>({restaurant.totalReview} reviews)</span>
+                                {totalReviews === 0 ? (
+                                    <span className={styles.heroRatingValue}>Quán mới</span>
+                                ) : (
+                                    <>
+                                        <span className={styles.heroRatingValue}>{displayRating}</span>
+                                        <Star size={16} fill="#ffffff" color="#ffffff" />
+                                        <span className={styles.heroRatingCount}>({totalReviews} reviews)</span>
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>

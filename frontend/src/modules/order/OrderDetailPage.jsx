@@ -223,6 +223,23 @@ const OrderDetailPage = () => {
     }
   };
 
+  const slugify = (value) => (
+    (value ?? '')
+      .toString()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[đĐ]/g, 'd')
+      .replace(/[^a-zA-Z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+      .toLowerCase()
+  );
+
+  const handleRestaurantClick = () => {
+    if (!order?.restaurantId) return;
+    const slug = slugify(order.restaurantName);
+    navigate(`/restaurant/${slug}-${order.restaurantId}`);
+  };
+
   return (
     <div className={styles.detailContainer}>
       <div className={styles.pageHeader}>
@@ -344,7 +361,19 @@ const OrderDetailPage = () => {
               />
               <div className={styles.restaurantInfo}>
                 <h3 className={styles.sectionTitle}>Nhà hàng</h3>
-                <h3 className={styles.restaurantName}>{order.restaurantName}</h3>
+                <h3
+                  className={styles.restaurantName}
+                  role="button"
+                  tabIndex={0}
+                  onClick={handleRestaurantClick}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      handleRestaurantClick();
+                    }
+                  }}
+                >
+                  {order.restaurantName}
+                </h3>
               </div>
             </div>
           )}
