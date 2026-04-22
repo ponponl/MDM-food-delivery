@@ -1,28 +1,51 @@
-import React, { useState} from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../../context/AuthContext';
-import MerchantMenu from '../merchantMenu/merchantMenuMenu';
-import Sidebar from '../../../components/sidebar/Sidebar';
+import React from 'react';
+import { useAuth } from '../../context/AuthContext';
 import styles from './MerchantDashboardPage.module.css';
 
 const MerchantDashboardPage = () => {
-    const { user, logoutUser: logout } = useAuth();
-    const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState('overview');
-    
+    const { user, loading } = useAuth();
     const restaurant = user?.restaurantInfo || {};
+    const isLoading = loading;
 
-    const handleLogout = async () => {
-        await logout();
-        navigate('/merchant/login', { replace: true });
-    };
-
-    const renderContent = () => {
-        switch (activeTab) {
-            case 'overview':
-                return (
-                    <div className={styles.content}>
+    return (
+        <div className={styles.page}>
+            <div className={styles.content}>
+                {isLoading ? (
+                    <>
                         <div className={styles.restaurantBanner}>
+                            <div className={styles.restaurantInfo}>
+                                <div className={`${styles.skeleton} ${styles.skeletonTitle}`} />
+                                <div className={`${styles.skeleton} ${styles.skeletonChip}`} />
+                                <div className={`${styles.skeleton} ${styles.skeletonLine}`} />
+                                <div className={`${styles.skeleton} ${styles.skeletonLineShort}`} />
+                            </div>
+                            <div className={styles.restaurantActions}>
+                                <div className={`${styles.skeleton} ${styles.skeletonButton}`} />
+                                <div className={`${styles.skeleton} ${styles.skeletonButton}`} />
+                            </div>
+                        </div>
+
+                        <div className={styles.statsGrid}>
+                            {[0, 1, 2, 3].map((item) => (
+                                <div className={styles.statCard} key={`stat-skeleton-${item}`}>
+                                    <div className={`${styles.skeleton} ${styles.skeletonIcon}`} />
+                                    <div className={styles.statDetails}>
+                                        <div className={`${styles.skeleton} ${styles.skeletonLabel}`} />
+                                        <div className={`${styles.skeleton} ${styles.skeletonValue}`} />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <div className={styles.restaurantBanner}>
+                            <div className={styles.restaurantBackground}>
+                                <img src={restaurant.background?.[0] || '/src/assets/home-banner.png'} alt="Restaurant Background" />
+                            </div>
+                            <div className={styles.restaurantImage}>
+                                <img src={restaurant.images?.[0] || '/src/assets/pizza.png'} alt={restaurant.name} />
+                            </div>
                             <div className={styles.restaurantInfo}>
                                 <h1>{restaurant.name || 'Tên nhà hàng chưa cập nhật'}</h1>
                                 <p className={styles.restaurantType}>{restaurant.type || 'Chưa phân loại'}</p>
@@ -65,40 +88,9 @@ const MerchantDashboardPage = () => {
                                 </div>
                             </div>
                         </div>
-                    </div>
-                );
-            case 'menu':
-                return <MerchantMenu />; 
-            default:
-                return <div className={styles.comingSoon}>Tính năng {activeTab} đang được phát triển...</div>;
-        }
-    };
-
-    return (
-        <div className={styles.dashboardContainer}>
-            <header className={styles.header}>
-                <div className={styles.headerLeft}>
-                    <Link className={styles.logo} to="/"> FOODLY </Link>
-                    <h2>Bảng điều khiển Đối tác</h2>
-                </div>
-                <div className={styles.userProfile}>
-                    <div className={styles.greeting}>
-                        Xin chào, <strong>{user?.username || 'Đối tác'}</strong>
-                    </div>
-                </div>
-            </header>
-
-            <Sidebar 
-                mode="merchant" 
-                activeTab={activeTab} 
-                onTabChange={setActiveTab} 
-            />
-
-            <main className={styles.mainContent}>
-                <div className={styles.tabContentWrapper}>
-                    {renderContent()}
-                </div>
-            </main>
+                    </>
+                )}
+            </div>
         </div>
     );
 };

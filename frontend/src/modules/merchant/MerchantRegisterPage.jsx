@@ -2,9 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { registerMerchant } from '../../../services/authService';
-import MapPicker from '../../../components/mapPicker/MapPicker';
-import { useAddressSearch } from '../../../hooks/useAddressSearch';
+import { registerMerchant } from '../../services/authService';
+import MapPicker from '../../components/mapPicker/MapPicker';
+import { useAddressSearch } from '../../hooks/useAddressSearch';
 import { MapPin, User, ChevronLeft, ChevronRight, ArrowLeft, ArrowRight, LoaderCircle, Check, Navigation } from 'lucide-react';
 import styles from './MerchantRegisterPage.module.css';
 
