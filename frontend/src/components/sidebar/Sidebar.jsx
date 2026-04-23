@@ -1,11 +1,10 @@
 import styles from './Sidebar.module.css';
-import { useState } from 'react';
-import { House, LogOut, UserPlus, List, Sparkles } from 'lucide-react';
+import { House, UserPlus, List, Sparkles, LayoutDashboard, UtensilsCrossed, Package, BarChart3, Settings } from 'lucide-react';
 import { HamburgerIcon, PizzaIcon, BowlFoodIcon, BowlSteamIcon, CoffeeIcon, CakeIcon, PintGlassIcon, OrangeIcon, BreadIcon } from "@phosphor-icons/react";
 import { useLocation, Link} from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-const sidebar = [
+const CUSTOMER_MENU  = [
   {name: 'Trang chủ', icon: House, path: '/'},
   {name: 'Dành cho bạn', icon: Sparkles, path: '/recommendations'},
   {name: 'Burger', icon: HamburgerIcon, path: '/category/burger'},
@@ -18,6 +17,14 @@ const sidebar = [
   {name: 'Nước Ép', icon: OrangeIcon, path: '/category/nuoc-ep'},
   {name: 'Bánh Ngọt', icon: CakeIcon, path: '/category/banh-ngot'},
 ]
+
+const MERCHANT_MENU = [
+    { id: 'overview', name: 'Tổng quan', icon: LayoutDashboard },
+    { id: 'menu', name: 'Quản lý thực đơn', icon: UtensilsCrossed },
+    { id: 'orders', name: 'Đơn hàng', icon: Package, badge: 3 },
+    { id: 'reports', name: 'Báo cáo doanh thu', icon: BarChart3 },
+    { id: 'settings', name: 'Cài đặt cửa hàng', icon: Settings },
+];
 
 export default function Sidebar({ mode = 'customer', activeTab, onTabChange }) {
     const { user } = useAuth();
