@@ -29,6 +29,11 @@ class ReviewService {
     return await this.reviewRepo.findReviewsByRestaurantId(resolvedId);
   }
 
+  async trackItemView(userId, itemId) {
+    if (!userId || !itemId) throw new Error("userId and itemId are required");
+    return await this.reviewRepo.trackItemView(String(userId), String(itemId));
+  }
+
 async createFullReview(userId, payload) {
     const { orderId, orderExternalId, restaurantReview, itemReviews } = payload;
     const resolvedOrderId = orderId || orderExternalId;
@@ -60,12 +65,16 @@ async createFullReview(userId, payload) {
       throw new Error('Đã quá thời hạn 7 ngày để thực hiện đánh giá.');
     }
 
-    return await reviewRepo.createReviewTransaction(
+    const result = await reviewRepo.createReviewTransaction(
       order.id, 
       order.restaurantid, 
       itemReviews, 
       restaurantReview
     );
+
+    this.reviewRepo.trackItemRatings(userId, itemReviews).catch(err => console.error(err));
+
+    return result;
   }
 }
 

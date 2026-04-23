@@ -59,3 +59,24 @@ export const createReview = async (req, res, next) => {
     });
   }
 };
+
+export const trackItemView = async (req, res) => {
+  try {
+    const { itemId } = req.body;
+    const userId = req.user?.id || req.user?.user_id; 
+    
+    if (!userId || !itemId) {
+      return res.status(400).json({ error: 'userId and itemId are required' });
+    }
+    
+    await reviewService.trackItemView(userId, itemId);
+    
+    return res.status(200).json({
+      status: 'success',
+      message: 'Tracked view'
+    });
+  } catch (error) {
+    console.error('Error tracking item view:', error);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};

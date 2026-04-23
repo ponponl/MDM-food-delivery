@@ -12,6 +12,10 @@ const reviewApi = {
     createReviews: (payload) => {
         const url = `/reviews/`;
         return axiosClient.post(url, payload);
+    },
+    trackItemView: (payload) => {
+        const url = `/reviews/track-view`;
+        return axiosClient.post(url, payload);
     }
 };
 
