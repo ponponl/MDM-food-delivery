@@ -12,7 +12,8 @@ export const AuthProvider = ({ children }) => {
         try {
             const response = await userApi.getMe();
             const payload = response?.data ?? response;
-            return payload?.data?.user || payload?.user || payload || null;
+            const userData = payload?.data?.user || payload?.user || payload || null;
+            return userData;
         } catch (error) {
             if (error?.response?.status === 401) {
                 return null;

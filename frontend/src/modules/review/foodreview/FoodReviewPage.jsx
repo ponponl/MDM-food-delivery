@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import styles from "./FoodReviewPage.module.css";
 import reviewApi from "../../../api/reviewApi";
+import { useAuth } from "../../../context/AuthContext";
 
 const FoodReviewPage = () => {
   const { id } = useParams();
@@ -10,13 +11,21 @@ const FoodReviewPage = () => {
   const [loadingReviews, setLoadingReviews] = useState(false);
 
   const foodItem = location.state?.foodItem;
+  const { user } = useAuth();
+  const hasTracked = useRef(false);
 
   useEffect(() => {
     const fetchReviews = async () => {
       setLoadingReviews(true);
       try {
         const response = await reviewApi.getReviewsByItemId(id);
-        setReviews(response?.data || response || []);
+        const data = response?.data || response || [];
+        setReviews(data);
+        const itemId = foodItem?._id;
+        if (user && (user.id || user.user_id) && !hasTracked.current) {
+          hasTracked.current = true;
+          reviewApi.trackItemView({ itemId }).catch(err => console.error("Tracking error", err));
+        }
       } catch (error) {
         console.error("Error fetching reviews:", error);
       } finally {
@@ -81,6 +90,7 @@ const FoodReviewPage = () => {
                   </span>
                 </div>
                 <p className={styles.comment}>{rev.comment}</p>
+                <p>{rev.itemid}</p>
               </div>
             ))}
           </div>

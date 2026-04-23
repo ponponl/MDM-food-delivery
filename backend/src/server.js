@@ -7,7 +7,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import connectMongo from './config/mongodb.js';
 import redisClient from './config/redis.js';
-import neo4jDriver from './config/neo4j.js';
+import neo4jDriver, { connectNeo4j } from './config/neo4j.js';
 import pgPool from './config/postgres.js';
 import apiRoutes from './routes/index.js';
 
@@ -30,6 +30,7 @@ redisClient.connect()
 pgPool.query('SELECT 1')
   .then(() => console.log('PostgreSQL Connected'))
   .catch(err => logger.error(`PostgreSQL connection error: ${err.message}`));
+connectNeo4j();
 
 // Import các Module chức năng 
 // app.use('/api/orders', require('./modules/orders/routes'));
@@ -47,8 +48,8 @@ app.get('/api/test', async (req, res) => {
     databases: {
       mongodb: 'Checking...',
       postgres: 'Checking...',
-      redis: 'Checking...'
-      // neo4j: 'Checking...'
+      redis: 'Checking...',
+      neo4j: 'Checking...'
     }
   };
 
@@ -77,12 +78,12 @@ app.get('/api/test', async (req, res) => {
     }
 
     // 4. Kiểm tra Neo4j
-    // try {
-    //   await neo4jDriver.verifyConnectivity();
-    //   testStatus.databases.neo4j = 'Connected';
-    // } catch (err) {
-    //   testStatus.databases.neo4j = `Error: ${err.message}`;
-    // }
+    try {
+      await neo4jDriver.verifyConnectivity();
+      testStatus.databases.neo4j = 'Connected';
+    } catch (err) {
+      testStatus.databases.neo4j = `Error: ${err.message}`;
+    }
 
     logger.info("Kiểm tra hệ thống hoàn tất");
     res.json(testStatus);

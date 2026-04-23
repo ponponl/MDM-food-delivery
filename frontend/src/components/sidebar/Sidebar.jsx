@@ -1,12 +1,13 @@
 import styles from './Sidebar.module.css';
 import { useState } from 'react';
-import { House, LogOut, UserPlus, List} from 'lucide-react';
+import { House, LogOut, UserPlus, List, Sparkles } from 'lucide-react';
 import { HamburgerIcon, PizzaIcon, BowlFoodIcon, BowlSteamIcon, CoffeeIcon, CakeIcon, PintGlassIcon, OrangeIcon, BreadIcon } from "@phosphor-icons/react";
 import { useLocation, Link} from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 const sidebar = [
   {name: 'Trang chủ', icon: House, path: '/'},
+  {name: 'Dành cho bạn', icon: Sparkles, path: '/recommendations'},
   {name: 'Burger', icon: HamburgerIcon, path: '/category/burger'},
   {name: 'Pizza', icon: PizzaIcon, path: '/category/pizza'},
   {name: 'Cơm', icon: BowlFoodIcon, path: '/category/com'},
