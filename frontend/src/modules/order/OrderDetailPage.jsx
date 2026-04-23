@@ -1,17 +1,20 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { ArrowLeft, MapPin, Clock, Phone, DollarSign, User } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, MapPin, Clock, Phone, DollarSign, User, ShoppingCart } from 'lucide-react';
 import { SpinnerIcon, CallBellIcon, PackageIcon, CheckIcon, XIcon } from '@phosphor-icons/react';
 import toast from 'react-hot-toast';
 import styles from './OrderDetailPage.module.css';
 import orderApi from '../../api/orderApi';
-import restaurantApi from '../../api/restaurantApi';
+import cartApi from '../../api/cartApi';
+import ConfirmModal from '../../components/common/ConfirmModal';
 
 const OrderDetailPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [order, setOrder] = useState(null);
+  const [orderData, setOrderData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
+  const [isCancelOpen, setIsCancelOpen] = useState(false);
 
   useEffect(() => {
     const fetchOrderDetail = async () => {
@@ -30,60 +33,7 @@ const OrderDetailPage = () => {
         const data = response?.data;
         
         if (data) {
-          let restaurantName = '';
-          let restaurantImage = null;
-          let restaurantMenuImage = null;
-          let transformedItems = data.items || [];
-          
-          try {
-            const restaurantRes = await restaurantApi.getById(data.restaurantId);
-            const restaurant = restaurantRes?.data || restaurantRes;
-            restaurantName = restaurant?.name || '';
-            restaurantImage = restaurant?.images?.[0] || null;
-            restaurantMenuImage = restaurant?.menu?.[0]?.image || restaurant?.menu?.[0]?.images?.[0] || null;
-            
-            const menuItemMap = {};
-            restaurant?.menu?.forEach(item => {
-              menuItemMap[item._id] = {
-                name: item.name,
-                image: item.image || item.images?.[0] || null,
-                description: item.description
-              };
-            });
-            
-            transformedItems = data.items.map(item => ({
-              ...item,
-              name: menuItemMap[item.itemId]?.name || `Món #${item.itemId}`,
-              image: menuItemMap[item.itemId]?.image || menuItemMap[item.itemId]?.images?.[0] || null,
-              description: menuItemMap[item.itemId]?.description || ''
-            }));
-          } catch (restaurantError) {
-            console.warn('Error fetching restaurant details:', restaurantError);
-          }
-
-          const transformedOrder = {
-            orderExternalId: data.orderExternalId,
-            restaurantId: data.restaurantId,
-            restaurantName: restaurantName || `Nhà hàng #${data.restaurantId}`,
-            restaurantImage: restaurantImage,
-            restaurantMenuImage,
-            status: data.status,
-            statusText: getStatusText(data.status),
-            totalPrice: data.totalPrice,
-            items: transformedItems,
-            deliveryAddress: data.deliveryAddress?.address || '',
-            receiver: data.deliveryAddress?.receiver || '',
-            phone: data.deliveryAddress?.phone || '',
-            paymentMethod: data.payment?.method || 'cash',
-            paymentStatus: data.payment?.status === 'completed' ? 'Đã thanh toán' : 'Chưa thanh toán',
-            orderDate: formatDate(data.createdAt),
-            createdAt: data.createdAt,
-            userName: data.user?.name,
-            userPhone: data.user?.phone,
-            driver: getDriverInfo(data.status)
-          };
-          
-          setOrder(transformedOrder);
+          setOrderData(data);
         } else {
           toast.error('Không tìm thấy thông tin đơn hàng');
         }
@@ -98,30 +48,65 @@ const OrderDetailPage = () => {
     fetchOrderDetail();
   }, [location.state]);
 
-  const getStatusText = (status) => {
+  const order = useMemo(() => {
+    if (!orderData) return null;
+
+    const restaurantName = orderData.restaurantName || `Nhà hàng #${orderData.restaurantId}`;
+    const restaurantImage = orderData.restaurantImageUrl || null;
+
+    const transformedItems = (orderData.items || []).map((item) => ({
+      ...item,
+      name: item.itemName || item.name || `Món #${item.itemId}`,
+      image: item.itemImageUrl || item.image || null,
+      description: item.description || ''
+    }));
+
+    return {
+      orderExternalId: orderData.orderExternalId,
+      restaurantId: orderData.restaurantId,
+      restaurantName,
+      restaurantImage,
+      status: orderData.status,
+      statusText: getStatusText(orderData.status),
+      totalPrice: orderData.totalPrice,
+      items: transformedItems,
+      deliveryAddress: orderData.deliveryAddress?.address || '',
+      receiver: orderData.deliveryAddress?.receiver || '',
+      phone: orderData.deliveryAddress?.phone || '',
+      paymentMethod: orderData.payment?.method || 'cash',
+      paymentStatus: orderData.payment?.status === 'completed' ? 'Đã thanh toán' : 'Chưa thanh toán',
+      orderDate: formatDate(orderData.createdAt),
+      createdAt: orderData.createdAt,
+      userName: orderData.user?.name,
+      userPhone: orderData.user?.phone,
+      driver: getDriverInfo(orderData.status)
+    };
+  }, [orderData]);
+
+  function getStatusText(status) {
     const statusMap = {
       'placed': 'Đã đặt',
       'confirmed': 'Xác nhận',
-      'preparing': 'Đang chuẩn bị',
-      'ready': 'Sẵn sàng',
+      // 'preparing': 'Đang chuẩn bị',
+      // 'ready': 'Sẵn sàng',
       'delivering': 'Đang giao',
       'completed': 'Đã hoàn thành',
       'cancelled': 'Đã hủy'
     };
     return statusMap[status] || status;
-  };
+  }
 
-  const getStatusMessage = (status) => {
+  function getStatusMessage(status) {
     const messageMap = {
       'placed': 'Đợi quán ăn xác nhận',
-      'confirmed': 'Tài xế đang lấy đơn',
+      'confirmed': 'Đơn của bạn đã được xác nhận',
       'preparing': 'Đơn của bạn đang được chuẩn bị',
       'delivering': 'Tài xế đang giao đến bạn'
     };
     return messageMap[status] || '';
-  };
+  }
 
-  const getDriverInfo = (status) => {
+  function getDriverInfo(status) {
     // Mock driver data - sẽ được cập nhật khi có dữ liệu thực từ API
     const shouldShowDriver = ['confirmed', 'preparing', 'delivering', 'completed', 'cancelled'].includes(status);
     
@@ -134,9 +119,9 @@ const OrderDetailPage = () => {
       image: 'https://i.pravatar.cc/150?img=12',
       estimatedTime: '15-20 phút'
     };
-  };
+  }
 
-  const formatDate = (dateString) => {
+  function formatDate(dateString) {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleString('vi-VN', {
@@ -146,9 +131,9 @@ const OrderDetailPage = () => {
       hour: '2-digit',
       minute: '2-digit'
     }).replace(/\//g, '-');
-  };
+  }
 
-  const getStatusClass = (status) => {
+  function getStatusClass(status) {
     switch (status) {
       case 'placed':
         return styles.statusPlaced || '';
@@ -167,6 +152,92 @@ const OrderDetailPage = () => {
       default:
         return '';
     }
+  }
+
+  const canCancel = order ? ['placed'].includes(order.status) : false;
+
+  const cancelOrder = async (currentOrder) => {
+    if (!currentOrder) return;
+
+    if (currentOrder.status !== 'placed') {
+      toast.error('Chỉ có thể hủy đơn khi đang ở trạng thái Đã đặt');
+      return;
+    }
+
+    setUpdating(true);
+
+    try {
+      await orderApi.cancelOrder(currentOrder.orderExternalId, {
+        reason: 'Customer cancelled',
+        cancelledBy: 'customer'
+      });
+
+      setOrderData((prev) => (prev ? { ...prev, status: 'cancelled' } : prev));
+      toast.success('Đã hủy đơn hàng');
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      toast.error('Lỗi khi hủy đơn hàng');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleReorder = async (currentOrder) => {
+    if (!currentOrder) return;
+
+    setUpdating(true);
+
+    try {
+      const restaurantName = currentOrder.restaurantName || `đơn hàng #${currentOrder.orderExternalId}`;
+      const orderDetailResponse = await orderApi.getOrderDetail(currentOrder.orderExternalId);
+      const orderDetail = orderDetailResponse?.data || {};
+      const items = Array.isArray(orderDetail.items) ? orderDetail.items : [];
+
+      if (items.length === 0) {
+        toast.error('Không tìm thấy món ăn để mua lại');
+        return;
+      }
+
+      for (const item of items) {
+        await cartApi.addItem({
+          itemId: item.itemId,
+          quantity: item.quantity,
+          restaurantPublicId: currentOrder.restaurantId,
+          options: [],
+          note: null
+        });
+      }
+
+      const cartResponse = await cartApi.getCart();
+      const cartPayload = cartResponse?.data ?? cartResponse;
+      const cartData = cartPayload?.data ?? cartPayload ?? {};
+      const totalQty = Number(cartData.totalQty ?? 0);
+      window.dispatchEvent(new CustomEvent('cart:updated', { detail: { totalQty } }));
+
+      toast.success(`Đã thêm các món từ ${restaurantName} vào giỏ hàng`);
+    } catch (error) {
+      console.error('Error reordering:', error);
+      toast.error('Lỗi khi thêm vào giỏ hàng. Vui lòng thử lại.');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const slugify = (value) => (
+    (value ?? '')
+      .toString()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[đĐ]/g, 'd')
+      .replace(/[^a-zA-Z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+      .toLowerCase()
+  );
+
+  const handleRestaurantClick = () => {
+    if (!order?.restaurantId) return;
+    const slug = slugify(order.restaurantName);
+    navigate(`/restaurant/${slug}-${order.restaurantId}`);
   };
 
   return (
@@ -260,10 +331,29 @@ const OrderDetailPage = () => {
                   <p className={styles.statusMessage}>{getStatusMessage(order.status)}</p>
                 )}
               </div>
+              <div className={styles.statusActions}>
+                {canCancel && (
+                  <button
+                    className={styles.btnCancelOrder}
+                    onClick={() => setIsCancelOpen(true)}
+                    disabled={updating}
+                  >
+                    Hủy đơn
+                  </button>
+                )}
+                <button
+                  className={styles.btnReorder}
+                  onClick={() => handleReorder(order)}
+                  disabled={updating}
+                >
+                  <ShoppingCart size={16} />
+                  Mua lại
+                </button>
+              </div>
             </div>
           </div>
 
-          {(order.restaurantMenuImage || order.restaurantImage) && (
+          {order.restaurantImage && (
             <div className={styles.sectionRestaurant}>
               <img
                 src={order.restaurantImage}
@@ -271,7 +361,19 @@ const OrderDetailPage = () => {
               />
               <div className={styles.restaurantInfo}>
                 <h3 className={styles.sectionTitle}>Nhà hàng</h3>
-                <h3 className={styles.restaurantName}>{order.restaurantName}</h3>
+                <h3
+                  className={styles.restaurantName}
+                  role="button"
+                  tabIndex={0}
+                  onClick={handleRestaurantClick}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      handleRestaurantClick();
+                    }
+                  }}
+                >
+                  {order.restaurantName}
+                </h3>
               </div>
             </div>
           )}
@@ -290,8 +392,12 @@ const OrderDetailPage = () => {
                     <p>Số lượng: {item.quantity}</p>
                     {item.notes && <p className={styles.notes}>Ghi chú: {item.notes}</p>}
                   </div>
-                  <div className={styles.itemPrice}>
-                    {(item.price * item.quantity).toLocaleString('vi-VN')}đ
+                  <div className={styles.priceInfo}>
+                    <div className={styles.priceRow}>
+                        <div className={styles.snapshotPrice}>{item.snapshotPrice?.toLocaleString('vi-VN') || 0}đ</div>
+                        <div className={styles.qtyText}>x {item.quantity}</div>
+                      </div>
+                    <div className={styles.itemPrice}>{((item.snapshotPrice ?? 0) * item.quantity).toLocaleString('vi-VN')}đ</div>
                   </div>
                 </div>
               ))}
@@ -339,7 +445,7 @@ const OrderDetailPage = () => {
               <div className={styles.paymentMethod}>
                 <div>
                   <p className={styles.label}>Phương thức thanh toán</p>
-                  <p>{order.paymentMethod}</p>
+                  <p className={styles.paymentMethodText}>{order.paymentMethod}</p>
                 </div>
                 <div>
                   <p className={styles.label}>Trạng thái</p>
@@ -389,6 +495,21 @@ const OrderDetailPage = () => {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={isCancelOpen}
+        title="Xác nhận hủy đơn"
+        message={`Bạn chắc chắn muốn hủy đơn #${order?.orderExternalId}?`}
+        confirmText="Hủy đơn"
+        cancelText="Quay lại"
+        isLoading={updating}
+        onClose={() => setIsCancelOpen(false)}
+        onConfirm={async () => {
+          if (!order) return;
+          await cancelOrder(order);
+          setIsCancelOpen(false);
+        }}
+      />
     </div>
   );
 };

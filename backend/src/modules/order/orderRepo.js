@@ -30,12 +30,30 @@ export class OrderRepository {
     return result.rows[0].id;
   }
 
-  async createOrder(client, { userId, restaurantId, totalPrice, totalItems, status, deliveryAddress }) {
+  async createOrder(client, {
+    userId,
+    restaurantId,
+    restaurantName,
+    restaurantImageUrl,
+    totalPrice,
+    totalItems,
+    status,
+    deliveryAddress
+  }) {
     const result = await client.query(
-      `INSERT INTO orders (userId, restaurantId, totalPrice, total_items, status, deliveryAddress, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      `INSERT INTO orders (userId, restaurantId, restaurantName, restaurantImageUrl, totalPrice, totalItem, status, deliveryAddress, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
        RETURNING id, externalId, created_at`,
-      [userId, restaurantId, totalPrice, totalItems, status, JSON.stringify(deliveryAddress)]
+      [
+        userId,
+        restaurantId,
+        restaurantName,
+        restaurantImageUrl,
+        totalPrice,
+        totalItems,
+        status,
+        JSON.stringify(deliveryAddress)
+      ]
     );
     return result.rows[0];
   }
@@ -43,9 +61,17 @@ export class OrderRepository {
   async createOrderItems(client, orderId, items) {
     for (const item of items) {
       await client.query(
-        `INSERT INTO order_items (orderId, itemId, quantity, price)
-         VALUES ($1, $2, $3, $4)`,
-        [orderId, item.itemId, item.quantity, item.price]
+        `INSERT INTO order_items (orderId, itemId, itemName, quantity, snapshotPrice, itemImageUrl, options)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          orderId,
+          item.itemId,
+          item.itemName,
+          item.quantity,
+          item.snapshotPrice,
+          item.itemImageUrl,
+          item.options ? JSON.stringify(item.options) : null
+        ]
       );
     }
   }
@@ -65,8 +91,10 @@ export class OrderRepository {
       SELECT
         o.externalId,
         o.restaurantId,
+        o.restaurantName,
+        o.restaurantImageUrl,
         o.totalPrice,
-        o.total_items,
+        o.totalItem,
         o.status,
         o.deliveryAddress,
         o.created_at,
@@ -79,10 +107,13 @@ export class OrderRepository {
         json_agg(
           json_build_object(
             'itemId', oi.itemId,
+            'itemName', oi.itemName,
+            'itemImageUrl', oi.itemImageUrl,
+            'snapshotPrice', oi.snapshotPrice,
             'quantity', oi.quantity,
-            'price', oi.price
+            'options', oi.options
           )
-        ) as items
+        ) FILTER (WHERE oi.id IS NOT NULL) as items
       FROM orders o
       LEFT JOIN users u ON o.userId = u.id
       LEFT JOIN payments p ON p.orderId = o.id
@@ -113,9 +144,11 @@ export class OrderRepository {
       SELECT
         o.externalId,
         o.restaurantId,
+        o.restaurantName,
+        o.restaurantImageUrl,
         o.status,
         o.totalPrice,
-        o.total_items,
+        o.totalItem,
         o.created_at,
         COUNT(*) OVER() as total_count
       FROM orders o
@@ -155,9 +188,11 @@ export class OrderRepository {
       SELECT
         o.externalId,
         o.restaurantId,
+        o.restaurantName,
+        o.restaurantImageUrl,
         o.status,
         o.totalPrice,
-        o.total_items,
+        o.totalItem,
         o.created_at,
         COUNT(*) OVER() as total_count
       FROM orders o
@@ -186,11 +221,12 @@ export class OrderRepository {
   }
 
   async updateOrderStatus(client, { orderExternalId, fromStatuses, toStatus }) {
-    const statusList = Array.isArray(fromStatuses) ? fromStatuses : [fromStatuses];
+    const statusList = (Array.isArray(fromStatuses) ? fromStatuses : [fromStatuses])
+      .map((status) => (typeof status === 'string' ? status.toLowerCase() : status));
     const result = await client.query(
       `UPDATE orders
        SET status = $1
-       WHERE externalId = $2 AND status = ANY($3)
+       WHERE externalId = $2 AND LOWER(status::text) = ANY($3)
        RETURNING id, status`,
       [toStatus, orderExternalId, statusList]
     );

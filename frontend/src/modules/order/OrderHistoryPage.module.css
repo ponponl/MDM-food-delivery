@@ -130,6 +130,18 @@
   align-items: center;
   gap: 12px;
   flex: 1;
+  border-radius: 10px;
+}
+
+.restaurantInfo:hover .restaurantName,
+.restaurantInfo:focus-visible .restaurantName {
+  cursor: pointer;
+  color: var(--primary-color);
+}
+
+.restaurantInfo:focus-visible {
+  outline: 2px solid rgba(255, 107, 53, 0.35);
+  outline-offset: 2px;
 }
 
 .restaurantInfo img {
@@ -139,7 +151,7 @@
   object-fit: cover;
 }
 
-.restaurantInfo h3 {
+.restaurantInfo .orderId, .restaurantInfo .restaurantName {
   font-size: 16px;
   font-weight: 600;
   color: #333;
@@ -392,8 +404,8 @@
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
-  background: #f0f0f0;
-  color: #333;
+  background: var(--primary-color);
+  color: #fff;
   border: none;
   border-radius: 6px;
   font-size: 13px;
@@ -403,7 +415,7 @@
 }
 
 .btnReorder:hover {
-  background: #e0e0e0;
+  background: var(--hover-color);
 }
 
 .btnNextStatus {

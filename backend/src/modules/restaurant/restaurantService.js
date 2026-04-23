@@ -24,7 +24,19 @@ export const getRestaurantsSummary = async (categories = [], limit = 5) => {
     const summaryEntries = await Promise.all(
         categories.map(async (category) => {
             const items = await repo.findByCategoryLimited(category.slug, limit);
-            return [category.slug, items];
+            const normalizedItems = (items || []).map((item) => {
+                const payload = item?.toObject ? item.toObject() : item;
+                const avgRating = Number.isFinite(Number(payload?.avgRating)) ? Number(payload.avgRating) : 0;
+                const totalReview = Number.isFinite(Number(payload?.totalReview)) ? Number(payload.totalReview) : 0;
+
+                return {
+                    ...payload,
+                    avgRating,
+                    totalReview
+                };
+            });
+
+            return [category.slug, normalizedItems];
         })
     );
 
@@ -33,4 +45,9 @@ export const getRestaurantsSummary = async (categories = [], limit = 5) => {
 
 export const getNearestRestaurants = async (lng, lat, maxDistance) => {
     return await repo.findNearest(lng, lat, maxDistance);
+};
+
+export const getRestaurantsByPublicIds = async (publicIds = [], { includeMenu = false } = {}) => {
+    const restaurants = await repo.findByPublicIds(publicIds, { includeMenu });
+    return restaurants;
 };

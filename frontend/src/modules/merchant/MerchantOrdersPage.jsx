@@ -48,8 +48,8 @@ const MerchantOrdersPage = () => {
       const transformedOrders = data.orders.map((order) => ({
         orderExternalId: order.orderExternalId,
         restaurantId: order.restaurantId,
-        restaurantName: restaurantInfo?.name || `Nhà hàng #${order.restaurantId}`,
-        restaurantImage: restaurantInfo?.images?.[0] || null,
+        restaurantName: order.restaurantName || restaurantInfo?.name || `Nhà hàng #${order.restaurantId}`,
+        restaurantImage: order.restaurantImageUrl || order.restaurantImage || restaurantInfo?.images?.[0] || null,
         status: order.status,
         statusText: getStatusText(order.status),
         totalPrice: order.totalPrice || 0,
@@ -306,10 +306,18 @@ const MerchantOrdersPage = () => {
                         color: '#999'
                       }}
                     >
-                      <ShoppingCart size={24} />
+                      {order.restaurantImage ? (
+                        <img
+                          src={order.restaurantImage}
+                          alt={order.restaurantName || 'Restaurant'}
+                          style={{ width: '100%', height: '100%', borderRadius: '8px', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <ShoppingCart size={24} />
+                      )}
                     </div>
                     <div>
-                      <h3>Đơn #{order.orderExternalId}</h3>
+                      <h3 className={styles.orderId}>Đơn #{order.orderExternalId}</h3>
                       <p className={styles.orderDate}>{order.orderDate}</p>
                     </div>
                   </div>

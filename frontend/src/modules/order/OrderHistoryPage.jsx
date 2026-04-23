@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Star, ShoppingCart, ArrowRight } from 'lucide-react';
 import styles from './OrderHistoryPage.module.css';
 import orderApi from '../../api/orderApi';
-import restaurantApi from '../../api/restaurantApi';
 import cartApi from '../../api/cartApi';
 import { useAuth } from '../../context/AuthContext';
 import ConfirmModal from '../../components/common/ConfirmModal';
@@ -12,7 +11,7 @@ const OrderHistoryPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [filterStatus, setFilterStatus] = useState('all');
-  const [orders, setOrders] = useState([]);
+  const [ordersRaw, setOrdersRaw] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updatingMap, setUpdatingMap] = useState({});
   const [confirmOrder, setConfirmOrder] = useState(null);
@@ -40,56 +39,15 @@ const OrderHistoryPage = () => {
 
       if (!data || !Array.isArray(data.orders)) {
         console.log('No orders data');
-        setOrders([]);
+        setOrdersRaw([]);
         return;
       }
 
-      // Get unique restaurant IDs
-      const uniqueRestaurantIds = [...new Set(data.orders.map(o => o.restaurantId))];
-      
-      // Fetch all restaurants in parallel
-      const restaurantPromises = uniqueRestaurantIds.map(id =>
-        restaurantApi.getById(id).catch(err => {
-          console.warn(`Error fetching restaurant ${id}:`, err);
-          return null;
-        })
-      );
-      
-      const restaurantResponses = await Promise.all(restaurantPromises);
-      
-      // Build restaurant map
-      const restaurantMap = {};
-      uniqueRestaurantIds.forEach((id, idx) => {
-        const restaurant = restaurantResponses[idx]?.data || restaurantResponses[idx];
-        restaurantMap[id] = restaurant;
-      });
-
-      // Transform orders with restaurant details only
-      const transformedOrders = data.orders.map(order => {
-        const restaurant = restaurantMap[order.restaurantId];
-
-        return {
-          orderExternalId: order.orderExternalId,
-          restaurantId: order.restaurantId,
-          restaurantName: restaurant?.name || `Nhà hàng #${order.restaurantId}`,
-          restaurantImage: restaurant?.images?.[0] || null,
-          status: order.status,
-          statusText: getStatusText(order.status),
-          totalPrice: order.totalPrice || 0,
-          totalItems: Number.isFinite(order.totalItems) ? order.totalItems : 0,
-          orderDate: formatDate(order.createdAt),
-          createdAt: order.createdAt,
-          rating: order.rating || null,
-          comment: order.comment || ''
-        };
-      });
-
-      console.log('Transformed Orders with details:', transformedOrders);
-      setOrders(transformedOrders);
+      setOrdersRaw(data.orders);
     } catch (error) {
       console.error('Error fetching orders:', error);
       toast.error('Lỗi tải lịch sử đơn hàng');
-      setOrders([]);
+      setOrdersRaw([]);
     } finally {
       setLoading(false);
     }
@@ -120,9 +78,28 @@ const OrderHistoryPage = () => {
     }).replace(/\//g, '-');
   };
 
-  const filteredOrders = filterStatus === 'all' 
-    ? orders 
+  const orders = useMemo(() =>
+    ordersRaw.map((order) => ({
+      orderExternalId: order.orderExternalId,
+      restaurantId: order.restaurantId,
+      restaurantName: order.restaurantName || `Nhà hàng #${order.restaurantId}`,
+      restaurantImage: order.restaurantImageUrl || order.restaurantImage || null,
+      status: order.status,
+      statusText: getStatusText(order.status),
+      totalPrice: order.totalPrice || 0,
+      totalItems: Number.isFinite(order.totalItems) ? order.totalItems : 0,
+      orderDate: formatDate(order.createdAt),
+      createdAt: order.createdAt,
+      rating: order.rating || null,
+      comment: order.comment || ''
+    })),
+  [ordersRaw]);
+
+  const filteredOrders = filterStatus === 'all'
+    ? orders
     : orders.filter(order => order.status === filterStatus);
+
+  const isPageLoading = loading;
 
   const handleReorder = async (order) => {
     try {
@@ -146,6 +123,12 @@ const OrderHistoryPage = () => {
           note: null
         });
       }
+
+      const cartResponse = await cartApi.getCart();
+      const cartPayload = cartResponse?.data ?? cartResponse;
+      const cartData = cartPayload?.data ?? cartPayload ?? {};
+      const totalQty = Number(cartData.totalQty ?? 0);
+      window.dispatchEvent(new CustomEvent('cart:updated', { detail: { totalQty } }));
       
       toast.success(`Đã thêm các món từ ${restaurantName} vào giỏ hàng`);
     } catch (error) {
@@ -156,6 +139,23 @@ const OrderHistoryPage = () => {
 
   const handleViewDetails = (order) => {
     navigate(`/orderDetail`, { state: { orderExternalId: order.orderExternalId } });
+  };
+
+  const slugify = (value) => (
+    (value ?? '')
+      .toString()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[đĐ]/g, 'd')
+      .replace(/[^a-zA-Z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+      .toLowerCase()
+  );
+
+  const handleRestaurantClick = (order) => {
+    if (!order?.restaurantId) return;
+    const slug = slugify(order.restaurantName);
+    navigate(`/restaurant/${slug}-${order.restaurantId}`);
   };
 
   const cancelOrder = async (order) => {
@@ -172,10 +172,10 @@ const OrderHistoryPage = () => {
         cancelledBy: 'customer'
       });
 
-      setOrders((prev) =>
+      setOrdersRaw((prev) =>
         prev.map((item) =>
           item.orderExternalId === order.orderExternalId
-            ? { ...item, status: 'cancelled', statusText: getStatusText('cancelled') }
+            ? { ...item, status: 'cancelled' }
             : item
         )
       );
@@ -281,7 +281,7 @@ const OrderHistoryPage = () => {
       </div>
 
       <div className={styles.ordersList}>
-        {loading ? (
+        {isPageLoading ? (
           [...Array(3)].map((_, index) => (
             <div key={index} className={styles.skeletonCard}>
               <div className={styles.skeletonHeaderRow}>
@@ -319,7 +319,17 @@ const OrderHistoryPage = () => {
             <div key={order.orderExternalId} className={styles.orderCard}>
               {/* Header */}
               <div className={styles.orderHeader}>
-                <div className={styles.restaurantInfo}>
+                <div
+                  className={styles.restaurantInfo}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleRestaurantClick(order)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      handleRestaurantClick(order);
+                    }
+                  }}
+                >
                   <div style={{
                     width: 50,
                     height: 50,
@@ -337,7 +347,7 @@ const OrderHistoryPage = () => {
                     )}
                   </div>
                   <div>
-                    <h3>{order.restaurantName || `Đơn hàng #${order.orderExternalId}`}</h3>
+                    <h3 className={styles.restaurantName}>{order.restaurantName || `Đơn hàng #${order.orderExternalId}`}</h3>
                     <p className={styles.orderDate}>{order.orderDate}</p>
                   </div>
                 </div>

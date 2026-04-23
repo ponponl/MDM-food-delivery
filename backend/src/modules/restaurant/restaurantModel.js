@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import menuItemSchema from '../menu/menuModel.js';
 
 const restaurantSchema = new mongoose.Schema({
-    slug: String,
     publicId: String,
     accountId: Number,
     name: String,

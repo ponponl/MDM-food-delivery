@@ -14,6 +14,7 @@ import searchApi from '../../api/searchApi';
 import CartModal from '../cartModal/CartModal';
 import ConfirmOrderModal from '../confirmOrder/ConfirmOrderModal';
 import { useAddressSearch } from '../../hooks/useAddressSearch.js';
+import toast from 'react-hot-toast';
 
 export default function Header() {
   const {address, updateAddress} = useContext(AddressContext);
@@ -480,17 +481,36 @@ export default function Header() {
     try {
       setIsPlacingOrder(true);
       setConfirmError('');
-      await orderApi.createOrder({
+      const response = await orderApi.createOrder({
         userExternalId: user?.externalId || user?.externalid || user?.userExternalId,
         restaurantId: confirmData.restaurantId,
         deliveryAddress,
         paymentMethod: 'cash',
         itemKeys: confirmData.itemKeys
       });
+      const payload = response?.data ?? response;
+      const orderResult = payload?.data ?? payload ?? {};
       await loadCart(true);
       setIsConfirmOpen(false);
       setConfirmData(null);
-      window.alert('Đặt hàng thành công!');
+      toast.success('Đặt hàng thành công!', {
+        duration: 3000,
+        style: {
+          background: '#FFFFFF',
+          color: '#1F2933',
+          padding: '12px 24px',
+          borderRadius: '12px',
+          border: '1px solid #E5E7EB',
+          fontSize: '15px',
+          fontWeight: '600',
+          fontFamily: '"Lexend", "Segoe UI", sans-serif',
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+        },
+        iconTheme: {
+          primary: '#4CAF50',
+          secondary: '#FFFFFF'
+        }
+      });
     } catch (error) {
       setConfirmError('Không thể đặt hàng. Vui lòng thử lại.');
     } finally {

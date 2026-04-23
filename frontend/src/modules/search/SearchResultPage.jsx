@@ -58,6 +58,7 @@ export default function SearchResultPage() {
             .toString()
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[đĐ]/g, 'd')
             .replace(/[^a-zA-Z0-9]+/g, '-')
             .replace(/(^-|-$)/g, '')
             .toLowerCase()
@@ -69,7 +70,7 @@ export default function SearchResultPage() {
             return;
         }
 
-        const slug = restaurant?.slug || slugify(restaurant?.name);
+        const slug = slugify(restaurant?.name);
         navigate(`/restaurant/${slug}-${publicId}`);
     };
 

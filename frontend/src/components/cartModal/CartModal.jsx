@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Trash2, Minus, Plus, X } from 'lucide-react';
 import styles from './CartModal.module.css';
 
@@ -33,6 +34,7 @@ export default function CartModal({
   onPlaceOrder,
   formatCurrency
 }) {
+  const navigate = useNavigate();
   const [selectedItemIds, setSelectedItemIds] = useState(new Set());
   const [selectedRestaurantId, setSelectedRestaurantId] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
@@ -153,6 +155,25 @@ export default function CartModal({
     setConfirmAction(null);
   };
 
+  const slugify = (value) => (
+    (value ?? '')
+      .toString()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[đĐ]/g, 'd')
+      .replace(/[^a-zA-Z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+      .toLowerCase()
+  );
+
+  const handleRestaurantClick = (event, group) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!group?.id) return;
+    const slug = slugify(group?.label);
+    navigate(`/restaurant/${slug}-${group.id}`);
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -192,7 +213,17 @@ export default function CartModal({
                           checked={groupSelected}
                           onChange={() => toggleGroup(group)}
                         />
-                        <span className={styles.groupInfo}>
+                        <span
+                          className={styles.groupInfo}
+                          role="button"
+                          tabIndex={0}
+                          onClick={(event) => handleRestaurantClick(event, group)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              handleRestaurantClick(event, group);
+                            }
+                          }}
+                        >
                           {group.image ? (
                             <img
                               className={styles.groupImage}
@@ -260,7 +291,13 @@ export default function CartModal({
                             </button>
                           </div>
 
-                          <div className={styles.itemPrice}>{formatCurrency(item.subtotal || 0)}</div>
+                          <div className={styles.priceInfo}>
+                            <div className={styles.priceRow}>
+                                <div className={styles.snapshotPrice}>{formatCurrency(item.snapshotPrice || item.price || 0)}</div>
+                                <div className={styles.qtyText}>x {item.quantity}</div>
+                              </div>
+                            <div className={styles.itemPrice}>{formatCurrency(item.subtotal || 0)}</div>
+                          </div>
 
                           <button
                             type="button"

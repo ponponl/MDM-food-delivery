@@ -105,6 +105,9 @@ export const createOrder = async ({
       logger.info(`Created new user: ${userId} for externalId: ${userExternalId}`);
     }
 
+    const restaurantSnapshotName = cartItems.find((item) => item?.restaurantName)?.restaurantName || null;
+    const restaurantSnapshotImage = cartItems.find((item) => item?.restaurantImage)?.restaurantImage || null;
+
     // Get item prices and calculate total
     const itemIds = [...new Set(cartItems.map((item) => item._id || item.itemId))];
     const menuItems = await menuService.getMenuItems(itemIds);
@@ -151,15 +154,18 @@ export const createOrder = async ({
         });
       }
 
-      const price = currentPrice;
-      const subtotal = price * qty;
+      const orderSnapshotPrice = Number.isFinite(currentPrice) ? currentPrice : snapshotPrice;
+      const subtotal = orderSnapshotPrice * qty;
 
       totalPrice += subtotal;
       totalItems += qty;
       orderItems.push({
         itemId,
+        itemName: cartItem.name || menuItem?.name || `Item ${itemId}`,
+        itemImageUrl: cartItem.image || menuItem?.image || menuItem?.images?.[0] || null,
         quantity: qty,
-        price
+        snapshotPrice: orderSnapshotPrice,
+        options: Array.isArray(cartItem.options) ? cartItem.options : []
       });
     }
 
@@ -176,6 +182,8 @@ export const createOrder = async ({
     const order = await orderRepository.createOrder(client, {
       userId,
       restaurantId: targetRestaurantId,
+      restaurantName: restaurantSnapshotName,
+      restaurantImageUrl: restaurantSnapshotImage,
       totalPrice,
       totalItems,
       status: 'placed',
@@ -229,6 +237,9 @@ export const createOrder = async ({
       totalPrice,
       totalItems,
       items: orderItems,
+      restaurantId: targetRestaurantId,
+      restaurantName: restaurantSnapshotName,
+      restaurantImageUrl: restaurantSnapshotImage,
       paymentMethod: paymentMethod,
       paymentStatus: 'pending',
       estimatedDelivery: '30-45 minutes',

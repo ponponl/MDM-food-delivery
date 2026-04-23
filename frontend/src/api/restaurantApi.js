@@ -9,6 +9,12 @@ const restaurantApi = {
         const url = `/restaurants/${publicId}`;
         return axiosClient.get(url);
     },
+    getBulk: (ids = []) => {
+        const url = '/restaurants/bulk';
+        const payload = Array.isArray(ids) ? ids : [ids];
+        const normalizedIds = payload.filter(Boolean);
+        return axiosClient.get(url, { params: { ids: normalizedIds.join(',') } });
+    },
     getSummary: () => {
         const url = '/restaurants/summary';
         return axiosClient.get(url);
