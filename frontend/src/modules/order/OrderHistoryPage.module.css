@@ -1,27 +1,25 @@
 .orderHistoryContainer {
-  padding: 80px 30px 20px 210px;
-  margin: 0 auto;
+  padding: 1.5rem;
 }
 
 .header {
-  margin-bottom: 30px;
+  /* margin-bottom: 30px; */
   padding-bottom: 20px;
-  border-bottom: 2px solid #f0f0f0;
 }
 
 .header h1 {
   font-size: 28px;
   font-weight: 700;
   color: #333;
-  margin-bottom: 8px;
-  margin-top: 0;
+  /* margin-bottom: 8px;
+  margin-top: 0; */
 }
 
-.header p {
+/* .header p {
   font-size: 14px;
   color: #888;
   margin: 0;
-}
+} */
 
 /* Tabs */
 .tabs {
@@ -51,8 +49,8 @@
 }
 
 .tabActive {
-  color: #1565c0;
-  border-bottom-color: #1565c0;
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
 }
 
 .ordersList {
@@ -81,8 +79,6 @@
   border: 1px solid #e0e0e0;
   border-radius: 12px;
   padding: 30px;
-  margin-left: 20px;
-  margin-right: 20px;
   transition: box-shadow 0.3s ease;
 }
 
@@ -99,11 +95,53 @@
   border-bottom: 1px solid #f0f0f0;
 }
 
+.orderBody {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.orderBodyLeft {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.orderBodyRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  min-width: 220px;
+}
+
+.orderBodyActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .restaurantInfo {
   display: flex;
   align-items: center;
   gap: 12px;
   flex: 1;
+  border-radius: 10px;
+}
+
+.restaurantInfo:hover .restaurantName,
+.restaurantInfo:focus-visible .restaurantName {
+  cursor: pointer;
+  color: var(--primary-color);
+}
+
+.restaurantInfo:focus-visible {
+  outline: 2px solid rgba(255, 107, 53, 0.35);
+  outline-offset: 2px;
 }
 
 .restaurantInfo img {
@@ -113,7 +151,7 @@
   object-fit: cover;
 }
 
-.restaurantInfo h3 {
+.restaurantInfo .orderId, .restaurantInfo .restaurantName {
   font-size: 16px;
   font-weight: 600;
   color: #333;
@@ -139,9 +177,24 @@
   color: #2e7d32;
 }
 
-.statusArriving {
+.statusPlaced {
   background: #e3f2fd;
   color: #1565c0;
+}
+
+.statusConfirmed {
+  background: #fff8e1;
+  color: #ef6c00;
+}
+
+.statusDelivering {
+  background: #ede7f6;
+  color: #5e35b1;
+}
+
+.statusArriving {
+  background: #e3f2fd;
+  color: var(--primary-color);
 }
 
 .statusCancelled {
@@ -239,7 +292,7 @@
 }
 
 .dotActive {
-  background: #1565c0;
+  background: var(--primary-color);
   width: 12px;
   border-radius: 3px;
 }
@@ -254,8 +307,8 @@
 
 .quantityBadge {
   display: inline-block;
-  padding: 6px 12px;
-  color: #1565c0;
+  padding: 6px 0px;
+  color: var(--primary-color);
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
@@ -268,19 +321,19 @@
   gap: 6px;
   padding: 8px 14px;
   background: white;
-  border: 1px solid #ddd;
+  border: 1px solid var(--primary-color);
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: #1565c0;
+  color: var(--primary-color);
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
 }
 
 .btnViewOrder:hover {
-  background: #f0f7ff;
-  border-color: #1565c0;
+  background: var(--primary-color);
+  color: #fff;
 }
 
 /* Total Price */
@@ -289,7 +342,7 @@
   justify-content: flex-end;
   gap: 5px;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 0;
   font-size: 16px;
   font-weight: 600;
   color: #333;
@@ -308,6 +361,13 @@
   justify-content: space-between;
 }
 
+.actionGroup {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-left: auto;
+}
+
 .ratingDisplay {
   display: flex;
   align-items: center;
@@ -315,6 +375,12 @@
   font-size: 13px;
   color: #666;
   flex: 1;
+}
+
+.ratingRow {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
 }
 
 .btnRate {
@@ -338,19 +404,177 @@
   align-items: center;
   gap: 8px;
   padding: 8px 14px;
-  background: #f0f0f0;
-  color: #333;
+  background: var(--primary-color);
+  color: #fff;
   border: none;
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-left: auto;
 }
 
 .btnReorder:hover {
-  background: #e0e0e0;
+  background: var(--hover-color);
+}
+
+.btnNextStatus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #1565c0;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btnNextStatus:hover {
+  background: #0d47a1;
+}
+
+.btnNextStatus:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnCancelOrder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  background: #fff;
+  color: #c62828;
+  border: 1px solid #c62828;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btnCancelOrder:hover {
+  background: #ffebee;
+}
+
+.btnCancelOrder:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.skeletonCard {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.skeletonShimmer {
+  position: relative;
+  overflow: hidden;
+  background: #f3f4f6;
+  border-radius: 10px;
+}
+
+.skeletonShimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, rgba(243, 244, 246, 0) 0%, rgba(255, 255, 255, 0.7) 50%, rgba(243, 244, 246, 0) 100%);
+  animation: shimmer 1.4s infinite;
+}
+
+.skeletonHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.skeletonRestaurant {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.skeletonAvatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+}
+
+.skeletonTextCol {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.skeletonLine {
+  height: 14px;
+  width: 100%;
+}
+
+.skeletonLineShort {
+  height: 12px;
+  width: 60%;
+}
+
+.skeletonBadge {
+  width: 90px;
+  height: 24px;
+  border-radius: 999px;
+}
+
+.skeletonCarousel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f8f8f8;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.skeletonThumb {
+  width: 80px;
+  height: 80px;
+  border-radius: 6px;
+}
+
+.skeletonFooterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.skeletonPrice {
+  width: 140px;
+  height: 18px;
+}
+
+.skeletonButton {
+  width: 120px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 /* Modal */
@@ -559,10 +783,20 @@
     gap: 10px;
   }
 
+  .actionGroup {
+    width: 100%;
+    flex-direction: column;
+  }
+
   .btnReorder {
     width: 100%;
     margin-left: 0;
     justify-content: center;
+  }
+
+  .btnNextStatus,
+  .btnCancelOrder {
+    width: 100%;
   }
 
   .modal {

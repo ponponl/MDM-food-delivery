@@ -1,7 +1,7 @@
 import styles from './Header.module.css';
 import { Search, Bell, ShoppingCart, ChevronDown, MapPin, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import { FishSimpleIcon, UserCircleIcon, SignOutIcon } from '@phosphor-icons/react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, act } from 'react';
 import { AddressContext } from '../../context/AddressContext';
 import { useContext } from 'react';
 import { useAuth } from '../../context/AuthContext';
@@ -13,7 +13,8 @@ import userApi from '../../api/userApi';
 import searchApi from '../../api/searchApi';
 import CartModal from '../cartModal/CartModal';
 import ConfirmOrderModal from '../confirmOrder/ConfirmOrderModal';
-import axios from 'axios';
+import { useAddressSearch } from '../../hooks/useAddressSearch.js';
+import toast from 'react-hot-toast';
 
 export default function Header() {
   const {address, updateAddress} = useContext(AddressContext);
@@ -36,80 +37,34 @@ export default function Header() {
   const { user, logoutUser } = useAuth();
   const searchContainerRef = useRef(null);
   const navigate = useNavigate();
-  const [isEditingAddress, setIsEditingAddress] = useState(false);
-  const [addressInput, setAddressInput] = useState('');
-  const [addressSuggestions, setAddressSuggestions] = useState([]);
-  const addressTimeoutRef = useRef(null);
   const addressContainerRef = useRef(null);
-  const [activeAddressIndex, setActiveAddressIndex] = useState(-1);
 
-  const handleAddressSearch = async (val) => {
-    setActiveAddressIndex(-1); // Reset index về -1
-    if (addressTimeoutRef.current) clearTimeout(addressTimeoutRef.current);
-    if (!val || val.trim().length < 3) {
-      setAddressSuggestions([]);
-      return;
-    }
-
-    addressTimeoutRef.current = setTimeout(async () => {
-      try {
-        const LIQ_KEY = import.meta.env.VITE_LOCATIONIQ_TOKEN;
-        const res = await axios.get(
-          `https://api.locationiq.com/v1/autocomplete?key=${LIQ_KEY}&q=${val}&limit=5&dedupe=1&countrycodes=vn&accept-language=vi`
-        );
-        setAddressSuggestions(res.data);
-      } catch (error) {
-        console.error("Lỗi tìm địa chỉ:", error);
-      }
-    }, 500);
-  };
-
-  const handleAddressKeyDown = (e) => {
-    if (addressSuggestions.length === 0) return;
-
-    if (e.key === 'ArrowDown') {
-      e.preventDefault(); // Ngăn con trỏ nhảy về cuối dòng
-      setActiveAddressIndex(prev => 
-        prev < addressSuggestions.length - 1 ? prev + 1 : prev
-      );
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setActiveAddressIndex(prev => (prev > 0 ? prev - 1 : 0));
-    } else if (e.key === 'Enter') {
-      if (activeAddressIndex >= 0) {
-        e.preventDefault();
-        handleSelectAddress(addressSuggestions[activeAddressIndex]);
-      }
-    } else if (e.key === 'Escape') {
-      setIsEditingAddress(false);
-      setAddressSuggestions([]);
-      setActiveAddressIndex(-1);
-    }
-  };
-
-  const handleSelectAddress = (item) => {
-    updateAddress({
-      fullAddress: item.display_name,
-      location: { 
-        type: 'Point', 
-        location: [parseFloat(item.lon), parseFloat(item.lat)] 
-      }
-    });
-    setIsEditingAddress(false);
-    setAddressSuggestions([]);
-    setAddressInput('');
-  };
+  const {
+        address: displayAddress,
+        setAddress,
+        suggestions,
+        setSuggestions,
+        isEditingAddress,
+        setIsEditingAddress,
+        activeSuggestionIndex,
+        handleInputChange,
+        handleKeyDown,
+        selectSuggestion,
+        handleDetectLocation
+    } = useAddressSearch({ initialValue: address?.full || '' });
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (addressContainerRef.current && !addressContainerRef.current.contains(event.target)) {
         setIsEditingAddress(false);
-        setAddressSuggestions([]);
+        if (typeof setSuggestions === 'function') {
+          setSuggestions([]); 
+        }
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [setSuggestions]);
 
   const handleLogout = async () => {
     try {
@@ -526,17 +481,36 @@ export default function Header() {
     try {
       setIsPlacingOrder(true);
       setConfirmError('');
-      await orderApi.createOrder({
+      const response = await orderApi.createOrder({
         userExternalId: user?.externalId || user?.externalid || user?.userExternalId,
         restaurantId: confirmData.restaurantId,
         deliveryAddress,
         paymentMethod: 'cash',
         itemKeys: confirmData.itemKeys
       });
+      const payload = response?.data ?? response;
+      const orderResult = payload?.data ?? payload ?? {};
       await loadCart(true);
       setIsConfirmOpen(false);
       setConfirmData(null);
-      window.alert('Đặt hàng thành công!');
+      toast.success('Đặt hàng thành công!', {
+        duration: 3000,
+        style: {
+          background: '#FFFFFF',
+          color: '#1F2933',
+          padding: '12px 24px',
+          borderRadius: '12px',
+          border: '1px solid #E5E7EB',
+          fontSize: '15px',
+          fontWeight: '600',
+          fontFamily: '"Lexend", "Segoe UI", sans-serif',
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+        },
+        iconTheme: {
+          primary: '#4CAF50',
+          secondary: '#FFFFFF'
+        }
+      });
     } catch (error) {
       setConfirmError('Không thể đặt hàng. Vui lòng thử lại.');
     } finally {
@@ -584,11 +558,11 @@ export default function Header() {
                     className={styles.addressHolder} 
                     onClick={() => {
                       setIsEditingAddress(true);
-                      setAddressInput(address?.fullAddress || '');
+                      setAddress(address?.fullAddress || '');
                     }}
                   >
                     <MapPin size={17}/>
-                    <span className={styles.addressText}>{address?.fullAddress}</span>
+                    <span className={styles.addressText}>{address?.full}</span>
                     <ChevronDown size={15} className={styles.hideMobile}/>
                   </button>
                 ) : (
@@ -596,18 +570,23 @@ export default function Header() {
                     <input 
                       autoFocus
                       className={styles.addressInputInline}
-                      value={addressInput}
+                      value={displayAddress}
                       onChange={(e) => {
-                        setAddressInput(e.target.value);
-                        handleAddressSearch(e.target.value);
+                        handleInputChange(e.target.value);
                       }}
-                      onKeyDown={handleAddressKeyDown}
+                      onKeyDown={handleKeyDown}
                       placeholder="Nhập địa chỉ"
                     />
-                    {addressSuggestions.length > 0 && (
+                    {suggestions.length > 0 && (
                       <ul className={styles.addressSuggestList}>
-                        {addressSuggestions.map((s, idx) => (
-                          <li key={idx} onClick={() => handleSelectAddress(s)} className={`${styles.addressSuggestItem} ${idx === activeAddressIndex ? styles.addressSuggestActive : ''}`}>
+                        {suggestions.map((s, idx) => (
+                          <li key={idx} 
+                              onClick={() => {
+                                selectSuggestion(s);
+                                setIsEditingAddress(false);
+                              }}
+                              className={`${styles.addressSuggestItem} ${idx === activeSuggestionIndex ? styles.addressSuggestActive : ''}`}
+                          >
                             <MapPin size={14} />
                             <span>{s.display_name}</span>
                           </li>

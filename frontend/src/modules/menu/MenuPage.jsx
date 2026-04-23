@@ -33,6 +33,7 @@ export default function MenuPage() {
             .toString()
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[đĐ]/g, 'd')
             .replace(/[^a-zA-Z0-9]+/g, '-')
             .replace(/(^-|-$)/g, '')
             .toLowerCase()
@@ -66,13 +67,13 @@ export default function MenuPage() {
             return;
         }
 
-        const slug = restaurant?.slug || slugify(restaurant?.name);
+        const slug = slugify(restaurant?.name);
         navigate(`/restaurant/${slug}-${publicId}`);
     };
 
     return (
-        <div style={{backgroundColor: '#FFFDFB'}}> 
-            <div className={styles.container}>
+        <div className={styles.menuPage}> 
+            <main className={styles.container}>
                 <div className={styles.content}>
                     <div className={styles.category}>
                         <h2 style={{marginBottom: '10px'}}>Chào mừng đến với Foodly!</h2>
@@ -113,8 +114,8 @@ export default function MenuPage() {
                                         <RestaurantCard 
                                             image={displayImage} 
                                             title={item.name} 
-                                            rating={5} 
-                                            ratingQuantity={120} 
+                                                rating={item.avgRating ?? 0} 
+                                                ratingQuantity={item.totalReview ?? 0} 
                                             distance={5} 
                                             deliveryTime={6} 
                                             fee={15} 
@@ -148,8 +149,8 @@ export default function MenuPage() {
                                                     key={index} 
                                                     image={displayImage} 
                                                     title={item.name} 
-                                                    rating={5} 
-                                                    ratingQuantity={120} 
+                                                    rating={item.avgRating ?? 0} 
+                                                    ratingQuantity={item.totalReview ?? 0} 
                                                     distance={5} 
                                                     deliveryTime={6} 
                                                     fee={15} 
@@ -162,7 +163,7 @@ export default function MenuPage() {
                         );
                     })}
                 </div>
-            </div>
+            </main>
         </div>
     );
 }

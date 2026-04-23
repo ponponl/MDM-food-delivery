@@ -3,6 +3,7 @@ import { User, MapPin, Plus, Trash2, Save } from "lucide-react";
 import styles from "./ProfilePage.module.css";
 import { useAuth } from "../../context/AuthContext";
 import { updateProfile, updateAddresses } from "../../services/authService";
+import AddressItem from "../../components/addressItem/addressItem";
 import toast from "react-hot-toast";
 
 export default function ProfilePage() {
@@ -94,8 +95,13 @@ export default function ProfilePage() {
   };
 
   const addNewAddress = () => {
-    const newAddr = { street: "", city: "HCM" };
-    setAddresses([...addresses, newAddr]);
+      const newAddr = { 
+          building: "", 
+          note: "", 
+          full: "", 
+          location: null 
+      };
+      setAddresses([...addresses, newAddr]);
   };
 
   const removeAddress = (index) => {
@@ -103,9 +109,9 @@ export default function ProfilePage() {
     setAddresses(newAddrs);
   };
 
-  const handleAddressChange = (index, field, value) => {
+  const handleAddressChange = (index, updatedAddr) => {
     const newAddrs = [...addresses];
-    newAddrs[index] = { ...newAddrs[index], [field]: value };
+    newAddrs[index] = updatedAddr; 
     setAddresses(newAddrs);
   };
 
@@ -202,7 +208,7 @@ export default function ProfilePage() {
                 Chưa có địa chỉ nào, hãy thêm mới
               </div>
             )}
-            {addresses.map((addr, index) => (
+            {/* {addresses.map((addr, index) => (
               <div key={index} className={styles.addressItem}>
                 <div className={styles.addressInfo}>
                   <p style={{ marginBottom: "10px" }}>
@@ -253,6 +259,15 @@ export default function ProfilePage() {
                   </button>
                 </div>
               </div>
+            ))} */}
+            {addresses.map((addr, index) => (
+                <AddressItem 
+                    key={index} 
+                    index={index} 
+                    addr={addr} 
+                    onChange={handleAddressChange} 
+                    onRemove={removeAddress} 
+                />
             ))}
           </div>
 

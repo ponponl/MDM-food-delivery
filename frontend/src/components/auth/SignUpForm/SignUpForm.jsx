@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { Link } from "react-router-dom";
 import { register } from "../../../services/authService";
 import styles from "./SignUpForm.module.css";
 import toast from "react-hot-toast";
@@ -19,7 +20,7 @@ const SignUpEditorial = () => (
       </div>
 
       <div className={styles.articleContent}>
-        <span className={styles.dropCap}>B</span>
+        {/* <span className={styles.dropCap}>B</span> */}
         <p className={styles.quoteText}>
           "Món ngon kết nối mọi người."
         </p>
@@ -141,7 +142,7 @@ const SignUpInputs = ({ onSwitch, onRegisterSuccess }) => {
       className={styles.formPart}
       style={{ width: "100%", height: "100%", borderRight: "none" }}
     >
-      <h2>Tham gia cộng đồng Foodly</h2>
+      <h2>Tham gia Foodly</h2>
       {error && <div className={styles.errorMessage}>{error}</div>}
       <form onSubmit={handleSubmit}>
         <div className={styles.inputGroup}>

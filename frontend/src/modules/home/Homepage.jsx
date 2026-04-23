@@ -10,7 +10,7 @@ import ClientLayout from '../../layouts/ClientLayout/ClientLayout.jsx';
 import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import axios from 'axios';
+import { useAddressSearch } from '../../hooks/useAddressSearch.js';
 
 const CARDS = [
     {
@@ -43,136 +43,30 @@ const STATS = [
 ];
 
 function HomeWithoutAddress() {
-    const [address, setAddress] = useState('');
     const {updateAddress} = useContext(AddressContext);
     const { user, logoutUser } = useAuth();
-    const [suggestions, setSuggestions] = useState([]);
     const navigate = useNavigate();
-    const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
-    const typingTimeoutRef = useRef(null);
 
-    // const handleSubmit = (e) => {
-    //     e.preventDefault();
-    //     if (address.trim() !== ''){
-    //         updateAddress(address);
-    //         navigate('/');
-    //     }
-    //     console.log('Đã gửi địa chỉ:', address);
-    // };
-
-    const selectSuggestion = (suggestion) => {
-        const lng = parseFloat(suggestion.lon);
-        const lat = parseFloat(suggestion.lat);
-
-        updateAddress({
-            fullAddress: suggestion.display_name,
-            location: { type: 'Point', coordinates: [lng, lat] }
-        });
-        setAddress(suggestion.display_name.split(',')[0]);
-        setSuggestions([]);
-        setActiveSuggestionIndex(-1);
-    };
-
-    const handleKeyDown = (e) => {
-        // Nếu không có gợi ý nào thì không làm gì
-        if (suggestions.length === 0) return;
-
-        if (e.key === "ArrowDown") {
-            // Nhấn xuống: tăng index
-            setActiveSuggestionIndex((prev) => 
-                prev < suggestions.length - 1 ? prev + 1 : prev
-            );
-        } else if (e.key === "ArrowUp") {
-            // Nhấn lên: giảm index
-            setActiveSuggestionIndex((prev) => (prev > 0 ? prev - 1 : 0));
-        } else if (e.key === "Enter") {
-            // Nhấn Enter: Nếu đang chọn một gợi ý thì chốt gợi ý đó
-            if (activeSuggestionIndex >= 0) {
-                e.preventDefault(); // Ngăn form submit ngay lập tức
-                handleSelectSuggestion(suggestions[activeSuggestionIndex]);
-            }
-        } else if (e.key === "Escape") {
-            // Nhấn Esc: Đóng danh sách
-            setSuggestions([]);
-            setActiveSuggestionIndex(-1);
-        }
-    };
+    const {
+        address,
+        suggestions,
+        activeSuggestionIndex,
+        handleInputChange,
+        handleKeyDown,
+        selectSuggestion,
+        handleDetectLocation
+    } = useAddressSearch();
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (address.trim() !== '') {
+        if (address.trim() !== ''){
             updateAddress({
                 fullAddress: address,
                 location: { type: 'Point', coordinates: [0, 0] } 
             });
             navigate('/');
         }
-    };
-
-    const handleInputChange = async (e) => {
-        const value = e.target.value;
-        setAddress(value);
-        setActiveSuggestionIndex(-1);
-
-        if (typingTimeoutRef.current) {
-            clearTimeout(typingTimeoutRef.current);
-        }
-
-        if (value.length > 2) {
-            typingTimeoutRef.current = setTimeout(async () => {
-                const LIQ_KEY = import.meta.env.VITE_LOCATIONIQ_TOKEN;
-                try {
-                    const res = await axios.get(
-                        `https://api.locationiq.com/v1/autocomplete?key=${LIQ_KEY}&q=${value}&limit=5&dedupe=1&countrycodes=vn&accept-language=vi`
-                    );
-                    setSuggestions(res.data);
-                } catch (err) {
-                    console.error("LocationIQ Error:", err);
-                }
-            }, 500);
-        } else {
-            setSuggestions([]);
-        }
-    };
-
-    const handleSelectSuggestion = async (suggestion) => {
-        const lng = parseFloat(suggestion.lon);
-        const lat = parseFloat(suggestion.lat);
-
-        updateAddress({
-            fullAddress: suggestion.display_name,
-            location: { 
-                type: 'Point', 
-                coordinates: [lng, lat] 
-            }
-        });
-    
-        // Hiển thị tên ngắn gọn lên input (ví dụ: lấy phần đầu của địa chỉ)
-        setAddress(suggestion.display_name.split(',')[0]); 
-        setSuggestions([]);
-        setActiveSuggestionIndex(-1);
-    };
-
-    const handleDetectLocation = () => {
-        if (!navigator.geolocation) return alert("Browser does not support geolocation");
-
-        navigator.geolocation.getCurrentPosition(async (position) => {
-            const { latitude, longitude } = position.coords;
-            const LIQ_KEY = import.meta.env.VITE_LOCATIONIQ_TOKEN;
-
-            try {
-                const res = await axios.get(`https://us1.locationiq.com/v1/reverse?key=${LIQ_KEY}&lat=${latitude}&lon=${longitude}&format=json`);
-                const displayAddr = res.data.display_name;
-
-                updateAddress({
-                    fullAddress: displayAddr,
-                    location: { type: 'Point', coordinates: [longitude, latitude] }
-                });
-                setAddress(displayAddr);
-            } catch (error) {
-                console.error("Location error", error);
-            }
-        });
+        console.log('Đã gửi địa chỉ:', address);
     };
 
     return (
@@ -191,7 +85,7 @@ function HomeWithoutAddress() {
                                 type="text" 
                                 placeholder="Nhập địa chỉ giao hàng" 
                                 value={address}
-                                onChange={handleInputChange}
+                                onChange={(e) => handleInputChange(e.target.value)}
                                 onKeyDown={handleKeyDown}
                             />
                             {/* Nút định vị */}
@@ -208,7 +102,7 @@ function HomeWithoutAddress() {
                         {suggestions.length > 0 && (
                             <ul className={styles.suggestionList}>
                                 {suggestions.map((s, index) => (
-                                    <li key={s.place_id ||index} onClick={() => handleSelectSuggestion(s)} className={index === activeSuggestionIndex ? styles.activeSuggestion : ''}>
+                                    <li key={s.place_id ||index} onClick={() => selectSuggestion(s)} className={index === activeSuggestionIndex ? styles.activeSuggestion : ''}>
                                         <strong>{s.display_place || s.display_name.split(',')[0]}</strong>
                                         <p>{s.display_name}</p>
                                     </li>

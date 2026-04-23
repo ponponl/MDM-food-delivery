@@ -18,6 +18,10 @@ import OrderDetailPage from './modules/order/OrderDetailPage.jsx';
 import MerchantRegisterPage from './modules/merchant/MerchantRegisterPage.jsx';
 import MerchantLoginPage from './modules/merchant/MerchantLoginPage.jsx';
 import MerchantDashboardPage from './modules/merchant/MerchantDashboardPage.jsx';
+import MerchantOrdersPage from './modules/merchant/MerchantOrdersPage.jsx';
+import MerchantOrderDetailPage from './modules/merchant/MerchantOrderDetailPage.jsx';
+import MerchantLayout from './layouts/MerchantLayout/MerchantLayout.jsx';
+import MerchantReportPage from './modules/merchant/MerchantReportPage.jsx'
 import './App.css';
 
 function App() {
@@ -42,7 +46,12 @@ function App() {
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/merchant/register" element={<MerchantRegisterPage />} />
           <Route path="/merchant/login" element={<MerchantLoginPage />} />
-          <Route path="/merchant/dashboard" element={<MerchantDashboardPage />} />
+          <Route element={<MerchantLayout />}>
+            <Route path="/merchant/dashboard" element={<MerchantDashboardPage />} />
+            <Route path="/merchant/orders" element={<MerchantOrdersPage />} />
+            <Route path="/merchant/order-detail" element={<MerchantOrderDetailPage />} />
+            <Route path="/merchant/reports" element={<MerchantReportPage />} />
+          </Route>
         </Routes>
 
       </AddressProvider>

@@ -62,6 +62,7 @@ export default function CategoryPage() {
             .toString()
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[đĐ]/g, 'd')
             .replace(/[^a-zA-Z0-9]+/g, '-')
             .replace(/(^-|-$)/g, '')
             .toLowerCase()
@@ -73,7 +74,7 @@ export default function CategoryPage() {
             return;
         }
 
-        const slug = restaurant?.slug || slugify(restaurant?.name);
+        const slug = slugify(restaurant?.name);
         navigate(`/restaurant/${slug}-${publicId}`);
     };
 
@@ -116,8 +117,8 @@ export default function CategoryPage() {
                                     key={index} 
                                     image={displayImage} 
                                     title={item.name} 
-                                    rating={5} 
-                                    ratingQuantity={120} 
+                                    rating={item.avgRating ?? 0} 
+                                    ratingQuantity={item.totalReview ?? 0} 
                                     distance={5} 
                                     deliveryTime={6} 
                                     fee={15} 

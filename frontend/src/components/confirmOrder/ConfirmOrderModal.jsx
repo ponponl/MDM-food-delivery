@@ -1,21 +1,20 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef, useContext } from 'react';
 import { X } from 'lucide-react';
 import styles from './ConfirmOrderModal.module.css';
+import { useAddressSearch } from '../../hooks/useAddressSearch.js';
+import { AddressContext } from '../../context/AddressContext';
+import AddressItem from "../../components/addressItem/AddressItem";
+import { updateAddresses } from '../../services/authService';
+import toast from "react-hot-toast";
 
 const normalizeAddress = (addr, defaults) => {
   if (!addr) return null;
-  if (typeof addr === 'string') {
-    return { receiver: defaults?.receiver || '', phone: defaults?.phone || '', address: addr };
-  }
-  const addressText =
-    addr.address ||
-    addr.full ||
-    addr.value ||
-    [addr.street, addr.city].filter(Boolean).join(', ');
+  const addressText = addr.full || addr.address || [addr.street, addr.city].filter(Boolean).join(', ');
   return {
     receiver: addr.receiver || addr.name || defaults?.receiver || '',
     phone: addr.phone || addr.phoneNumber || defaults?.phone || '',
-    address: addressText || ''
+    address: addressText || '',
+    location: addr.location || null
   };
 };
 
@@ -26,18 +25,27 @@ const formatAddressLabel = (addr) => {
 };
 
 export default function ConfirmOrderModal({
-  isOpen,
-  onClose,
-  restaurantName,
-  items,
-  total,
-  addresses,
-  defaultReceiver,
-  defaultPhone,
-  isSubmitting,
-  error,
-  onConfirm
+  isOpen, onClose, restaurantName, items, total, addresses,
+  defaultReceiver, defaultPhone, isSubmitting, error, onConfirm
 }) {
+  const { address: contextAddress } = useContext(AddressContext);
+  const manualFormRef = useRef(null);
+  const [shouldSaveAddress, setShouldSaveAddress] = useState(false);
+  
+  const { handleDetectLocation } = useAddressSearch({
+    onSelect: (data) => {
+      setManualAddress(prev => ({ ...prev, full: data.full, location: data.location }));
+    }
+  });
+
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [useManual, setUseManual] = useState(false);
+  const [manualAddress, setManualAddress] = useState({ 
+    receiver: defaultReceiver || '', 
+    phone: defaultPhone || '', 
+    building: '', note: '', full: '', location: null 
+  });
+
   const normalizedAddresses = useMemo(
     () => (addresses || [])
       .map((addr) => normalizeAddress(addr, { receiver: defaultReceiver, phone: defaultPhone }))
@@ -45,168 +53,187 @@ export default function ConfirmOrderModal({
     [addresses, defaultReceiver, defaultPhone]
   );
 
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [useManual, setUseManual] = useState(false);
-  const [manualAddress, setManualAddress] = useState({ receiver: '', phone: '', address: '' });
-
+  // Logic: Khi mở Modal, thiết lập giá trị mặc định
   useEffect(() => {
     if (!isOpen) return;
+
     if (normalizedAddresses.length > 0) {
-      setSelectedIndex(0);
       setUseManual(false);
+      setSelectedIndex(0);
     } else {
       setUseManual(true);
     }
-    setManualAddress({ receiver: '', phone: '', address: '' });
-  }, [isOpen, normalizedAddresses.length]);
+
+    // Default: Context (LocalStorage) > Auto Detect
+    if (contextAddress?.full) {
+      setManualAddress(prev => ({
+        ...prev,
+        full: contextAddress.full,
+        location: contextAddress.location
+      }));
+    } else {
+      handleDetectLocation();
+    }
+  }, [isOpen, normalizedAddresses.length, contextAddress]);
+
+  const handleManualAddressChange = (_, updatedData) => {
+    setManualAddress(prev => ({ ...prev, ...updatedData }));
+  };
+
+  const isPhoneValid = (phone) => /^\d{10}$/.test(phone);
+
+  const resolvedAddress = useManual ? {
+    ...manualAddress,
+    address: manualAddress.full // Khớp với field address của backend
+  } : normalizedAddresses[selectedIndex];
+
+  const canConfirm = 
+    resolvedAddress?.address && 
+    resolvedAddress?.receiver &&
+    isPhoneValid(resolvedAddress?.phone) && 
+    !isSubmitting;
+
+  const handleConfirmOrder = async () => {
+    if (!canConfirm) return;
+
+    // Nếu người dùng chọn nhập mới và tích vào "Lưu địa chỉ"
+    if (useManual && shouldSaveAddress) {
+      try {
+        const newAddressObj = {
+          building: manualAddress.building,
+          note: manualAddress.note,
+          full: manualAddress.full,
+          location: manualAddress.location,
+          receiver: manualAddress.receiver,
+          phone: manualAddress.phone
+        };
+        await updateAddresses([...(addresses || []), newAddressObj]);
+      } catch (error) {
+        console.error("Không thể lưu địa chỉ:", error);
+      }
+    }
+
+    onConfirm(resolvedAddress);
+  };
 
   if (!isOpen) return null;
 
-  const selectedAddress = !useManual ? normalizedAddresses[selectedIndex] : null;
-  const resolvedAddress = useManual ? manualAddress : selectedAddress;
-  const canConfirm =
-    resolvedAddress &&
-    resolvedAddress.address &&
-    resolvedAddress.phone &&
-    resolvedAddress.receiver &&
-    items?.length > 0 &&
-    !isSubmitting;
-
-  const handleConfirm = () => {
-    if (!canConfirm) return;
-    onConfirm?.(resolvedAddress);
-  };
+  // const canConfirm = resolvedAddress?.address && resolvedAddress?.phone && !isSubmitting;
 
   return (
-    <div className={styles.backdrop} role="presentation" onClick={onClose}>
-      <div
-        className={styles.modal}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Confirm order"
-        onClick={(event) => event.stopPropagation()}
-      >
+    <div className={styles.backdrop} onClick={onClose}>
+      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <h3>Xác nhận đặt hàng</h3>
-          <button type="button" className={styles.closeButton} onClick={onClose} aria-label="Close">
-            <X size={18} />
+          <button 
+            className={styles.closeButton} 
+            onClick={onClose}><X size={18} 
+          />
           </button>
         </div>
 
         <div className={styles.content}>
           <div className={styles.section}>
-            <div className={styles.sectionTitle}>Nhà hàng</div>
-            <div className={styles.restaurantName}>{restaurantName || 'Nha hang'}</div>
+            <div className={styles.sectionTitle}>Nhà hàng: {restaurantName}</div>
           </div>
 
           <div className={styles.section}>
             <div className={styles.sectionTitle}>Món đã chọn</div>
             <div className={styles.itemList}>
-              {(items || []).map((item) => (
-                <div key={item.itemKey || item.itemId} className={styles.itemRow}>
-                  <div className={styles.itemInfo}>
-                    {item.image ? (
-                      <img
-                        className={styles.itemImage}
-                        src={item.image}
-                        alt={item.name}
-                        loading="lazy"
-                      />
-                    ) : (
-                      <span className={styles.itemPlaceholder}>Ảnh</span>
-                    )}
-                    <div className={styles.itemName}>
-                      {item.name}
-                      {item.priceUpdated && (
-                        <span className={styles.priceBadge}>Giá mới cập nhật</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className={styles.itemMeta}>x{item.quantity}</div>
-                  <div className={styles.itemPrice}>{item.subtotal}</div>
+              {items?.map((item) => (
+                <div key={item.itemKey} className={styles.itemRow}>
+                  <span>{item.name} x{item.quantity}</span>
+                  <span className={styles.itemPrice}>{item.subtotal}</span>
                 </div>
               ))}
             </div>
-            <div className={styles.totalRow}>
-              <span>Tổng tiền</span>
-              <strong>{total}</strong>
-            </div>
+            <div className={styles.totalRow}><span>Tổng cộng</span><strong>{total}</strong></div>
           </div>
 
           <div className={styles.section}>
             <div className={styles.sectionTitle}>Địa chỉ giao hàng</div>
-            {normalizedAddresses.length > 0 && (
-              <div className={styles.addressList}>
-                {normalizedAddresses.map((addr, index) => (
-                  <label key={`${addr.address}-${index}`} className={styles.addressOption}>
-                    <input
-                      type="radio"
-                      name="address"
-                      checked={!useManual && selectedIndex === index}
-                      onChange={() => {
-                        setUseManual(false);
-                        setSelectedIndex(index);
-                      }}
-                    />
-                    <span>{formatAddressLabel(addr)}</span>
-                  </label>
-                ))}
-                <label className={styles.addressOption}>
-                  <input
-                    type="radio"
-                    name="address"
-                    checked={useManual}
-                    onChange={() => setUseManual(true)}
+            <div className={styles.addressList}>
+              {normalizedAddresses.map((addr, idx) => (
+                <label key={idx} className={styles.addressOption}>
+                  <input 
+                    type="radio" 
+                    checked={!useManual && selectedIndex === idx} 
+                    onChange={() => {setUseManual(false); setSelectedIndex(idx);}} 
                   />
-                  <span>Nhập địa chỉ khác</span>
+                  <span>{formatAddressLabel(addr)}</span>
                 </label>
-              </div>
-            )}
+              ))}
+              <label className={styles.addressOption}>
+                <input 
+                  type="radio" 
+                  checked={useManual} 
+                  onChange={() => setUseManual(true)} 
+                />
+                <span>Nhập địa chỉ khác</span>
+              </label>
+            </div>
 
-            {(useManual || normalizedAddresses.length === 0) && (
-              <div className={styles.manualForm}>
-                <input
-                  type="text"
-                  placeholder="Người nhận"
-                  value={manualAddress.receiver}
-                  onChange={(event) =>
-                    setManualAddress((prev) => ({ ...prev, receiver: event.target.value }))
-                  }
+            {useManual && (
+              <div className={styles.manualForm} ref={manualFormRef}>
+                <div className={styles.formRow}>
+                  <input 
+                    type="text" 
+                    placeholder="Người nhận" 
+                    value={manualAddress.receiver} 
+                    onChange={(e) => setManualAddress(p => ({ ...p, receiver: e.target.value }))} 
+                  />
+                  <input 
+                    type="text" 
+                    placeholder="SĐT (10 số)" 
+                    maxLength={10} // Giới hạn nhập 10 ký tự
+                    value={manualAddress.phone} 
+                    onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '' || /^\d+$/.test(val)) {
+                            setManualAddress(p => ({ ...p, phone: val }));
+                        }
+                    }} 
+                  />
+                </div>
+                
+                {/* Thông báo lỗi nếu SĐT chưa đủ 10 số */}
+                {manualAddress.phone && manualAddress.phone.length !== 10 && (
+                    <span className={styles.validationError}>Số điện thoại phải đủ 10 chữ số</span>
+                )}
+
+                <AddressItem 
+                  addr={manualAddress} 
+                  index={0}
+                  onChange={handleManualAddressChange} 
                 />
-                <input
-                  type="text"
-                  placeholder="Số điện thoại"
-                  value={manualAddress.phone}
-                  onChange={(event) =>
-                    setManualAddress((prev) => ({ ...prev, phone: event.target.value }))
-                  }
-                />
-                <textarea
-                  rows={3}
-                  placeholder="Địa chỉ giao hàng"
-                  value={manualAddress.address}
-                  onChange={(event) =>
-                    setManualAddress((prev) => ({ ...prev, address: event.target.value }))
-                  }
-                />
+
+                {/* Ô Checkbox lưu địa chỉ */}
+                <label className={styles.saveAddressOption}>
+                    <input 
+                        type="checkbox" 
+                        checked={shouldSaveAddress} 
+                        onChange={(e) => setShouldSaveAddress(e.target.checked)} 
+                    />
+                    <span>Lưu địa chỉ này vào sổ địa chỉ của tôi</span>
+                </label>
               </div>
             )}
           </div>
         </div>
 
-        {error && <div className={styles.errorText}>{error}</div>}
-
         <div className={styles.footer}>
-          <button type="button" className={styles.cancelButton} onClick={onClose}>
-            Hủy
-          </button>
-          <button
-            type="button"
-            className={styles.confirmButton}
-            onClick={handleConfirm}
+          <button 
+            className={styles.cancelButton} 
+              onClick={onClose}
+            >
+              Hủy
+            </button>
+          <button 
+            className={styles.confirmButton} 
+            onClick={() => onConfirm(resolvedAddress)} 
             disabled={!canConfirm}
           >
-            {isSubmitting ? 'Đang xử lý...' : 'Xác nhận đặt hàng'}
+            Xác nhận
           </button>
         </div>
       </div>

@@ -105,11 +105,15 @@ export const createOrder = async ({
       logger.info(`Created new user: ${userId} for externalId: ${userExternalId}`);
     }
 
+    const restaurantSnapshotName = cartItems.find((item) => item?.restaurantName)?.restaurantName || null;
+    const restaurantSnapshotImage = cartItems.find((item) => item?.restaurantImage)?.restaurantImage || null;
+
     // Get item prices and calculate total
     const itemIds = [...new Set(cartItems.map((item) => item._id || item.itemId))];
     const menuItems = await menuService.getMenuItems(itemIds);
 
     let totalPrice = 0;
+    let totalItems = 0;
     const orderItems = [];
     const priceUpdates = [];
     const cartPriceUpdates = [];
@@ -150,14 +154,18 @@ export const createOrder = async ({
         });
       }
 
-      const price = currentPrice;
-      const subtotal = price * qty;
+      const orderSnapshotPrice = Number.isFinite(currentPrice) ? currentPrice : snapshotPrice;
+      const subtotal = orderSnapshotPrice * qty;
 
       totalPrice += subtotal;
+      totalItems += qty;
       orderItems.push({
         itemId,
+        itemName: cartItem.name || menuItem?.name || `Item ${itemId}`,
+        itemImageUrl: cartItem.image || menuItem?.image || menuItem?.images?.[0] || null,
         quantity: qty,
-        price
+        snapshotPrice: orderSnapshotPrice,
+        options: Array.isArray(cartItem.options) ? cartItem.options : []
       });
     }
 
@@ -174,7 +182,10 @@ export const createOrder = async ({
     const order = await orderRepository.createOrder(client, {
       userId,
       restaurantId: targetRestaurantId,
+      restaurantName: restaurantSnapshotName,
+      restaurantImageUrl: restaurantSnapshotImage,
       totalPrice,
+      totalItems,
       status: 'placed',
       deliveryAddress: resolvedDeliveryAddress
     });
@@ -221,11 +232,14 @@ export const createOrder = async ({
     // emitOrderEvent('order:created', { orderId, orderExternalId, status: 'placed' });
 
     return {
-      orderId,
       orderExternalId,
       status: 'placed',
       totalPrice,
+      totalItems,
       items: orderItems,
+      restaurantId: targetRestaurantId,
+      restaurantName: restaurantSnapshotName,
+      restaurantImageUrl: restaurantSnapshotImage,
       paymentMethod: paymentMethod,
       paymentStatus: 'pending',
       estimatedDelivery: '30-45 minutes',
@@ -388,6 +402,20 @@ export const getUserOrders = async ({ userExternalId, status, limit, offset }) =
   }
 };
 
+export const getRestaurantOrders = async ({ restaurantId, status, limit, offset }) => {
+  try {
+    return await orderRepository.getRestaurantOrdersByRestaurantId({
+      restaurantId,
+      status,
+      limit,
+      offset
+    });
+  } catch (error) {
+    logger.error(`Error getting restaurant orders: ${error.message}`);
+    throw error;
+  }
+};
+
 export const confirmOrder = async (orderExternalId, estimatedPrepTime) => {
   const client = await pgPool.connect();
 
@@ -422,7 +450,7 @@ export const confirmOrder = async (orderExternalId, estimatedPrepTime) => {
     logger.info(`Order ${orderId} confirmed`);
 
     return {
-      orderId,
+      orderExternalId,
       status: 'confirmed',
       estimatedPrepTime
     };
@@ -471,7 +499,7 @@ export const startDelivery = async (orderExternalId, { driverId, estimatedDelive
     logger.info(`Order ${orderId} delivery started by driver ${driverId}`);
 
     return {
-      orderId,
+      orderExternalId,
       status: 'delivering',
       driverId,
       estimatedDeliveryTime
@@ -505,10 +533,11 @@ export const completeOrder = async (orderExternalId, { completedBy, signature })
     const orderId = updated.id;
 
     // Update payment status (COD paid)
+    const paidAt = new Date();
     await orderRepository.updatePaymentStatus(client, {
       orderId,
       status: 'paid',
-      paidAt: new Date()
+      paidAt
     });
 
     await client.query('COMMIT');
@@ -525,11 +554,11 @@ export const completeOrder = async (orderExternalId, { completedBy, signature })
     logger.info(`Order ${orderId} completed`);
 
     return {
-      orderId,
+      orderExternalId,
       status: 'completed',
       payment: {
         status: 'paid',
-        paidAt: new Date()
+        paidAt
       }
     };
 
@@ -548,10 +577,10 @@ export const cancelOrder = async (orderExternalId, { reason, cancelledBy }) => {
   try {
     await client.query('BEGIN');
 
-    // Can only cancel if status is 'placed' or 'confirmed'
+    // Can only cancel if status is 'placed'
     const updated = await orderRepository.updateOrderStatus(client, {
       orderExternalId,
-      fromStatuses: ['placed', 'confirmed'],
+      fromStatuses: ['placed'],
       toStatus: 'cancelled'
     });
 
@@ -584,7 +613,7 @@ export const cancelOrder = async (orderExternalId, { reason, cancelledBy }) => {
     logger.info(`Order ${orderId} cancelled. Reason: ${reason}`);
 
     return {
-      orderId,
+      orderExternalId,
       status: 'cancelled',
       reason
     };

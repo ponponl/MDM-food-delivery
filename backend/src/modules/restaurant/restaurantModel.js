@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import menuItemSchema from '../menu/menuModel.js';
 
 const restaurantSchema = new mongoose.Schema({
-    slug: String,
     publicId: String,
     accountId: Number,
     name: String,
@@ -35,7 +34,9 @@ const restaurantSchema = new mongoose.Schema({
     images: [String],
     menu: [menuItemSchema],
     openTime: String,
-    closeTime: String
+    closeTime: String,
+    totalReview: Number,
+    avgRating: Number
 }, {
     toJSON: {
         versionKey: false,

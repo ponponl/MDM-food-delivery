@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Star, Clock, MapPin } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import MenuSidebar from '../../components/menuSideBar/menuSideBar.jsx';
@@ -15,9 +16,6 @@ export default function RestaurantPage() {
     const navigate = useNavigate();
     const { slugAndId } = useParams();
     const { user } = useAuth();
-    const [restaurant, setRestaurant] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [activeCategory, setActiveCategory] = useState('');
 
     const publicId = (slugAndId || '').includes('-')
@@ -32,47 +30,73 @@ export default function RestaurantPage() {
         });
     };
 
-   useEffect(() => {
-        const fetchRestaurantDetail = async () => {
-            try {
-                setLoading(true);
-                const [data, reviewsResponse] = await Promise.all([
-                    restaurantApi.getById(publicId),
-                    reviewApi.getReviewsByRestaurantId(publicId).catch(() => []) 
-                ]);
-                
-                const realReviews = reviewsResponse?.data || reviewsResponse || [];
-                
-                setRestaurant({
-                    ...data,
-                    reviews: realReviews
-                });
-                
-                if (data.menu && data.menu.length > 0) {
-                    const firstCategory = data.menu
-                        .map((item) => item.category)
-                        .filter((category) => category)[0];
-                    setActiveCategory(firstCategory || '');
-                }
-            } catch (err) {
-                console.error("Lỗi fetch nhà hàng:", err);
-                setError("Không thể tải dữ liệu nhà hàng. Vui lòng thử lại sau.");
-            } finally {
-                setLoading(false);
-            }
-        };
+    const {
+        data: restaurantData,
+        isLoading: isRestaurantLoading,
+        isError: isRestaurantError
+    } = useQuery({
+        queryKey: ['restaurant', publicId],
+        queryFn: () => restaurantApi.getById(publicId),
+        enabled: Boolean(publicId),
+        staleTime: 5 * 60 * 1000
+    });
 
-        if (publicId) {
-            fetchRestaurantDetail();
-        }
-    }, [publicId]);
+    const restaurant = restaurantData ? { ...restaurantData } : null;
 
-    if (loading || error || !restaurant) return null;
+    useEffect(() => {
+        if (!restaurant?.menu?.length) return;
+        const firstCategory = restaurant.menu
+            .map((item) => item.category)
+            .filter((category) => category)[0];
+        setActiveCategory(firstCategory || '');
+    }, [restaurant]);
 
-    const totalReviews = restaurant.reviews?.length || 0;
-    const avgRating = totalReviews > 0 
-        ? (restaurant.reviews.reduce((acc, rev) => acc + rev.rating, 0) / totalReviews).toFixed(1)
-        : '0.0';
+    if (isRestaurantLoading) {
+        return (
+            <div className={styles.restaurantPage}>
+                <main className={styles.mainContent}>
+                    <section className={`${styles.heroSection} ${styles.skeletonShimmer} ${styles.skeletonHero}`}>
+                        <div className={styles.skeletonHeroOverlay}>
+                            <div className={styles.skeletonHeroInfo}>
+                                <div className={`${styles.skeletonShimmer} ${styles.skeletonTitle}`} />
+                                <div className={`${styles.skeletonShimmer} ${styles.skeletonMeta}`} />
+                                <div className={`${styles.skeletonShimmer} ${styles.skeletonMetaShort}`} />
+                                <div className={`${styles.skeletonShimmer} ${styles.skeletonRating}`} />
+                            </div>
+                        </div>
+                    </section>
+
+                    <div className={styles.twoColumnLayout}>
+                        <aside className={styles.columnLeft}>
+                            <div className={styles.skeletonSidebar}>
+                                {[...Array(6)].map((_, index) => (
+                                    <div
+                                        key={index}
+                                        className={`${styles.skeletonShimmer} ${styles.skeletonSidebarItem}`}
+                                    />
+                                ))}
+                            </div>
+                        </aside>
+
+                        <section className={styles.columnRight}>
+                            <div className={styles.skeletonMenuGrid}>
+                                {[...Array(6)].map((_, index) => (
+                                    <div key={index} className={styles.skeletonMenuCard}>
+                                        <div className={`${styles.skeletonShimmer} ${styles.skeletonMenuHeader}`} />
+                                        <div className={`${styles.skeletonShimmer} ${styles.skeletonLine}`} />
+                                        <div className={`${styles.skeletonShimmer} ${styles.skeletonLineShort}`} />
+                                        <div className={`${styles.skeletonShimmer} ${styles.skeletonMenuFooter}`} />
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                    </div>
+                </main>
+            </div>
+        );
+    }
+
+    if (isRestaurantError || !restaurant) return null;
 
     const groupedMenu = (restaurant.menu || []).reduce((acc, item) => {
         if (!acc[item.category]) acc[item.category] = [];
@@ -124,31 +148,39 @@ export default function RestaurantPage() {
         }
     };
 
-    const maskUserName = (name) => {
-        if (!name) return 'Ẩn danh';
-        const [first] = name.trim().split(' ');
-        if (!first) return 'Ẩn danh';
-        return `${first.slice(0, 3)}***`;
-    };
+    // const maskUserName = (name) => {
+    //     if (!name) return 'Ẩn danh';
+    //     const [first] = name.trim().split(' ');
+    //     if (!first) return 'Ẩn danh';
+    //     return `${first.slice(0, 3)}***`;
+    // };
 
-    const formatReviewTime = (value) => {
-        if (!value) return '';
-        const normalized = String(value).replace(' ', 'T');
-        const parsed = new Date(normalized);
-        if (Number.isNaN(parsed.getTime())) return '';
-        const day = String(parsed.getDate()).padStart(2, '0');
-        const month = String(parsed.getMonth() + 1).padStart(2, '0');
-        const year = parsed.getFullYear();
-        const hours = String(parsed.getHours()).padStart(2, '0');
-        const minutes = String(parsed.getMinutes()).padStart(2, '0');
-        return `${day}/${month}/${year} ${hours}:${minutes}`;
-    };
+    // const formatReviewTime = (value) => {
+    //     if (!value) return '';
+    //     const normalized = String(value).replace(' ', 'T');
+    //     const parsed = new Date(normalized);
+    //     if (Number.isNaN(parsed.getTime())) return '';
+    //     const day = String(parsed.getDate()).padStart(2, '0');
+    //     const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    //     const year = parsed.getFullYear();
+    //     const hours = String(parsed.getHours()).padStart(2, '0');
+    //     const minutes = String(parsed.getMinutes()).padStart(2, '0');
+    //     return `${day}/${month}/${year} ${hours}:${minutes}`;
+    // };
+
+    const totalReviews = Number.isFinite(Number(restaurant?.totalReview))
+        ? Number(restaurant.totalReview)
+        : 0;
+    const avgRatingValue = Number.isFinite(Number(restaurant?.avgRating))
+        ? Number(restaurant.avgRating)
+        : 0;
+    const displayRating = totalReviews > 0 ? avgRatingValue.toFixed(1) : '0';
 
     return (
         <div className={styles.restaurantPage}>
             <main className={styles.mainContent}>
                 <section className={styles.heroSection}>
-                    <img src={restaurant.images[0]} alt={restaurant.name} className={styles.heroBgImg} />
+                    <img src={restaurant.background?.[0] || restaurant.images?.[0]} alt={restaurant.name} className={styles.heroBgImg} />
                     <div className={styles.heroOverlay}>
                         <div className={styles.heroInfo}>
                             <h1 className={styles.heroTitle}>{restaurant.name}</h1>
@@ -167,9 +199,15 @@ export default function RestaurantPage() {
                                 className={styles.heroRatingBtn}
                                 onClick={handleViewReviews}
                             >
-                                <span className={styles.heroRatingValue}>{avgRating}</span>
-                                <Star size={16} fill="#ffffff" color="#ffffff" />
-                                <span className={styles.heroRatingCount}>({restaurant.reviews.length} reviews)</span>
+                                {totalReviews === 0 ? (
+                                    <span className={styles.heroRatingValue}>Quán mới</span>
+                                ) : (
+                                    <>
+                                        <span className={styles.heroRatingValue}>{displayRating}</span>
+                                        <Star size={16} fill="#ffffff" color="#ffffff" />
+                                        <span className={styles.heroRatingCount}>({totalReviews} reviews)</span>
+                                    </>
+                                )}
                             </button>
                         </div>
                     </div>

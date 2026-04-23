@@ -78,4 +78,13 @@ const loginMerchant = async (credentials) => {
     }
 };
 
-export { register, login, logout, fetchCurrentUser, updateProfile, updateAddresses, registerMerchant, loginMerchant };
+const fetchCurrentMerchant = async () => {
+    try {
+        const response = await api.get('/auth/merchant/me');
+        return response.data?.data?.user || response.data?.user || response.data || null;
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};
+
+export { register, login, logout, fetchCurrentUser, updateProfile, updateAddresses, registerMerchant, loginMerchant, fetchCurrentMerchant };

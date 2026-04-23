@@ -1,5 +1,5 @@
 import { authService } from '../services/authService.js';
-import { catchAsync } from '../middlewares/errorHandler.js';
+import { AppError, catchAsync } from '../middlewares/errorHandler.js';
 import { generateTokens } from '../middlewares/auth.js';
 
 class AuthController {
@@ -34,13 +34,30 @@ class AuthController {
             path: '/'
         });
 
+        const sanitizedUser = { ...user };
+        delete sanitizedUser.id;
+        delete sanitizedUser.user_id;
+
         res
             .cookie('accessToken', tokens.accessToken, cookieOptions(15 * 60 * 1000))
             .cookie('refreshToken', tokens.refreshToken, cookieOptions(7 * 24 * 60 * 60 * 1000))
             .status(200).json({
                 status: 'success',
-                data: { user }
+                data: { user: sanitizedUser }
             });
+    });
+
+    getMerchantMe = catchAsync(async (req, res, next) => {
+        if (req.user?.role !== 'merchant') {
+            return next(new AppError('Insufficient permissions for this action', 403));
+        }
+
+        const user = await authService.getMerchantById(req.user.id);
+
+        res.status(200).json({
+            status: 'success',
+            data: { user }
+        });
     });
 }
 

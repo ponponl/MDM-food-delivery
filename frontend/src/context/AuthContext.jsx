@@ -1,19 +1,24 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { logout } from '../services/authService';
+import { fetchCurrentMerchant, logout } from '../services/authService';
 import userApi from '../api/userApi';
+import { useLocation } from 'react-router-dom';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const queryClient = useQueryClient();
+    const location = useLocation();
+    const isMerchantRoute = location.pathname.startsWith('/merchant');
 
-    const fetchMe = async () => {
+    const extractUserPayload = (response) => {
+        const payload = response?.data ?? response;
+        return payload?.data?.user || payload?.user || payload || null;
+    };
+
+    const fetchMerchantMe = async () => {
         try {
-            const response = await userApi.getMe();
-            const payload = response?.data ?? response;
-            const userData = payload?.data?.user || payload?.user || payload || null;
-            return userData;
+            return await fetchCurrentMerchant();
         } catch (error) {
             if (error?.response?.status === 401) {
                 return null;
@@ -22,14 +27,41 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const { data: user, isLoading } = useQuery({
-        queryKey: ['me'],
-        queryFn: fetchMe,
-        retry: false
+    const fetchUserMe = async () => {
+        try {
+            const response = await userApi.getMe();
+            return extractUserPayload(response);
+        } catch (error) {
+            if (error?.response?.status === 401) {
+                return null;
+            }
+            throw error;
+        }
+    };
+
+    const { data: merchantUser, isLoading: isMerchantLoading } = useQuery({
+        queryKey: ['merchantMe'],
+        queryFn: fetchMerchantMe,
+        retry: false,
+        enabled: isMerchantRoute
     });
 
+    const { data: clientUser, isLoading: isClientLoading } = useQuery({
+        queryKey: ['userMe'],
+        queryFn: fetchUserMe,
+        retry: false,
+        enabled: !isMerchantRoute
+    });
+
+    const user = useMemo(() => {
+        return isMerchantRoute ? merchantUser : clientUser;
+    }, [clientUser, isMerchantRoute, merchantUser]);
+
+    const isLoading = isMerchantRoute ? isMerchantLoading : isClientLoading;
+
     const loginUser = (userData) => {
-        queryClient.setQueryData(['me'], userData || null);
+        const isMerchant = userData?.role === 'merchant' || isMerchantRoute;
+        queryClient.setQueryData(isMerchant ? ['merchantMe'] : ['userMe'], userData || null);
     };
 
     const logoutUser = async () => {
@@ -38,8 +70,10 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
             console.error("Lỗi khi gọi API logout:", error);
         } finally {
-            queryClient.setQueryData(['me'], null);
-            queryClient.removeQueries({ queryKey: ['me'] });
+            queryClient.setQueryData(['merchantMe'], null);
+            queryClient.setQueryData(['userMe'], null);
+            queryClient.removeQueries({ queryKey: ['merchantMe'] });
+            queryClient.removeQueries({ queryKey: ['userMe'] });
         }
     };
 

@@ -6,7 +6,7 @@ import { CATEGORY_MAP } from '../modules/restaurant/restaurantRepo.js';
 
 class AuthService {
     async registerMerchant(payload) {
-        const { email, password, username, name, type, phone, address } = payload;
+        const { email, password, username, name, type, phone, address, openTime, closeTime } = payload;
 
         if (!email || !password || !username || !name || !type) {
             throw new AppError('Vui lòng cung cấp đầy đủ thông tin yêu cầu', 400);
@@ -44,8 +44,16 @@ class AuthService {
                 type: mappedType,
                 phone,
                 address: {
-                    full: address
-                }
+                    street: address.street,
+                    ward: address.ward,
+                    city: address.city,
+                    full: address.full,
+                    location: address.location
+                },
+                openTime,
+                closeTime,
+                totalReview: 0,
+                avgRating: 0.0
             });
 
             await newRestaurant.save();
@@ -89,6 +97,32 @@ class AuthService {
 
         delete user.password;
         
+        return {
+            ...user,
+            restaurantInfo: restaurant || null
+        };
+    }
+
+    async getMerchantById(accountId) {
+        if (!accountId) {
+            throw new AppError('Merchant account id is required', 400);
+        }
+
+        const result = await pool.query(
+            "SELECT * FROM accounts WHERE id = $1 AND role = 'merchant'",
+            [accountId]
+        );
+
+        const user = result.rows[0];
+        if (!user) {
+            throw new AppError('Merchant account not found', 404);
+        }
+
+        const restaurant = await Restaurant.findOne({ accountId: user.id });
+        delete user.password;
+        delete user.id;
+        delete user.user_id;
+
         return {
             ...user,
             restaurantInfo: restaurant || null

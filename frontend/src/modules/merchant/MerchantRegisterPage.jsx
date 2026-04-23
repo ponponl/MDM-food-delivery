@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { registerMerchant } from '../../services/authService';
+import MapPicker from '../../components/mapPicker/MapPicker';
+import { useAddressSearch } from '../../hooks/useAddressSearch';
+import { MapPin, User, ChevronLeft, ChevronRight, ArrowLeft, ArrowRight, LoaderCircle, Check, Navigation } from 'lucide-react';
 import styles from './MerchantRegisterPage.module.css';
 
 const CATEGORIES = [
@@ -18,9 +21,38 @@ const CATEGORIES = [
 ];
 
 const MerchantRegisterPage = () => {
+    const [isMapModalOpen, setIsMapModalOpen] = useState(false);
     const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
+    const suggestionListRef = useRef(null);
+
+    const {
+        address: displayAddress,
+        suggestions,
+        handleInputChange,
+        handleKeyDown,
+        activeSuggestionIndex,
+        selectSuggestion,
+        reverseGeocode,
+        handleDetectLocation
+    } = useAddressSearch({
+        onSelect: (data) => {
+            setFormData(prev => ({ ...prev, address: data }));
+        }
+    });
+
+    useEffect(() => {
+        if (activeSuggestionIndex >= 0 && suggestionListRef.current) {
+            const activeItem = suggestionListRef.current.childNodes[activeSuggestionIndex];
+            if (activeItem) {
+                activeItem.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                });
+            }
+        }
+    }, [activeSuggestionIndex]);
     
     const [formData, setFormData] = useState({
         username: '',
@@ -30,8 +62,15 @@ const MerchantRegisterPage = () => {
         name: '',
         type: '',
         phone: '',
-        address: ''
+        address: '',
+        openTime: '08:00',
+        closeTime: '22:00'
     });
+
+    const handleConfirmMapLocation = () => {
+        setIsMapModalOpen(false);
+        toast.success('Đã xác nhận vị trí trên bản đồ!');
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -79,11 +118,14 @@ const MerchantRegisterPage = () => {
                 name: formData.name,
                 type: formData.type,
                 phone: formData.phone,
-                address: formData.address
+                address: formData.address,
+                openTime: formData.openTime,
+                closeTime: formData.closeTime
             });
             
             toast.success('Đăng ký tài khoản nhà hàng thành công! Vui lòng đăng nhập.');
             navigate('/merchant/login'); 
+            //console.log(formData);
         } catch (error) {
             toast.error(error.message || 'Đăng ký thất bại, vui lòng thử lại sau.');
         } finally {
@@ -97,7 +139,8 @@ const MerchantRegisterPage = () => {
                 <div className={styles.leftPanel}>
                     <div className={styles.branding}>
                         <img src="/src/assets/logo.png" alt="Foodly Logo" className={styles.logo} onError={(e) => e.target.style.display='none'} />
-                        <h2>Foodly cho Đối Tác</h2>
+                        <Link to="/" className={styles.brandLink}>Foodly</Link>
+                        <h2> cho Đối Tác</h2>
                     </div>
                     <div className={styles.editorialContent}>
                         <h1>Mở rộng kinh doanh cùng chúng tôi.</h1>
@@ -238,14 +281,101 @@ const MerchantRegisterPage = () => {
                                         />
                                     </div>
                                     <div className={styles.inputGroup}>
-                                        <label>Địa chỉ chi tiết</label>
-                                        <textarea 
-                                            name="address" 
-                                            value={formData.address} 
+                                        <label>Giờ mở cửa</label>
+                                        <input 
+                                            type="time" 
+                                            name="openTime" 
+                                            value={formData.openTime} 
                                             onChange={handleChange} 
-                                            placeholder="Số nhà, Tên đường, Quận, Thành phố..."
-                                            rows="3"
-                                        ></textarea>
+                                        />
+                                    </div>
+                                    <div className={styles.inputGroup}>
+                                        <label>Giờ đóng cửa</label>
+                                        <input 
+                                            type="time" 
+                                            name="closeTime" 
+                                            value={formData.closeTime} 
+                                            onChange={handleChange} 
+                                        />
+                                    </div>
+                                    <div className={styles.inputGroup}>
+                                        <label>Địa chỉ nhà hàng</label>
+                                        <div className={styles.addressSearchBox}>
+                                            <input 
+                                                type="text" 
+                                                value={displayAddress}
+                                                onChange={(e) => handleInputChange(e.target.value)}
+                                                onKeyDown={handleKeyDown}
+                                                placeholder="Nhập địa chỉ nhà hàng..."
+                                            />
+                                            {suggestions.length > 0 && (
+                                                <ul className={styles.suggestionList} ref={suggestionListRef}>
+                                                    {suggestions.map((s, index) => (
+                                                        <li key={s.place_id ||index} onClick={() => selectSuggestion(s)} className={index === activeSuggestionIndex ? styles.activeSuggestion : ''}>
+                                                            <strong>{s.display_place || s.display_name.split(',')[0]}</strong>
+                                                            <p>{s.display_name}</p>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                            {/* Nút kích hoạt bản đồ khi không tìm thấy địa chỉ */}
+                                            <button 
+                                                type="button" 
+                                                className={styles.mapTriggerBtn}
+                                                onClick={() => setIsMapModalOpen(true)}
+                                            >
+                                                📍 Không tìm thấy địa chỉ? Chọn trên bản đồ
+                                            </button>
+                                        </div>
+
+                                        {/* Modal Bản đồ */}
+                                        <AnimatePresence>
+                                            {isMapModalOpen && (
+                                                <motion.div 
+                                                    className={styles.modalOverlay}
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    exit={{ opacity: 0 }}
+                                                >
+                                                    <div className={styles.modalContent}>
+                                                        <div className={styles.modalHeader}>
+                                                            <h3>Chọn vị trí chính xác</h3>
+                                                            {/* Container chứa các hành động */}
+                                                            <div className={styles.headerActions}>
+                                                                <button 
+                                                                    type="button" 
+                                                                    className={styles.detectLocationBtn} // Sử dụng class style mới
+                                                                    onClick={handleDetectLocation} // Hàm từ useAddressSearch
+                                                                >
+                                                                    {/* Sử dụng icon Navigation cho hành động định vị */}
+                                                                    <Navigation size={15} /> 
+                                                                    Lấy vị trí hiện tại
+                                                                </button>
+                                                                
+                                                                {/* Nút X đóng modal đã được chỉnh style gọn hơn */}
+                                                                <button onClick={() => setIsMapModalOpen(false)}>✕</button>
+                                                            </div>
+                                                        </div>
+                                                        <div className={styles.mapWrapper}>
+                                                            <MapPicker 
+                                                                onLocationSelect={(lng, lat) => reverseGeocode(lng, lat)} 
+                                                                initialCoords={formData.address?.location?.coordinates}
+                                                            />
+                                                        </div>
+                                                        <div className={styles.modalFooter}>
+                                                            <p>Nhấp vào bản đồ để chọn vị trí nhà hàng của bạn</p>
+                                                            <button 
+                                                                className={styles.primaryButton} 
+                                                                onClick={handleConfirmMapLocation}
+                                                                disabled={!formData.address?.location}
+                                                            >
+                                                                Xác nhận vị trí
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                     </div>
                                     
                                     <div className={styles.actionButtons}>
