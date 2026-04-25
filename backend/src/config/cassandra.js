@@ -17,7 +17,6 @@ export const cassandraClient = new cassandra.Client({
     keyspace: 'foodly_tracking'
 });
 
-// 3. Kết nối
 cassandraClient.connect()
     .then(() => console.log('Cassandra Cloud connected!'))
     .catch(err => console.error('Lỗi kết nối:', err));

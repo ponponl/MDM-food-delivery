@@ -1,5 +1,6 @@
 import express from 'express';
 import * as orderController from './orderController.js';
+import { generateOrders } from './orderGen.js';
 
 const router = express.Router();
 
@@ -32,5 +33,10 @@ router.patch('/:orderExternalId/cancel', orderController.cancelOrder);
 
 // Revenue report
 router.get('/stats/revenue', orderController.getRevenueStats);
+
+
+// CHỈ DÙNG CHO ADMIN/DEV 
+router.post('/test/generate-orders', generateOrders);
+
 
 export default router;

@@ -66,13 +66,8 @@ const orderApi = {
       reason,
       cancelledBy
     }),
-  getRevenueStats: ({ restaurantId, granularity = 'DAY', timePartition }) => {
-    const params = new URLSearchParams({
-      restaurantId,
-      granularity,
-      timePartition
-    });
-    return axiosClient.get(`/orders/stats/revenue?${params.toString()}`);
+  getRevenueStats: (params) => {
+    return axiosClient.get('/orders/stats/revenue', { params: params });
   }
 };
 
