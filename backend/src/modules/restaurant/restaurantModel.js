@@ -9,7 +9,6 @@ const restaurantSchema = new mongoose.Schema({
     address: {
         street: String,
         ward: String,
-        district: String,
         city: String,
         country: String,
         full: String,

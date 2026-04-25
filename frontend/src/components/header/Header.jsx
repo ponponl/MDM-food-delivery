@@ -7,6 +7,7 @@ import { useContext } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { logout as logoutService } from '../../services/authService';
 import { useNavigate, Link } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import cartApi from '../../api/cartApi';
 import orderApi from '../../api/orderApi';
 import userApi from '../../api/userApi';
@@ -38,6 +39,7 @@ export default function Header() {
   const searchContainerRef = useRef(null);
   const navigate = useNavigate();
   const addressContainerRef = useRef(null);
+  const queryClient = useQueryClient();
 
   const {
         address: displayAddress,
@@ -493,6 +495,7 @@ export default function Header() {
       await loadCart(true);
       setIsConfirmOpen(false);
       setConfirmData(null);
+      queryClient.invalidateQueries({ queryKey: ['restaurant'] });
       toast.success('Đặt hàng thành công!', {
         duration: 3000,
         style: {
@@ -512,7 +515,12 @@ export default function Header() {
         }
       });
     } catch (error) {
-      setConfirmError('Không thể đặt hàng. Vui lòng thử lại.');
+      const errorMsg = error.response?.data?.message;
+      if (errorMsg === 'ITEM_OUT_OF_STOCK') {
+        setConfirmError('Món ăn bạn chọn vừa hết hàng, vui lòng kiểm tra lại giỏ hàng!');
+      } else {
+        setConfirmError('Không thể đặt hàng. Vui lòng thử lại.');
+      }
     } finally {
       setIsPlacingOrder(false);
     }

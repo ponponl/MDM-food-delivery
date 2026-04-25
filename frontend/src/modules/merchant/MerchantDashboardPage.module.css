@@ -108,6 +108,24 @@
     font-size: 0.95rem;
 }
 
+.restaurantMeta {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 10px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.95rem;
+}
+
+.restaurantMeta p {
+    margin: 0;
+}
+
+.separator {
+    opacity: 0.4;
+    font-weight: 300;
+}
+
 .restaurantActions {
     display: flex;
     gap: 12px;

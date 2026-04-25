@@ -12,6 +12,7 @@ import { cassandraClient } from './config/cassandra.js';
 import pgPool from './config/postgres.js';
 import apiRoutes from './routes/index.js';
 import './workers/startWorker.js';
+import './workers/inventoryWorker.js';
 
 const app = express();
 app.use(cors({

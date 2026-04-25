@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useRef, useContext } from 'react';
 import { X } from 'lucide-react';
 import styles from './ConfirmOrderModal.module.css';
 import { useAddressSearch } from '../../hooks/useAddressSearch.js';
+import { useAuth } from "../../context/AuthContext";
 import { AddressContext } from '../../context/AddressContext';
 import AddressItem from "../../components/addressItem/AddressItem";
 import { updateAddresses } from '../../services/authService';
@@ -29,6 +30,7 @@ export default function ConfirmOrderModal({
   defaultReceiver, defaultPhone, isSubmitting, error, onConfirm
 }) {
   const { address: contextAddress } = useContext(AddressContext);
+  const { user, loginUser } = useAuth();
   const manualFormRef = useRef(null);
   const [shouldSaveAddress, setShouldSaveAddress] = useState(false);
   
@@ -90,7 +92,7 @@ export default function ConfirmOrderModal({
   const canConfirm = 
     resolvedAddress?.address && 
     resolvedAddress?.receiver &&
-    isPhoneValid(resolvedAddress?.phone) && 
+    (useManual ? isPhoneValid(resolvedAddress?.phone) : !!resolvedAddress?.phone) && 
     !isSubmitting;
 
   const handleConfirmOrder = async () => {
@@ -104,16 +106,24 @@ export default function ConfirmOrderModal({
           note: manualAddress.note,
           full: manualAddress.full,
           location: manualAddress.location,
-          receiver: manualAddress.receiver,
-          phone: manualAddress.phone
         };
-        await updateAddresses([...(addresses || []), newAddressObj]);
+        const updatedUser = await updateAddresses([...(addresses || []), newAddressObj]);
+        if (updatedUser) {
+          loginUser(updatedUser);
+          toast.success("Đã lưu địa chỉ mới vào sổ địa chỉ!");
+        }
       } catch (error) {
         console.error("Không thể lưu địa chỉ:", error);
+        toast.error("Lỗi khi lưu địa chỉ mới.");
       }
     }
-
     onConfirm(resolvedAddress);
+    setShouldSaveAddress(false);
+  };
+
+  const handleClose = async () => {
+    setShouldSaveAddress(false);
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -127,7 +137,7 @@ export default function ConfirmOrderModal({
           <h3>Xác nhận đặt hàng</h3>
           <button 
             className={styles.closeButton} 
-            onClick={onClose}><X size={18} 
+            onClick={handleClose}><X size={18} 
           />
           </button>
         </div>
@@ -224,13 +234,13 @@ export default function ConfirmOrderModal({
         <div className={styles.footer}>
           <button 
             className={styles.cancelButton} 
-              onClick={onClose}
+            onClick={handleClose}
             >
               Hủy
             </button>
           <button 
             className={styles.confirmButton} 
-            onClick={() => onConfirm(resolvedAddress)} 
+            onClick={handleConfirmOrder}
             disabled={!canConfirm}
           >
             Xác nhận

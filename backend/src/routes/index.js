@@ -7,6 +7,7 @@ import orderRoute from '../modules/order/orderRoute.js';
 import searchRoute from '../modules/search/searchRoute.js'
 import reviewRoute from '../modules/review/reviewRoute.js';
 import recommendationRoute from '../modules/recommendation/recommendationRoute.js';
+import menuRoute from '../modules/menu/menuRoute.js';
 import authRoute from './authRoute.js';
 const router = express.Router();
 
@@ -19,5 +20,6 @@ router.use('/orders', orderRoute);
 router.use('/search', searchRoute);
 router.use('/reviews', reviewRoute);
 router.use('/recommendations', recommendationRoute);
+router.use('/menu', menuRoute);
 
 export default router;

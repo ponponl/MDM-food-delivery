@@ -1,11 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
+import RestaurantEditModal from '../../components/restaurantEditModal/RestaurantEditModal';
+import restaurantApi from '../../api/restaurantApi';
 import styles from './MerchantDashboardPage.module.css';
+import toast from 'react-hot-toast';
 
 const MerchantDashboardPage = () => {
-    const { user, loading } = useAuth();
+    const { user, loading, refreshUser } = useAuth();
+    const queryClient = useQueryClient();
     const restaurant = user?.restaurantInfo || {};
+    const publicId = user?.restaurant_public_id || ''; 
     const isLoading = loading;
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
+
+    const handleUpdateRestaurant = async (formData) => {
+        try {
+            setIsUpdating(true);
+            formData.append('publicId', publicId);
+            await restaurantApi.updateInfo(formData); 
+            queryClient.invalidateQueries({ queryKey: ['merchantMe'] });
+            toast.success("Cập nhật thông tin nhà hàng thành công!");
+            setIsEditModalOpen(false);
+        } catch (error) {
+            toast.error("Cập nhật thất bại: " + error.message);
+        } finally {
+            setIsUpdating(false);
+        }
+    };
 
     return (
         <div className={styles.page}>
@@ -50,11 +73,14 @@ const MerchantDashboardPage = () => {
                                 <h1>{restaurant.name || 'Tên nhà hàng chưa cập nhật'}</h1>
                                 <p className={styles.restaurantType}>{restaurant.type || 'Chưa phân loại'}</p>
                                 <p className={styles.restaurantAddress}>📍 {restaurant.address?.full || 'Chưa cập nhật địa chỉ'}</p>
-                                <p className={styles.restaurantPhone}>📞 {restaurant.phone || 'Chưa cập nhật SĐT'}</p>
+                                <div className={styles.restaurantMeta}>
+                                    <p>📞 {restaurant.phone || 'Chưa cập nhật SĐT'}</p>
+                                    <span className={styles.separator}>|</span>
+                                    <p>🕒 {restaurant.openTime || '--:--'} - {restaurant.closeTime || '--:--'}</p>
+                                </div>
                             </div>
-                            <div className={styles.restaurantActions}>
-                                <button className={styles.primaryBtn}>Mở cửa ngay</button>
-                                <button className={styles.secondaryBtn}>Chỉnh sửa thông tin</button>
+                            <div className={styles.restaurantActions} onClick={() => setIsEditModalOpen(true)}>
+                                <button className={styles.primaryBtn}>Chỉnh sửa thông tin</button>
                             </div>
                         </div>
 
@@ -80,17 +106,17 @@ const MerchantDashboardPage = () => {
                                     <p className={styles.statValue}>4.8 / 5.0</p>
                                 </div>
                             </div>
-                            <div className={styles.statCard}>
-                                <div className={styles.statIcon}>👀</div>
-                                <div className={styles.statDetails}>
-                                    <h3>Lượt xem trang</h3>
-                                    <p className={styles.statValue}>342</p>
-                                </div>
-                            </div>
                         </div>
                     </>
                 )}
             </div>
+            <RestaurantEditModal 
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                initialData={restaurant}
+                onSubmit={handleUpdateRestaurant}
+                isUpdating={isUpdating}
+            />
         </div>
     );
 };

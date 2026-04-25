@@ -2,7 +2,8 @@ import pgPool from '../../config/postgres.js';
 import redisClient from '../../config/redis.js';
 import logger from '../../config/logger.js';
 import * as cartService from '../cart/cartService.js';
-import * as menuService from '../menu/menu.service.js';
+import * as menuService from '../menu/menuService.js';
+import { menuCache } from '../menu/menuCache.js';
 import { OrderRepository } from './orderRepo.js';
 
 const ORDER_MIN_VALUE = 20000;
@@ -33,6 +34,7 @@ export const createOrder = async ({
   itemKeys = null
 }) => {
   const client = await pgPool.connect();
+  const deductedRedisItems = [];
 
   try {
     await client.query('BEGIN');
@@ -121,19 +123,29 @@ export const createOrder = async ({
     for (const cartItem of cartItems) {
       const itemId = cartItem._id || cartItem.itemId;
       const menuItem = menuItems[itemId];
+      const qty = parseInt(cartItem.quantity);
+      console.log(qty);
 
       if (!menuItem || !menuItem.available) {
         throw new Error('ITEM_UNAVAILABLE');
       }
 
-      const qty = parseInt(cartItem.quantity);
-      if (!Number.isFinite(qty) || qty <= 0) {
-        throw new Error('INVALID_QUANTITY');
+      // const qty = parseInt(cartItem.quantity);
+      // if (!Number.isFinite(qty) || qty <= 0) {
+      //   throw new Error('INVALID_QUANTITY');
+      // }
+
+      // if (typeof menuItem?.stock === 'number' && menuItem.stock < qty) {
+      //   throw new Error('ITEM_OUT_OF_STOCK');
+      // }
+
+      const result = await menuCache.deductStock(itemId, qty);
+      
+      if (!result.success) {
+        throw new Error(`ITEM_OUT_OF_STOCK: ${cartItem.name} chỉ còn ${result.remaining} món`);
       }
 
-      if (typeof menuItem?.stock === 'number' && menuItem.stock < qty) {
-        throw new Error('ITEM_OUT_OF_STOCK');
-      }
+      deductedRedisItems.push({ itemId, qty });
 
       const currentPrice = typeof menuItem?.price === 'number' ? menuItem.price : 0;
       const snapshotPrice = typeof cartItem.priceSnapshot === 'number'
@@ -248,8 +260,24 @@ export const createOrder = async ({
     };
 
   } catch (error) {
-    await client.query('ROLLBACK');
-    logger.error(`Error in createOrder transaction: ${error.message}`);
+    try {
+      if (client) await client.query('ROLLBACK');
+    } catch (pgError) {
+      logger.error('Postgres Rollback failed:', pgError.message);
+    }
+    if (deductedRedisItems.length > 0) {
+      try {
+        const rollbackPromises = deductedRedisItems.map(item => 
+          menuCache.rollbackStock(item.itemId, item.qty)
+        );
+        await Promise.all(rollbackPromises);
+        logger.info(`Rolled back ${deductedRedisItems.length} items to Redis`);
+      } catch (redisError) {
+        logger.error('Redis Rollback failed (Data Inconsistency!):', redisError.message);
+      }
+    }
+
+    logger.error(`Error in createOrder: ${error.message}`);
     throw error;
   } finally {
     client.release();

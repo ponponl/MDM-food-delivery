@@ -21,7 +21,8 @@ import MerchantDashboardPage from './modules/merchant/MerchantDashboardPage.jsx'
 import MerchantOrdersPage from './modules/merchant/MerchantOrdersPage.jsx';
 import MerchantOrderDetailPage from './modules/merchant/MerchantOrderDetailPage.jsx';
 import MerchantLayout from './layouts/MerchantLayout/MerchantLayout.jsx';
-import MerchantReportPage from './modules/merchant/MerchantReportPage.jsx'
+import MerchantReportPage from './modules/merchant/MerchantReportPage.jsx';
+import MerchantMenuPage from './modules/merchant/MerchantMenuPage.jsx';
 import './App.css';
 
 function App() {
@@ -51,6 +52,7 @@ function App() {
             <Route path="/merchant/orders" element={<MerchantOrdersPage />} />
             <Route path="/merchant/order-detail" element={<MerchantOrderDetailPage />} />
             <Route path="/merchant/reports" element={<MerchantReportPage />} />
+            <Route path="/merchant/menu" element={<MerchantMenuPage />} />
           </Route>
         </Routes>
 
