@@ -224,7 +224,7 @@ export class OrderRepository {
     };
   }
 
-  async updateOrderStatus(client, { orderExternalId, fromStatuses, toStatus, driverId }) {
+  async updateOrderStatus(client, { orderExternalId, fromStatuses, toStatus, driverId = null }) {
     const statusList = (Array.isArray(fromStatuses) ? fromStatuses : [fromStatuses])
       .map((status) => (typeof status === 'string' ? status.toLowerCase() : status));
     const result = await client.query(
@@ -232,7 +232,7 @@ export class OrderRepository {
        SET status = $1, driverId = COALESCE($4, driverId)
        WHERE externalId = $2 AND LOWER(status::text) = ANY($3)
        RETURNING id, status`,
-      [toStatus, orderExternalId, statusList, driverId]
+      [toStatus, orderExternalId, statusList, driverId || null]
     );
 
     return result.rows[0] ?? null;

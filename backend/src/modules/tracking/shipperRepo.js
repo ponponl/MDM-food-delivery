@@ -1,7 +1,7 @@
 export class ShipperRepository {
   async getRandomAvailableDriver(clientOrPool) {
     const query = `
-      SELECT driverid, name, phone, status 
+      SELECT driverid, fullname, phone, status 
       FROM shippers 
       WHERE status = 'available' 
       ORDER BY RANDOM() 

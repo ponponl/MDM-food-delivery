@@ -354,7 +354,7 @@ export const startDelivery = async (req, res, next) => {
     const { driverId, estimatedDeliveryTime } = req.body;
 
     const result = await orderService.startDelivery(orderExternalId, {
-      driverId: driverId || 'merchant',
+      driverId,
       estimatedDeliveryTime
     });
 

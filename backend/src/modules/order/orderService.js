@@ -526,11 +526,12 @@ export const startDelivery = async (orderExternalId, { driverId, estimatedDelive
         console.log("Không có driverId từ body, đang tự chọn bốc tài xế rảnh...");
         const driver = await shipperRepository.getRandomAvailableDriver(client);
         if (!driver) throw new Error('No available driver');
-        finalDriverId = driver.id;
+        finalDriverId = driver.driverid;
     } else {
         console.log(`Sử dụng driverId từ body: ${finalDriverId}`);
         const driver = await shipperRepository.findById(client, finalDriverId);
         if (!driver) throw new Error('Driver not found');
+        finalDriverId = driver.driverid;
     }
 
     await shipperRepository.updateStatus(client, finalDriverId, 'delivering');
