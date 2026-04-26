@@ -7,6 +7,7 @@ import styles from './OrderDetailPage.module.css';
 import orderApi from '../../api/orderApi';
 import cartApi from '../../api/cartApi';
 import ConfirmModal from '../../components/common/ConfirmModal';
+import TrackingMap from '../../components/tracking/TrackingMap'
 
 const OrderDetailPage = () => {
   const location = useLocation();
@@ -63,6 +64,7 @@ const OrderDetailPage = () => {
 
     return {
       orderExternalId: orderData.orderExternalId,
+      driverId: orderData.driverId,
       restaurantId: orderData.restaurantId,
       restaurantName,
       restaurantImage,
@@ -79,9 +81,11 @@ const OrderDetailPage = () => {
       createdAt: orderData.createdAt,
       userName: orderData.user?.name,
       userPhone: orderData.user?.phone,
-      driver: getDriverInfo(orderData.status)
+      driver: getDriverInfo(orderData.status, orderData)
     };
   }, [orderData]);
+
+  console.log(orderData);
 
   function getStatusText(status) {
     const statusMap = {
@@ -106,18 +110,16 @@ const OrderDetailPage = () => {
     return messageMap[status] || '';
   }
 
-  function getDriverInfo(status) {
-    // Mock driver data - sẽ được cập nhật khi có dữ liệu thực từ API
-    const shouldShowDriver = ['confirmed', 'preparing', 'delivering', 'completed', 'cancelled'].includes(status);
+  function getDriverInfo(status, rawData) {
+    const shouldShowDriver = ['delivering', 'completed', 'cancelled'].includes(status);
     
-    if (!shouldShowDriver) return null;
-
+    if (!shouldShowDriver || !rawData?.driverId) return null;
+    
     return {
-      name: 'Nguyễn Văn A',
-      phone: '0912345678',
-      vehicle: 'Honda Wave - 30A12345',
-      image: 'https://i.pravatar.cc/150?img=12',
-      estimatedTime: '15-20 phút'
+      name: rawData.driver_name || 'Tài xế Foodly', 
+      phone: rawData.driver_phone || 'Đang cập nhật',
+      image: 'https://i.pravatar.cc/150?img=12', 
+      estimatedTime: status === 'delivering' ? '15-20 phút' : 'Đã giao'
     };
   }
 
@@ -404,6 +406,32 @@ const OrderDetailPage = () => {
             </div>
           </div>
 
+          {(() => {
+            // 1. Check an toàn tọa độ nhà hàng
+            const hasRestaurantLoc = orderData?.restaurantLat && orderData?.restaurantLng;
+            const safeRestaurantLoc = hasRestaurantLoc 
+              ? [Number(orderData.restaurantLat), Number(orderData.restaurantLng)] 
+              : null;
+
+            // 2. Check an toàn tọa độ khách hàng
+            const hasDestLoc = orderData?.deliveryAddress?.location?.coordinates?.length >= 2;
+            const safeDestinationLoc = hasDestLoc 
+              ? [
+                  Number(orderData.deliveryAddress.location.coordinates[1]), // Lat
+                  Number(orderData.deliveryAddress.location.coordinates[0])  // Lng
+                ] 
+              : null;
+
+            return (
+              <TrackingMap 
+                driverId={order.driverId} 
+                orderId={order.orderExternalId}
+                restaurantLoc={safeRestaurantLoc} 
+                destinationLoc={safeDestinationLoc}
+              />
+            );
+          })()}
+
           {/* Delivery Address */}
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>Thông tin giao hàng</h3>
@@ -430,6 +458,29 @@ const OrderDetailPage = () => {
             </div>
           </div>
 
+          {order && order.driver && (
+          <div className={styles.section}>
+            <h3 className={styles.sectionTitle}>Thông Tin Tài Xế</h3>
+            <div className={styles.driverCard}>
+              <img 
+                src={order.driver.image} 
+                alt={order.driver.name} 
+                className={styles.driverImage} 
+              />
+              
+              <div className={styles.driverInfo}>
+                <div className={styles.driverHeader}>
+                  <h4>{order.driver.name}</h4>
+                  <p className={styles.driverPhone}>
+                    <Phone size={14} style={{ marginRight: '6px' }} />
+                    {order.driver.phone}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          )}
+
           {/* Payment Info */}
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>Thông Tin Thanh Toán</h3>
@@ -454,23 +505,6 @@ const OrderDetailPage = () => {
               </div>
             </div>
           </div>
-
-          {/* Driver Info */}
-          {order.driver && (
-            <div className={styles.section}>
-              <h3 className={styles.sectionTitle}>Thông Tin Tài Xế</h3>
-              <div className={styles.driverCard}>
-                <img src={order.driver.image} alt={order.driver.name} className={styles.driverImage} />
-                <div className={styles.driverInfo}>
-                  <div>
-                    <h4>{order.driver.name}</h4>
-                    <p className={styles.driverPhone}>{order.driver.phone}</p>
-                    <p className={styles.driverVehicle}>{order.driver.vehicle}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
 
           {/* Additional Info */}
