@@ -57,8 +57,6 @@ const OrderHistoryPage = () => {
     const statusMap = {
       'placed': 'Đã đặt',
       'confirmed': 'Xác nhận',
-      'preparing': 'Đang chuẩn bị',
-      'ready': 'Sẵn sàng',
       'delivering': 'Đang giao',
       'completed': 'Đã hoàn thành',
       'cancelled': 'Đã hủy'
@@ -206,10 +204,6 @@ const OrderHistoryPage = () => {
         return styles.statusPlaced || '';
       case 'confirmed':
         return styles.statusConfirmed || '';
-      case 'preparing':
-        return styles.statusPreparing || '';
-      case 'ready':
-        return styles.statusReady || '';
       case 'delivering':
         return styles.statusDelivering || '';
       case 'completed':
@@ -247,18 +241,6 @@ const OrderHistoryPage = () => {
           onClick={() => setFilterStatus('confirmed')}
         >
           Xác Nhận ({orders.filter(o => o.status === 'confirmed').length})
-        </button>
-        <button
-          className={`${styles.tab} ${filterStatus === 'preparing' ? styles.tabActive : ''}`}
-          onClick={() => setFilterStatus('preparing')}
-        >
-          Chuẩn Bị ({orders.filter(o => o.status === 'preparing').length})
-        </button>
-        <button
-          className={`${styles.tab} ${filterStatus === 'ready' ? styles.tabActive : ''}`}
-          onClick={() => setFilterStatus('ready')}
-        >
-          Sẵn Sàng ({orders.filter(o => o.status === 'ready').length})
         </button>
         <button
           className={`${styles.tab} ${filterStatus === 'delivering' ? styles.tabActive : ''}`}

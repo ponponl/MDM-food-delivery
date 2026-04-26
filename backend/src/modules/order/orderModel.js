@@ -3,6 +3,9 @@ export const mapOrderDetailRow = (row) => {
 
     return {
         orderExternalId: row.externalid,
+        driverId: row.driverid,      
+        driver_name: row.driver_name,    
+        driver_phone: row.driver_phone,
         restaurantId: row.restaurantid,
         restaurantName: row.restaurantname,
         restaurantImageUrl: row.restaurantimageurl,

@@ -30,13 +30,14 @@ const RecenterMap = ({ position }) => {
     return null;
 };
 
-const TrackingMap = ({ driverId, orderId, restaurantLoc, destinationLoc }) => {
+const TrackingMap = ({ driverId, orderId, restaurantLoc, destinationLoc, status }) => {
     const [routePoints, setRoutePoints] = useState([]);
     const [currentLoc, setCurrentLoc] = useState(null);
 
     const centerPosition = [10.7725, 106.7042]; 
 
-    useEffect(() => {
+
+    useEffect(() => {    
         if (!driverId || !orderId) return;
 
         const loadMapData = async () => {
@@ -46,7 +47,7 @@ const TrackingMap = ({ driverId, orderId, restaurantLoc, destinationLoc }) => {
                 if (response && response.success && response.data?.route?.length > 0) {
                     const points = response.data.route.map(p => [p.lat, p.lng]);
                     setRoutePoints(points);
-                    setCurrentLoc(points[0]); 
+                    setCurrentLoc(points[0]);
                 }
             } catch (error) {
                 console.error("Lỗi lấy tọa độ từ Cassandra:", error);
@@ -54,10 +55,14 @@ const TrackingMap = ({ driverId, orderId, restaurantLoc, destinationLoc }) => {
         };
 
         loadMapData();
-        const interval = setInterval(loadMapData, 3000); 
+
+        let interval;
+        if (status === 'delivering') {
+            interval = setInterval(loadMapData, 3000);
+        }
 
         return () => clearInterval(interval);
-    }, [driverId, orderId]); 
+    }, [driverId, orderId, status]); 
 
     return (
         <div style={{ height: '60vh', width: '100%', borderRadius: '15px', overflow: 'hidden' }}>

@@ -90,6 +90,9 @@ export class OrderRepository {
     const query = `
       SELECT
         o.externalId,
+        o.driverId,
+        s.fullname as driver_name,    
+        s.phone as driver_phone,      
         o.restaurantId,
         o.restaurantName,
         o.restaurantImageUrl,
@@ -118,8 +121,9 @@ export class OrderRepository {
       LEFT JOIN users u ON o.userId = u.id
       LEFT JOIN payments p ON p.orderId = o.id
       LEFT JOIN order_items oi ON oi.orderId = o.id
+      LEFT JOIN shippers s ON o.driverId = s.driverId
       WHERE o.externalId = $1
-      GROUP BY o.id, u.externalId, u.name, u.phone, p.method, p.status, p.paid_at
+      GROUP BY o.id, u.externalId, u.name, u.phone, p.method, p.status, p.paid_at, s.fullname, s.phone
     `;
 
     const result = await pgPool.query(query, [orderExternalId]);
@@ -220,15 +224,15 @@ export class OrderRepository {
     };
   }
 
-  async updateOrderStatus(client, { orderExternalId, fromStatuses, toStatus }) {
+  async updateOrderStatus(client, { orderExternalId, fromStatuses, toStatus, driverId }) {
     const statusList = (Array.isArray(fromStatuses) ? fromStatuses : [fromStatuses])
       .map((status) => (typeof status === 'string' ? status.toLowerCase() : status));
     const result = await client.query(
       `UPDATE orders
-       SET status = $1
+       SET status = $1, driverId = COALESCE($4, driverId)
        WHERE externalId = $2 AND LOWER(status::text) = ANY($3)
        RETURNING id, status`,
-      [toStatus, orderExternalId, statusList]
+      [toStatus, orderExternalId, statusList, driverId]
     );
 
     return result.rows[0] ?? null;
@@ -251,5 +255,31 @@ export class OrderRepository {
        WHERE orderId = $2`,
       [status, orderId]
     );
+  }
+
+  async updateOrderDelivery(client, { orderExternalId, driverId, toStatus }) {
+    const result = await client.query(
+      `UPDATE orders
+      SET status = $1, driverId = $2
+      WHERE externalId = $3
+      RETURNING id, status, driverId`,
+      [toStatus, driverId, orderExternalId]
+    );
+    return result.rows[0] ?? null;
+  }
+
+  async getActiveDeliveriesForSimulation() {
+      const query = `
+          SELECT 
+              externalId as externalid, 
+              driverId,
+              CAST(deliveryAddress::json->'location'->'coordinates'->>1 AS FLOAT) as dest_lat,
+              CAST(deliveryAddress::json->'location'->'coordinates'->>0 AS FLOAT) as dest_lng,
+              restaurantId
+          FROM orders 
+          WHERE status = 'delivering' AND driverId IS NOT NULL
+      `;
+      const result = await pgPool.query(query);
+      return result; 
   }
 }

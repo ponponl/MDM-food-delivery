@@ -64,7 +64,7 @@ const OrderDetailPage = () => {
 
     return {
       orderExternalId: orderData.orderExternalId,
-      driverId: orderData.driverId,
+      driverId: orderData.driverId || orderData.driver_id,
       restaurantId: orderData.restaurantId,
       restaurantName,
       restaurantImage,
@@ -91,8 +91,6 @@ const OrderDetailPage = () => {
     const statusMap = {
       'placed': 'Đã đặt',
       'confirmed': 'Xác nhận',
-      // 'preparing': 'Đang chuẩn bị',
-      // 'ready': 'Sẵn sàng',
       'delivering': 'Đang giao',
       'completed': 'Đã hoàn thành',
       'cancelled': 'Đã hủy'
@@ -104,7 +102,6 @@ const OrderDetailPage = () => {
     const messageMap = {
       'placed': 'Đợi quán ăn xác nhận',
       'confirmed': 'Đơn của bạn đã được xác nhận',
-      'preparing': 'Đơn của bạn đang được chuẩn bị',
       'delivering': 'Tài xế đang giao đến bạn'
     };
     return messageMap[status] || '';
@@ -141,10 +138,6 @@ const OrderDetailPage = () => {
         return styles.statusPlaced || '';
       case 'confirmed':
         return styles.statusConfirmed || '';
-      case 'preparing':
-        return styles.statusConfirmed || '';
-      case 'ready':
-        return styles.statusDelivering || '';
       case 'delivering':
         return styles.statusDelivering || '';
       case 'completed':
@@ -313,8 +306,6 @@ const OrderDetailPage = () => {
               <div className={styles.statusBadge}>
                 {order.status === 'placed' && <SpinnerIcon size={20} color="#ffffff" />}
                 {order.status === 'confirmed' && <CallBellIcon size={20} color="#ffffff" />}
-                {order.status === 'preparing' && <PackageIcon size={20} color="#ffffff" />}
-                {order.status === 'ready' && <PackageIcon size={20} color="#ffffff" />}
                 {order.status === 'delivering' && <PackageIcon size={20} color="#ffffff" />}
                 {order.status === 'completed' && <CheckIcon size={20} color="#ffffff" />}
                 {order.status === 'cancelled' && <XIcon size={20} color="#ffffff" />}
@@ -323,7 +314,7 @@ const OrderDetailPage = () => {
                 <h2>{order.statusText}</h2>
                 <p>Mã đơn: #{order.orderExternalId}</p>
                 <p>{order.orderDate}</p>
-                {order.status === 'delivering' && order.driver && (
+                {(order.status === 'delivering' || order.status === 'completed') && order.driver && (
                   <p style={{ color: '#1565c0', fontWeight: 'bold', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <Clock size={16} />
                     Giao dự kiến: {order.driver.estimatedTime}
@@ -407,18 +398,18 @@ const OrderDetailPage = () => {
           </div>
 
           {(() => {
-            // 1. Check an toàn tọa độ nhà hàng
+            if (['placed', 'confirmed', 'cancelled'].includes(order.status)) return null;
+
             const hasRestaurantLoc = orderData?.restaurantLat && orderData?.restaurantLng;
             const safeRestaurantLoc = hasRestaurantLoc 
               ? [Number(orderData.restaurantLat), Number(orderData.restaurantLng)] 
               : null;
 
-            // 2. Check an toàn tọa độ khách hàng
             const hasDestLoc = orderData?.deliveryAddress?.location?.coordinates?.length >= 2;
             const safeDestinationLoc = hasDestLoc 
               ? [
-                  Number(orderData.deliveryAddress.location.coordinates[1]), // Lat
-                  Number(orderData.deliveryAddress.location.coordinates[0])  // Lng
+                  Number(orderData.deliveryAddress.location.coordinates[1]), 
+                  Number(orderData.deliveryAddress.location.coordinates[0])  
                 ] 
               : null;
 
@@ -428,12 +419,13 @@ const OrderDetailPage = () => {
                 orderId={order.orderExternalId}
                 restaurantLoc={safeRestaurantLoc} 
                 destinationLoc={safeDestinationLoc}
+                status={order.status}
               />
             );
           })()}
 
           {/* Delivery Address */}
-          <div className={styles.section}>
+          <div className={styles.section} style={{marginTop: '20px'}}>
             <h3 className={styles.sectionTitle}>Thông tin giao hàng</h3>
             <div className={styles.addressBox}>
               <User size={20} color="#1565c0"/>

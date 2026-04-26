@@ -4,12 +4,17 @@ import logger from '../../config/logger.js';
 import * as cartService from '../cart/cartService.js';
 import * as menuService from '../menu/menu.service.js';
 import { OrderRepository } from './orderRepo.js';
+import { RestaurantRepository } from '../restaurant/restaurantRepo.js'; 
+import { ShipperRepository } from '../tracking/shipperRepo.js';
+
 
 const ORDER_MIN_VALUE = 20000;
 const ORDER_MAX_VALUE = 10000000;
 const ACTIVE_ORDER_PREFIX = 'order:active:';
 
 const orderRepository = new OrderRepository();
+const restaurantRepository = new RestaurantRepository();
+const shipperRepository = new ShipperRepository();
 
 const resolveDeliveryAddress = (userRecord, deliveryAddress) => {
   if (deliveryAddress) {
@@ -381,7 +386,24 @@ export const previewOrder = async ({
 
 export const getOrderDetail = async (orderExternalId) => {
   try {
-    return await orderRepository.getOrderDetailByExternalId(orderExternalId);
+    const order = await orderRepository.getOrderDetailByExternalId(orderExternalId);
+
+    if (!order) return null;
+
+    if (order.restaurantId) {
+      try {
+        const restaurant = await restaurantRepository.findByPublicId(order.restaurantId, { includeMenu: false });
+        
+        if (restaurant && restaurant.address?.location?.coordinates) {
+          order.restaurantLng = restaurant.address.location.coordinates[0];
+          order.restaurantLat = restaurant.address.location.coordinates[1];
+        }
+      } catch (mongoErr) {
+        logger.error(`[Mongo] Lỗi khi lấy tọa độ quán ${order.restaurantId}: ${mongoErr.message}`);
+      }
+    }
+    
+    return order;
   } catch (error) {
     logger.error(`Error getting order detail: ${error.message}`);
     throw error;
@@ -470,10 +492,26 @@ export const startDelivery = async (orderExternalId, { driverId, estimatedDelive
   try {
     await client.query('BEGIN');
 
+    let finalDriverId = driverId; 
+
+    if (!finalDriverId) {
+        console.log("Không có driverId từ body, đang tự chọn bốc tài xế rảnh...");
+        const driver = await shipperRepository.getRandomAvailableDriver(client);
+        if (!driver) throw new Error('No available driver');
+        finalDriverId = driver.id;
+    } else {
+        console.log(`Sử dụng driverId từ body: ${finalDriverId}`);
+        const driver = await shipperRepository.findById(client, finalDriverId);
+        if (!driver) throw new Error('Driver not found');
+    }
+
+    await shipperRepository.updateStatus(client, finalDriverId, 'delivering');
+
     const updated = await orderRepository.updateOrderStatus(client, {
       orderExternalId,
       fromStatuses: 'confirmed',
-      toStatus: 'delivering'
+      toStatus: 'delivering',
+      driverId: finalDriverId
     });
 
     if (!updated) {
@@ -487,7 +525,7 @@ export const startDelivery = async (orderExternalId, { driverId, estimatedDelive
     // Update Redis tracking
     const activeOrderKey = `${ACTIVE_ORDER_PREFIX}${orderId}`;
     await redisClient.hSet(activeOrderKey, 'status', 'delivering');
-    await redisClient.hSet(activeOrderKey, 'driverId', driverId);
+    await redisClient.hSet(activeOrderKey, 'driverId', finalDriverId);
     if (estimatedDeliveryTime) {
       await redisClient.hSet(activeOrderKey, 'estimatedTime', estimatedDeliveryTime.toString());
     }
@@ -496,12 +534,12 @@ export const startDelivery = async (orderExternalId, { driverId, estimatedDelive
     // TODO: Emit real-time event
     // emitOrderEvent('order:delivering', { orderId, orderExternalId, driverId });
 
-    logger.info(`Order ${orderId} delivery started by driver ${driverId}`);
+    logger.info(`Order ${orderId} delivery started by driver ${finalDriverId}`);
 
     return {
       orderExternalId,
       status: 'delivering',
-      driverId,
+      driverId: finalDriverId,
       estimatedDeliveryTime
     };
 
@@ -520,14 +558,22 @@ export const completeOrder = async (orderExternalId, { completedBy, signature })
   try {
     await client.query('BEGIN');
 
+    const currentOrder = await orderRepository.getOrderDetailByExternalId(orderExternalId);
+
     const updated = await orderRepository.updateOrderStatus(client, {
       orderExternalId,
       fromStatuses: 'delivering',
-      toStatus: 'completed'
+      toStatus: 'completed',
+      driverId: currentOrder.driver_id
     });
 
     if (!updated) {
       throw new Error('INVALID_STATUS_TRANSITION');
+    }
+
+    if (updated.driverId || updated.driver_id) {
+        const driverId = updated.driverId || updated.driver_id;
+        await shipperRepository.updateStatus(client, driverId, 'available');
     }
 
     const orderId = updated.id;
