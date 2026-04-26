@@ -30,7 +30,9 @@ export const AuthProvider = ({ children }) => {
     const fetchUserMe = async () => {
         try {
             const response = await userApi.getMe();
-            return extractUserPayload(response);
+            const payload = response?.data ?? response;
+            const userData = payload?.data?.user || payload?.user || payload || null;
+            return userData;
         } catch (error) {
             if (error?.response?.status === 401) {
                 return null;

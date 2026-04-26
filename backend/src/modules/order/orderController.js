@@ -454,39 +454,53 @@ export const getRevenueStats = async (req, res, next) => {
   try {
     const { restaurantId } = req.query;
     const granularity = (req.query.granularity || 'DAY').toUpperCase();
+    const exactDate = req.query.exactDate; // New: YYYY-MM-DD format
     
-    let { timePartition } = req.query;
-
-    if (!timePartition) {
-      if (granularity === 'DAY') timePartition = moment().format('YYYY-MM-DD'); // Ví dụ: 2026-04-22
-      else if (granularity === 'MONTH') timePartition = moment().format('YYYY-MM'); // Ví dụ: 2026-04
-      else if (granularity === 'YEAR') timePartition = moment().format('YYYY'); // Ví dụ: 2026
-    } else {
-      if (granularity === 'DAY' && timePartition.length > 10) {
-        timePartition = timePartition.substring(0, 10); // Convert to YYYY-MM-DD
-      } else if (granularity === 'MONTH' && timePartition.length > 7) {
-        timePartition = timePartition.substring(0, 7); // Convert to YYYY-MM
-      } else if (granularity === 'YEAR' && timePartition.length > 4) {
-        timePartition = timePartition.substring(0, 4); // Convert to YYYY
-      }
-    }
+    let rawTimePartition = req.query.timePartition; 
+    let dbPartitionKey = '';
+    let query = '';
+    let params = [];
 
     if (!restaurantId) {
       return res.status(400).json({ status: 'error', message: 'Thiếu restaurantId rồi m ơi!' });
     }
 
-    const query = `
-      SELECT * FROM foodly_tracking.restaurant_revenue_stats 
-      WHERE restaurant_id = ? AND granularity = ? AND time_partition = ?
-    `;
+    if (exactDate && granularity === 'DAY') {
+      dbPartitionKey = exactDate.substring(0, 7);
+      
+      query = `
+        SELECT * FROM foodly_tracking.restaurant_revenue_stats 
+        WHERE restaurant_id = ? AND granularity = ? AND time_partition = ? AND time_value = ?
+      `;
+      params = [restaurantId, granularity, dbPartitionKey, exactDate];
+    } 
+    else {
+      if (granularity === 'DAY') {
+        if (rawTimePartition && rawTimePartition.length >= 7) {
+          dbPartitionKey = rawTimePartition.substring(0, 7);
+        } else {
+          dbPartitionKey = moment().format('YYYY-MM');
+        }
+      } 
+      else if (granularity === 'MONTH') {
+        if (rawTimePartition && rawTimePartition.length >= 4) {
+          dbPartitionKey = rawTimePartition.substring(0, 4);
+        } else {
+          dbPartitionKey = moment().format('YYYY');
+        }
+      } 
+      else if (granularity === 'YEAR') {
+        dbPartitionKey = 'ALL';
+      }
 
-    const result = await cassandraClient.execute(
-      query, 
-      [restaurantId, granularity, timePartition], 
-      { prepare: true }
-    );
-    
-    console.log('Query result rows:', result.rows.length);
+      query = `
+        SELECT * FROM foodly_tracking.restaurant_revenue_stats 
+        WHERE restaurant_id = ? AND granularity = ? AND time_partition = ?
+      `;
+      params = [restaurantId, granularity, dbPartitionKey];
+    }
+
+    const result = await cassandraClient.execute(query, params, { prepare: true });
     const sortedData = result.rows.sort((a, b) => a.time_value.localeCompare(b.time_value));
 
     res.status(200).json({
