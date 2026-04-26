@@ -26,7 +26,12 @@ const MenuItemsList = ({ groupedMenu, onAddToCart }) => {
                             <div className={styles.foodGrid}>
                                 {sortedItems.map((item) => {
                                     const isUnavailable = item?.available === false || item?.stock === 0;
-                                    const statusLabel = item?.available === false ? 'Tạm ngưng phục vụ' : 'Hết món';
+                                    let statusLabel = '';
+                                    if (item?.available === false) {
+                                        statusLabel = 'Tạm dừng bán'; 
+                                    } else if (item?.stock <= 0) {
+                                        statusLabel = 'Hết món'; 
+                                    }
 
                                     return (
                                         <div

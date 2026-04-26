@@ -1,5 +1,5 @@
 import { recommendationService } from './recommendationService.js';
-import * as menuService from '../menu/menu.service.js';
+import * as menuService from '../menu/menuService.js';
 
 export const getRecommendations = async (req, res) => {
   try {

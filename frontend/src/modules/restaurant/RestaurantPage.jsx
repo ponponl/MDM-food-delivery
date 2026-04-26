@@ -38,7 +38,8 @@ export default function RestaurantPage() {
         queryKey: ['restaurant', publicId],
         queryFn: () => restaurantApi.getById(publicId),
         enabled: Boolean(publicId),
-        staleTime: 5 * 60 * 1000
+        staleTime: 0,
+        refetchOnMount: true
     });
 
     const restaurant = restaurantData ? { ...restaurantData } : null;
@@ -115,6 +116,7 @@ export default function RestaurantPage() {
 
     const handleAddToCart = async (item) => {
         const itemId = item?._id ?? item?.itemId;
+        const userExternalId = resolveUserExternalId(user);
 
         if (!user || !itemId) {
             toast.error('Vui lòng đăng nhập để thêm món vào giỏ.');
@@ -126,6 +128,7 @@ export default function RestaurantPage() {
 
         try {
             const response = await cartApi.addItem({
+                userExternalId,
                 itemId,
                 quantity: optimisticDelta,
                 restaurantPublicId: publicId,

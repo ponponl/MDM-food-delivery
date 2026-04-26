@@ -30,6 +30,14 @@ const restaurantApi = {
     getNearest: (lng, lat, distance = 5000) => {
         const url = '/restaurants/nearest';
         return axiosClient.get(url, { params: { lng, lat, distance } });
+    },
+    updateInfo: (formData) => {
+        const url = '/restaurants/update';
+        return axiosClient.put(url, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
     }
 };
 

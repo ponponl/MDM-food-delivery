@@ -138,4 +138,12 @@ export class RestaurantRepository {
             }
         });
     }
+
+    async updateInfo(publicId, updateData) {
+        return await Restaurant.findOneAndUpdate(
+            { publicId },
+            { $set: updateData },
+            { new: true, runValidators: true }
+        );
+    }
 }

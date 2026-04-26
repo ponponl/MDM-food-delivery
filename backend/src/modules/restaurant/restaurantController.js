@@ -34,59 +34,100 @@ export const getByPublicId = async (req, res) => {
         let cachedInfo = null;
         let cachedMenu = null;
 
+        // if (isRedisReady()) {
+        //     const cachedInfoRaw = await redisClient.get(infoCacheKey);
+        //     if (cachedInfoRaw) {
+        //         try {
+        //             cachedInfo = JSON.parse(cachedInfoRaw);
+        //         } catch (error) {
+        //             cachedInfo = null;
+        //         }
+        //     }
+
+        //     const cachedRaw = await redisClient.get(menuCacheKey);
+        //     if (cachedRaw) {
+        //         try {
+        //             cachedMenu = JSON.parse(cachedRaw);
+        //         } catch (error) {
+        //             cachedMenu = null;
+        //         }
+        //     }
+        // }
+
+        // if (cachedInfo && cachedMenu) {
+        //     res.status(200).json({ ...cachedInfo, menu: cachedMenu });
+        //     return;
+        // }
+
+        // const restaurant = cachedInfo && !cachedMenu
+        //     ? await restaurantService.getRestaurantByPublicId(
+        //         publicId,
+        //         { includeMenu: true }
+        //     )
+        //     : cachedInfo
+        //         ? cachedInfo
+        //         : await restaurantService.getRestaurantByPublicId(
+        //             publicId,
+        //             { includeMenu: !cachedMenu }
+        //         );
+
+        // const restaurantData = restaurant?.toObject ? restaurant.toObject() : restaurant;
+
+        // if (!cachedMenu && isRedisReady()) {
+        //     await cacheRestaurantMenu(publicId, restaurantData.menu || []);
+        // }
+
+        // if (!cachedInfo && isRedisReady()) {
+        //     const { menu, ...infoPayload } = restaurantData || {};
+        //     await cacheRestaurantInfo(publicId, infoPayload);
+        // }
+
+        // const responsePayload = cachedMenu
+        //     ? { ...restaurantData, menu: cachedMenu }
+        //     : restaurantData;
+
         if (isRedisReady()) {
-            const cachedInfoRaw = await redisClient.get(infoCacheKey);
-            if (cachedInfoRaw) {
-                try {
-                    cachedInfo = JSON.parse(cachedInfoRaw);
-                } catch (error) {
-                    cachedInfo = null;
-                }
-            }
-
-            const cachedRaw = await redisClient.get(menuCacheKey);
-            if (cachedRaw) {
-                try {
-                    cachedMenu = JSON.parse(cachedRaw);
-                } catch (error) {
-                    cachedMenu = null;
-                }
-            }
+            const [infoRaw, menuRaw] = await Promise.all([
+                redisClient.get(infoCacheKey),
+                redisClient.get(menuCacheKey)
+            ]);
+            if (infoRaw) cachedInfo = JSON.parse(infoRaw);
+            if (menuRaw) cachedMenu = JSON.parse(menuRaw);
         }
 
+        let restaurantData;
         if (cachedInfo && cachedMenu) {
-            res.status(200).json({ ...cachedInfo, menu: cachedMenu });
-            return;
-        }
-
-        const restaurant = cachedInfo && !cachedMenu
-            ? await restaurantService.getRestaurantByPublicId(
+            restaurantData = { ...cachedInfo, menu: cachedMenu };
+        } else {
+            const restaurant = await restaurantService.getRestaurantByPublicId(
                 publicId,
                 { includeMenu: true }
-            )
-            : cachedInfo
-                ? cachedInfo
-                : await restaurantService.getRestaurantByPublicId(
-                    publicId,
-                    { includeMenu: !cachedMenu }
-                );
-
-        const restaurantData = restaurant?.toObject ? restaurant.toObject() : restaurant;
-
-        if (!cachedMenu && isRedisReady()) {
-            await cacheRestaurantMenu(publicId, restaurantData.menu || []);
+            );
+            restaurantData = restaurant?.toObject ? restaurant.toObject() : restaurant;
+            
+            // Cập nhật lại cache nếu cần
+            if (isRedisReady()) {
+                if (!cachedMenu) await cacheRestaurantMenu(publicId, restaurantData.menu || []);
+                if (!cachedInfo) {
+                    const { menu, ...infoPayload } = restaurantData || {};
+                    await cacheRestaurantInfo(publicId, infoPayload);
+                }
+            }
         }
 
-        if (!cachedInfo && isRedisReady()) {
-            const { menu, ...infoPayload } = restaurantData || {};
-            await cacheRestaurantInfo(publicId, infoPayload);
+        if (restaurantData.menu && restaurantData.menu.length > 0 && isRedisReady()) {
+            const stockKeys = restaurantData.menu.map(item => `stock:item:${item.itemId || item._id}`);
+            const redisStocks = await redisClient.mGet(stockKeys);
+            restaurantData.menu = restaurantData.menu.map((item, index) => {
+                const liveStock = redisStocks[index];
+                return {
+                    ...item,
+                    stock: liveStock !== null ? parseInt(liveStock, 10) : item.stock 
+                };
+            });
         }
 
-        const responsePayload = cachedMenu
-            ? { ...restaurantData, menu: cachedMenu }
-            : restaurantData;
-
-        res.status(200).json(responsePayload);
+        res.status(200).json(restaurantData);
     } catch (error) {
         res.status(404).json({ message: error.message });
     }
@@ -207,5 +248,23 @@ export const getNearest = async (req, res) => {
         res.status(200).json(restaurants);
     } catch (error) {
         res.status(500).json({ error: error.message });
+    }
+};
+
+export const updateRestaurantInfo = async (req, res) => {
+    try {
+        const { publicId } = req.body;
+        if (!publicId) return res.status(400).json({ message: "Thiếu publicId" });
+        const result = await restaurantService.updateRestaurantDetails(
+            publicId, 
+            req.body, 
+            req.file
+        );
+
+        if (!result) return res.status(404).json({ message: "Không tìm thấy nhà hàng" });
+
+        res.status(200).json({ message: "Cập nhật thành công", restaurant: result });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };

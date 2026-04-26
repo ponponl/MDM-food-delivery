@@ -1,6 +1,6 @@
 import redisClient from '../../config/redis.js';
 import logger from '../../config/logger.js';
-import * as menuService from '../menu/menu.service.js';
+import * as menuService from '../menu/menuService.js';
 import { addOrUpdateItemLua, deleteItemLua } from './cartScripts.js';
 import { buildItemKey, normalizeOptionsForStorage } from './cartItemKey.js';
 import { RestaurantRepository } from '../restaurant/restaurantRepo.js';
