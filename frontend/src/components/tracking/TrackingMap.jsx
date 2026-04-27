@@ -13,7 +13,7 @@ const motorbikeIcon = new L.Icon({
 const restaurantIcon = new L.Icon({
     iconUrl: 'https://cdn-icons-png.flaticon.com/128/948/948036.png', 
     iconSize: [35, 35],
-    iconAnchor: [17, 35], // Anchor ở chân icon
+    iconAnchor: [17, 35], 
 });
 
 const destinationIcon = new L.Icon({
@@ -36,18 +36,24 @@ const TrackingMap = ({ driverId, orderId, restaurantLoc, destinationLoc, status 
 
     const centerPosition = [10.7725, 106.7042]; 
 
+    useEffect(() => {
+        console.log("Dữ liệu nhận vào Map:", { orderId, restaurantLoc, destinationLoc });
+    }, [orderId, restaurantLoc, destinationLoc]);
 
     useEffect(() => {    
-        if (!driverId || !orderId) return;
+        if (!orderId) return; 
 
         const loadMapData = async () => {
             try {
-                const response = await trackingApi.getOrderRoute(driverId, orderId);
+                const response = await trackingApi.getOrderRoute(orderId);
 
                 if (response && response.success && response.data?.route?.length > 0) {
-                    const points = response.data.route.map(p => [p.lat, p.lng]);
+                    const rawRoute = [...response.data.route].reverse(); 
+                    const points = rawRoute.map(p => [p.lat, p.lng]);
+                    
                     setRoutePoints(points);
-                    setCurrentLoc(points[0]);
+                    
+                    setCurrentLoc(points[points.length - 1]);
                 }
             } catch (error) {
                 console.error("Lỗi lấy tọa độ từ Cassandra:", error);
@@ -62,7 +68,7 @@ const TrackingMap = ({ driverId, orderId, restaurantLoc, destinationLoc, status 
         }
 
         return () => clearInterval(interval);
-    }, [driverId, orderId, status]); 
+    }, [orderId, status]);
 
     return (
         <div style={{ height: '60vh', width: '100%', borderRadius: '15px', overflow: 'hidden' }}>

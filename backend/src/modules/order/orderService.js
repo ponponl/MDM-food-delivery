@@ -589,20 +589,22 @@ export const completeOrder = async (orderExternalId, { completedBy, signature })
 
     const currentOrder = await orderRepository.getOrderDetailByExternalId(orderExternalId);
 
+    const driverId = currentOrder.driver_id || currentOrder.driverId;
+
     const updated = await orderRepository.updateOrderStatus(client, {
       orderExternalId,
       fromStatuses: 'delivering',
       toStatus: 'completed',
-      driverId: currentOrder.driver_id
+      driverId: driverId
     });
 
     if (!updated) {
       throw new Error('INVALID_STATUS_TRANSITION');
     }
 
-    if (updated.driverId || updated.driver_id) {
-        const driverId = updated.driverId || updated.driver_id;
+    if (driverId) {
         await shipperRepository.updateStatus(client, driverId, 'available');
+        logger.info(`Shipper ${driverId} has been released (available)`);
     }
 
     const orderId = updated.id;

@@ -3,6 +3,6 @@ export const formatTrackingData = (row) => {
         lat: row.lat,
         lng: row.lng,
         timestamp: row.timestamp,
-        orderId: row.order_id
+        driverId: row.driver_id 
     };
 };

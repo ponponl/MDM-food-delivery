@@ -1,18 +1,17 @@
 import { fetchTrackingHistory } from './tracking.service.js';
 
-export const getDriverTracking = async (req, res) => {
+export const getOrderTracking = async (req, res) => {
     try {
-        const { driver_id } = req.params;
-        const { date, order_id } = req.query; 
+        const order_id = req.params.order_id || req.query.order_id; 
 
-        if (!driver_id || !order_id) {
+        if (!order_id) {
             return res.status(400).json({ 
                 success: false, 
-                message: 'Thiếu mã tài xế hoặc mã đơn hàng' 
+                message: 'Thiếu mã đơn hàng (order_id)' 
             });
         }
 
-        const trackingData = await fetchTrackingHistory(driver_id, order_id, date);
+        const trackingData = await fetchTrackingHistory(order_id);
 
         return res.status(200).json({
             success: true,

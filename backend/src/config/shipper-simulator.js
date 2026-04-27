@@ -38,40 +38,26 @@ async function simulateRoute() {
             process.exit(0); 
         }
 
-        const today = new Date().toISOString().split('T')[0];
         const now = new Date();
 
         for (const order of deliverOrder.rows) {
             const externalid = order.externalid || order.externalId;
-            const dest_lat = order.dest_lat;
-            const dest_lng = order.dest_lng;
+            const dest_lat = Number(order.dest_lat);
+            const dest_lng = Number(order.dest_lng);
             const restaurantid = order.restaurantid || order.restaurantId;
-            
             const driver_id = order.driver_id || order.driverid || order.driverId;
 
-            if (!driver_id) {
-                console.log(`Đơn ${externalid} không tìm thấy mã tài xế`);
-                continue;
-            }
-
-            if (dest_lat == null || dest_lng == null) {
-                console.log(`Đơn ${externalid} thiếu tọa độ khách hàng trong Postgres`);
-                continue;
-            }
+            if (!driver_id || dest_lat == null || dest_lng == null) continue;
 
             const restaurant = await restaurantRepository.findByPublicId(restaurantid, { includeMenu: false });
-
-            if (!restaurant || !restaurant.address?.location?.coordinates) {
-                console.log(`Không tìm thấy tọa độ quán trong MongoDB`);
-                continue; 
-            }
+            if (!restaurant?.address?.location?.coordinates) continue;
 
             const start_lng = restaurant.address.location.coordinates[0];
             const start_lat = restaurant.address.location.coordinates[1];
 
             const lastLoc = await cassandraClient.execute(
-                "SELECT lat, lng FROM foodly_tracking.location_history WHERE driver_id = ? AND date = ? LIMIT 1",
-                [driver_id, today],
+                "SELECT lat, lng FROM foodly_tracking.location_by_order WHERE order_id = ? LIMIT 1",
+                [externalid],
                 { prepare: true }
             );
 
@@ -83,30 +69,33 @@ async function simulateRoute() {
                 curLng = lastLoc.rows[0].lng;
             }
 
+            // Tính toán khoảng cách còn lại
             const dLat = dest_lat - curLat;
             const dLng = dest_lng - curLng;
             
-            if (Math.abs(dLat) > 0.0001 || Math.abs(dLng) > 0.0001) {
+            // Ngưỡng sai số để xác định đã đến nơi (tầm ~10 mét)
+            const ARRIVAL_THRESHOLD = 0.0001;
+
+            if (Math.abs(dLat) > ARRIVAL_THRESHOLD || Math.abs(dLng) > ARRIVAL_THRESHOLD) {
+                // DI CHUYỂN ĐƯỜNG THẲNG:
+                // Chỉ cộng dồn theo tỉ lệ STEP_RATIO, loại bỏ Math.random()
                 curLat += dLat * STEP_RATIO;
                 curLng += dLng * STEP_RATIO;
-                
-                curLat += (Math.random() - 0.5) * 0.0001;
-                curLng += (Math.random() - 0.5) * 0.0001;
 
                 await cassandraClient.execute(
-                    "INSERT INTO foodly_tracking.location_history (driver_id, date, timestamp, lat, lng, order_id) VALUES (?, ?, ?, ?, ?, ?)",
-                    [driver_id, today, now, curLat, curLng, externalid],
+                    "INSERT INTO foodly_tracking.location_by_order (order_id, timestamp, driver_id, lat, lng) VALUES (?, ?, ?, ?, ?)",
+                    [externalid, now, driver_id, curLat, curLng],
                     { prepare: true }
                 );
-                console.log(`Shipper ${driver_id} đang giao: Quán (${start_lat.toFixed(4)}, ${start_lng.toFixed(4)}) -> Khách (${dest_lat.toFixed(4)}, ${dest_lng.toFixed(4)})`);
+                console.log(`Shipper ${driver_id} đang thẳng tiến: (${curLat.toFixed(4)}, ${curLng.toFixed(4)}) -> Đích (${dest_lat.toFixed(4)})`);
             } else {
-                console.log(`🏁 Shipper ${driver_id} ĐÃ ĐẾN NƠI! Đang chốt đơn...`);
-                
+                // ĐÃ ĐẾN NƠI
+                console.log(`Shipper ${driver_id} ĐÃ CẬP BẾN!`);
                 triggerCompleteOrder(externalid);
 
                 await cassandraClient.execute(
-                    "INSERT INTO foodly_tracking.location_history (driver_id, date, timestamp, lat, lng, order_id) VALUES (?, ?, ?, ?, ?, ?)",
-                    [driver_id, today, now, dest_lat, dest_lng, externalid],
+                    "INSERT INTO foodly_tracking.location_by_order (order_id, timestamp, driver_id, lat, lng) VALUES (?, ?, ?, ?, ?)",
+                    [externalid, now, driver_id, dest_lat, dest_lng],
                     { prepare: true }
                 );
             }

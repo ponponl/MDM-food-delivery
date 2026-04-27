@@ -397,32 +397,32 @@ const OrderDetailPage = () => {
             </div>
           </div>
 
-          {(() => {
-            if (['placed', 'confirmed', 'cancelled'].includes(order.status)) return null;
+              {(() => {
+                if (['placed', 'confirmed'].includes(order.status)) return null;
 
-            const hasRestaurantLoc = orderData?.restaurantLat && orderData?.restaurantLng;
-            const safeRestaurantLoc = hasRestaurantLoc 
-              ? [Number(orderData.restaurantLat), Number(orderData.restaurantLng)] 
-              : null;
+                const hasRestaurantLoc = orderData?.restaurantLat && orderData?.restaurantLng;
+                const safeRestaurantLoc = hasRestaurantLoc 
+                  ? [Number(orderData.restaurantLat), Number(orderData.restaurantLng)] 
+                  : null;
 
-            const hasDestLoc = orderData?.deliveryAddress?.location?.coordinates?.length >= 2;
-            const safeDestinationLoc = hasDestLoc 
-              ? [
-                  Number(orderData.deliveryAddress.location.coordinates[1]), 
-                  Number(orderData.deliveryAddress.location.coordinates[0])  
-                ] 
-              : null;
+                const hasDestLoc = orderData?.deliveryAddress?.location?.coordinates?.length >= 2;
+                const safeDestinationLoc = hasDestLoc 
+                  ? [
+                      Number(orderData.deliveryAddress.location.coordinates[1]), 
+                      Number(orderData.deliveryAddress.location.coordinates[0])  
+                    ] 
+                  : null;
 
-            return (
-              <TrackingMap 
-                driverId={order.driverId} 
-                orderId={order.orderExternalId}
-                restaurantLoc={safeRestaurantLoc} 
-                destinationLoc={safeDestinationLoc}
-                status={order.status}
-              />
-            );
-          })()}
+                return (
+                  <TrackingMap 
+                    orderId={order.orderExternalId}
+                    restaurantLoc={safeRestaurantLoc} 
+                    destinationLoc={safeDestinationLoc}
+                    status={order.status}
+                    driverId={order.driverId} 
+                  />
+                );
+              })()}
 
           {/* Delivery Address */}
           <div className={styles.section} style={{marginTop: '20px'}}>

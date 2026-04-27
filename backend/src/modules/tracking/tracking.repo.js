@@ -12,19 +12,16 @@ export class TrackingRepository {
         return result.rows; 
     };
 
-    async getTrackingHistoryByOrder(driverId, date, orderId) {
+    async getTrackingHistoryByOrder(orderId) {
         const query = `
-            SELECT timestamp, lat, lng 
-            FROM foodly_tracking.location_history 
-            WHERE driver_id = ? 
-            AND date = ? 
-            AND order_id = ? 
-            ALLOW FILTERING
+            SELECT timestamp, lat, lng, driver_id 
+            FROM foodly_tracking.location_by_order 
+            WHERE order_id = ? 
         `;
         
         const result = await cassandraClient.execute(
             query, 
-            [driverId, date, orderId], 
+            [orderId], 
             { prepare: true }
         );
         
@@ -33,13 +30,17 @@ export class TrackingRepository {
 
     async saveLocationToDB({ driverId, lat, lng, order_id }) {
         const query = `
-            INSERT INTO foodly_tracking.location_history 
-            (driverId, date, timestamp, lat, lng, order_id) 
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO foodly_tracking.location_by_order 
+            (order_id, timestamp, driver_id, lat, lng) 
+            VALUES (?, ?, ?, ?, ?)
         `;
-        const date = new Date().toISOString().split('T')[0];
-        const timestamp = new Date();
         
-        return await cassandraClient.execute(query, [driverId, date, timestamp, lat, lng, order_id], { prepare: true });
+        const timestamp = new Date(); 
+        
+        return await cassandraClient.execute(
+            query, 
+            [order_id, timestamp, driverId, lat, lng], 
+            { prepare: true }
+        );
     };
 }

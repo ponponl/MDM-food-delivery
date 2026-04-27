@@ -1,8 +1,8 @@
 import express from 'express';
-import { getDriverTracking } from '../modules/tracking/tracking.controller.js';
+import { getOrderTracking } from '../modules/tracking/tracking.controller.js';
 
 const router = express.Router();
 
-router.get('/:driver_id', getDriverTracking);
+router.get('/:order_id', getOrderTracking);
 
 export default router;
