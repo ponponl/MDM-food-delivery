@@ -28,6 +28,17 @@ export class TrackingRepository {
         return result.rows; 
     };
 
+    async getLatestLocationByOrder(orderId) {
+        const query = `
+            SELECT timestamp, lat, lng, driver_id 
+            FROM foodly_tracking.location_by_order 
+            WHERE order_id = ? 
+            LIMIT 1
+        `;
+        const result = await cassandraClient.execute(query, [orderId], { prepare: true });
+        return result.rows.length > 0 ? result.rows[0] : null; 
+    };
+
     async saveLocationToDB({ driverId, lat, lng, order_id }) {
         const query = `
             INSERT INTO foodly_tracking.location_by_order 

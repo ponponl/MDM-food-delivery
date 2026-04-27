@@ -10,6 +10,8 @@ const restaurantRepository = new RestaurantRepository();
 
 const STEP_RATIO = 0.05; 
 
+const completedOrderCache = new Set();
+
 async function triggerCompleteOrder(orderExternalId) {
     try {
         const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:3000'}/api/orders/${orderExternalId}/complete`, {
@@ -23,9 +25,11 @@ async function triggerCompleteOrder(orderExternalId) {
         const result = await response.json();
         if (result.status === 'success') {
             console.log(`Đã cập nhật trạng thái đơn ${orderExternalId} thành COMPLETED.`);
+            completedOrderCache.delete(orderExternalId);
         }
     } catch (error) {
         console.error(`Lỗi khi gọi API Complete cho đơn ${orderExternalId}:`, error.message);
+        completedOrderCache.delete(orderExternalId);
     }
 }
 
@@ -42,6 +46,11 @@ async function simulateRoute() {
 
         for (const order of deliverOrder.rows) {
             const externalid = order.externalid || order.externalId;
+
+            if (completedOrderCache.has(externalid)) {
+                continue; 
+            }
+
             const dest_lat = Number(order.dest_lat);
             const dest_lng = Number(order.dest_lng);
             const restaurantid = order.restaurantid || order.restaurantId;
@@ -69,16 +78,12 @@ async function simulateRoute() {
                 curLng = lastLoc.rows[0].lng;
             }
 
-            // Tính toán khoảng cách còn lại
             const dLat = dest_lat - curLat;
             const dLng = dest_lng - curLng;
             
-            // Ngưỡng sai số để xác định đã đến nơi (tầm ~10 mét)
             const ARRIVAL_THRESHOLD = 0.0001;
 
             if (Math.abs(dLat) > ARRIVAL_THRESHOLD || Math.abs(dLng) > ARRIVAL_THRESHOLD) {
-                // DI CHUYỂN ĐƯỜNG THẲNG:
-                // Chỉ cộng dồn theo tỉ lệ STEP_RATIO, loại bỏ Math.random()
                 curLat += dLat * STEP_RATIO;
                 curLng += dLng * STEP_RATIO;
 
@@ -87,10 +92,12 @@ async function simulateRoute() {
                     [externalid, now, driver_id, curLat, curLng],
                     { prepare: true }
                 );
-                console.log(`Shipper ${driver_id} đang thẳng tiến: (${curLat.toFixed(4)}, ${curLng.toFixed(4)}) -> Đích (${dest_lat.toFixed(4)})`);
+                console.log(`[Đơn ${externalid}]: Shipper ${driver_id} đang thẳng tiến: (${curLat.toFixed(4)}, ${curLng.toFixed(4)}) -> Đích (${dest_lat.toFixed(4)})`);
             } else {
-                // ĐÃ ĐẾN NƠI
-                console.log(`Shipper ${driver_id} ĐÃ CẬP BẾN!`);
+                console.log(`[Đơn ${externalid}]: Shipper ${driver_id} ĐÃ CẬP BẾN!`);
+
+                completedOrderCache.add(externalid);
+
                 triggerCompleteOrder(externalid);
 
                 await cassandraClient.execute(

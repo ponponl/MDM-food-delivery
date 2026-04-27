@@ -34,8 +34,6 @@ const TrackingMap = ({ driverId, orderId, restaurantLoc, destinationLoc, status 
     const [routePoints, setRoutePoints] = useState([]);
     const [currentLoc, setCurrentLoc] = useState(null);
 
-    const centerPosition = [10.7725, 106.7042]; 
-
     useEffect(() => {
         console.log("Dữ liệu nhận vào Map:", { orderId, restaurantLoc, destinationLoc });
     }, [orderId, restaurantLoc, destinationLoc]);
@@ -43,7 +41,7 @@ const TrackingMap = ({ driverId, orderId, restaurantLoc, destinationLoc, status 
     useEffect(() => {    
         if (!orderId) return; 
 
-        const loadMapData = async () => {
+        const loadInitialRoute = async () => {
             try {
                 const response = await trackingApi.getOrderRoute(orderId);
 
@@ -52,7 +50,6 @@ const TrackingMap = ({ driverId, orderId, restaurantLoc, destinationLoc, status 
                     const points = rawRoute.map(p => [p.lat, p.lng]);
                     
                     setRoutePoints(points);
-                    
                     setCurrentLoc(points[points.length - 1]);
                 }
             } catch (error) {
@@ -60,11 +57,34 @@ const TrackingMap = ({ driverId, orderId, restaurantLoc, destinationLoc, status 
             }
         };
 
-        loadMapData();
+        const fetchLatestPoint = async () => {
+            try {
+                const response = await trackingApi.getLatestLocation(orderId);
+
+                if (response && response.success && response.data?.current_location) {
+                    const { lat, lng } = response.data.current_location;
+                    const newPoint = [lat, lng];
+                    
+                    setCurrentLoc(newPoint); 
+                    
+                    setRoutePoints(prevPoints => {
+                        const lastPoint = prevPoints[prevPoints.length - 1];
+                        if (lastPoint && lastPoint[0] === lat && lastPoint[1] === lng) {
+                            return prevPoints;
+                        }
+                        return [...prevPoints, newPoint];
+                    });
+                }
+            } catch (error) {
+                console.error("Lỗi lấy vị trí mới nhất:", error);
+            }
+        };
+
+        loadInitialRoute();
 
         let interval;
         if (status === 'delivering') {
-            interval = setInterval(loadMapData, 3000);
+            interval = setInterval(fetchLatestPoint, 3000);
         }
 
         return () => clearInterval(interval);

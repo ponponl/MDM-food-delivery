@@ -13,10 +13,10 @@ export const fetchTrackingHistory = async (orderId) => {
 
         if (!rawData || rawData.length === 0) {
             console.warn(`[TrackingService] Không tìm thấy lịch sử tọa độ cho Order: ${orderId}`);
+            return null;
         }
 
         const formattedRoute = rawData.map(row => formatTrackingData(row));
-
         const currentDriverId = formattedRoute.length > 0 ? formattedRoute[0].driverId : null;
 
         return {
@@ -27,6 +27,31 @@ export const fetchTrackingHistory = async (orderId) => {
         };
     } catch (error) {
         console.error("Error in fetchTrackingHistory service:", error);
+        throw error;
+    }
+};
+
+export const fetchLatestLocation = async (orderId) => {
+    if (!orderId) {
+        throw new Error('orderId is required');
+    }
+
+    try {
+        const rawData = await trackingRepo.getLatestLocationByOrder(orderId);
+
+        if (!rawData) {
+            return null;
+        }
+
+        const formattedLocation = formatTrackingData(rawData);
+
+        return {
+            order_id: orderId,
+            driver_id: formattedLocation.driverId,
+            current_location: formattedLocation
+        };
+    } catch (error) {
+        console.error("Error in fetchLatestLocation service:", error);
         throw error;
     }
 };
