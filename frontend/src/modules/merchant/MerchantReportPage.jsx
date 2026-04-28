@@ -44,7 +44,10 @@ const MerchantReportPage = () => {
             dayParams.exactDate = searchDate;
           } else {
             const todayDate = new Date();
-            dayParams.timePartition = todayDate.toISOString().split('T')[0].substring(0, 10);
+            const yyyy = todayDate.getFullYear();
+            const mm = String(todayDate.getMonth() + 1).padStart(2, '0');
+            const dd = String(todayDate.getDate()).padStart(2, '0');
+            dayParams.timePartition = `${yyyy}-${mm}-${dd}`;
           }
 
           const dayResponse = await orderApi.getRevenueStats(dayParams);
@@ -100,11 +103,15 @@ const MerchantReportPage = () => {
     const currentYear = today.getFullYear();
 
     const todayRevenue = useMemo(() => {
-      const todayString = today.toISOString().split('T')[0];
-      return data
-        .filter((item) => item.granularity === 'DAY' && item.time_value === todayString)
-        .reduce((sum, item) => sum + Number(item.total_revenue || 0), 0);
-    }, [data, today]);
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const todayString = `${year}-${month}-${day}`;
+
+    return data
+      .filter((item) => item.granularity === 'DAY' && item.time_value === todayString)
+      .reduce((sum, item) => sum + Number(item.total_revenue || 0), 0);
+  }, [data, today]);
 
     const monthOrders = useMemo(() => {
       return data
