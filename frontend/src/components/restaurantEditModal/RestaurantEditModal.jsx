@@ -22,9 +22,10 @@ const RestaurantEditModal = ({ isOpen, onClose, initialData, onSubmit, isUpdatin
     const [isMapModalOpen, setIsMapModalOpen] = useState(false);
     const suggestionListRef = useRef(null);
     const [formData, setFormData] = useState({
-        name: '', type: '', phone: '', openTime: '', closeTime: '', addressFull: null, image: null
+        name: '', type: '', phone: '', openTime: '', closeTime: '', addressFull: null, image: null, background: null
     });
     const [preview, setPreview] = useState(null);
+    const [bgPreview, setBgPreview] = useState(null);
 
     const {
         address: displayAddress,
@@ -51,10 +52,12 @@ const RestaurantEditModal = ({ isOpen, onClose, initialData, onSubmit, isUpdatin
                 openTime: initialData.openTime || '',
                 closeTime: initialData.closeTime || '',
                 addressFull: initialData.address?.full || null,
-                image: null
+                image: null,
+                background: null
             });
             console.log(initialData.address);
             setPreview(initialData.images?.[0] || null);
+            setBgPreview(initialData.background?.[0] || null);
             if (initialData.address?.full) {
                 setDisplayAddress(initialData.address.full);
             }
@@ -96,6 +99,27 @@ const RestaurantEditModal = ({ isOpen, onClose, initialData, onSubmit, isUpdatin
                     <X className={styles.closeBtn} onClick={onClose} />
                 </div>
                 <form onSubmit={handleSubmit} className={styles.form}>
+                    <div className={styles.backgroundSection}>
+                        <label className={styles.backgroundLabel}>
+                            <div className={styles.bgOverlay}>
+                                <UploadCloud size={24} />
+                                <span>Thay đổi ảnh bìa</span>
+                            </div>
+                            <img src={bgPreview || '/src/assets/home-banner.png'} alt="Background Preview" />
+                            <input 
+                                type="file" 
+                                hidden 
+                                accept="image/*"
+                                onChange={e => {
+                                    const file = e.target.files[0];
+                                    if (file) {
+                                        setFormData({...formData, background: file});
+                                        setBgPreview(URL.createObjectURL(file));
+                                    }
+                                }} 
+                            />
+                        </label>
+                    </div>
                     {/* Phần upload ảnh đại diện */}
                     <div className={styles.imageSection}>
                         <label className={styles.imageLabel}>

@@ -14,6 +14,11 @@ router.get('/bulk', restaurantController.getBulkByPublicIds);
 
 router.get('/:publicId', restaurantController.getByPublicId);
 
-router.put('/update', uploadCloud.single('image'), restaurantController.updateRestaurantInfo);
-
+router.put(
+    '/update', 
+    uploadCloud.fields([
+        { name: 'image', maxCount: 1 }, 
+        { name: 'background', maxCount: 1 }
+    ]),
+    restaurantController.updateRestaurantInfo);
 export default router;

@@ -282,4 +282,12 @@ export class OrderRepository {
       const result = await pgPool.query(query);
       return result; 
   }
+  
+  async getOrderItemsOnly(client, orderId) {
+    const result = await client.query(
+      'SELECT itemId, quantity FROM order_items WHERE orderId = $1',
+      [orderId]
+    );
+    return result.rows;
+  }
 }

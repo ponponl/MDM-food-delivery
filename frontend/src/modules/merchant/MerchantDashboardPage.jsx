@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import RestaurantEditModal from '../../components/restaurantEditModal/RestaurantEditModal';
 import restaurantApi from '../../api/restaurantApi';
+import orderApi from '../../api/orderApi';
 import styles from './MerchantDashboardPage.module.css';
 import toast from 'react-hot-toast';
 
@@ -14,6 +15,46 @@ const MerchantDashboardPage = () => {
     const isLoading = loading;
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
+    const [stats, setStats] = useState({ todayRevenue: 0, todayOrders: 0 });
+    const [isStatsLoading, setIsStatsLoading] = useState(true);
+
+    const formatVND = (value) => {
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND',
+            maximumFractionDigits: 0,
+        }).format(value);
+    };
+
+    useEffect(() => {
+        const fetchTodayStats = async () => {
+            if (!publicId) return;
+            try {
+                setIsStatsLoading(true);
+                const today = new Date();
+                const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+                const response = await orderApi.getRevenueStats({
+                    restaurantId: publicId,
+                    granularity: 'DAY',
+                    timePartition: todayString
+                });
+
+                const todayData = (response?.data || []).find(item => item.time_value === todayString);
+                
+                setStats({
+                    todayRevenue: Number(todayData?.total_revenue || 0),
+                    todayOrders: Number(todayData?.total_orders || 0)
+                });
+            } catch (error) {
+                console.error("Lỗi lấy thống kê dashboard:", error);
+            } finally {
+                setIsStatsLoading(false);
+            }
+        };
+
+        fetchTodayStats();
+    }, [publicId]);
 
     const handleUpdateRestaurant = async (formData) => {
         try {
@@ -89,21 +130,31 @@ const MerchantDashboardPage = () => {
                                 <div className={styles.statIcon}>💰</div>
                                 <div className={styles.statDetails}>
                                     <h3>Doanh thu hôm nay</h3>
-                                    <p className={styles.statValue}>1,250,000đ</p>
+                                    {isStatsLoading ? (
+                                        <div className={`${styles.skeleton} ${styles.skeletonValue}`} style={{width: '100px'}} />
+                                    ) : (
+                                        <p className={styles.statValue}>{formatVND(stats.todayRevenue)}</p>
+                                    )}
                                 </div>
                             </div>
                             <div className={styles.statCard}>
                                 <div className={styles.statIcon}>📦</div>
                                 <div className={styles.statDetails}>
                                     <h3>Đơn hàng mới</h3>
-                                    <p className={styles.statValue}>14</p>
+                                    {isStatsLoading ? (
+                                        <div className={`${styles.skeleton} ${styles.skeletonValue}`} style={{width: '60px'}} />
+                                    ) : (
+                                        <p className={styles.statValue}>{stats.todayOrders}</p>
+                                    )}
                                 </div>
                             </div>
                             <div className={styles.statCard}>
                                 <div className={styles.statIcon}>⭐</div>
                                 <div className={styles.statDetails}>
                                     <h3>Đánh giá trung bình</h3>
-                                    <p className={styles.statValue}>4.8 / 5.0</p>
+                                    <p className={styles.statValue}>
+                                        {restaurant.avgRating ? `${restaurant.avgRating.toFixed(1)} / 5.0` : '0.0 / 5.0'}
+                                    </p>
                                 </div>
                             </div>
                         </div>
