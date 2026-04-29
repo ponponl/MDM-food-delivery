@@ -666,6 +666,7 @@ export const cancelOrder = async (orderExternalId, { reason, cancelledBy }) => {
     }
 
     const orderId = updated.id;
+    const orderItems = await orderRepository.getOrderItemsOnly(client, orderId);
 
     // Update payment status
     await orderRepository.updatePaymentStatus(client, {
@@ -676,6 +677,13 @@ export const cancelOrder = async (orderExternalId, { reason, cancelledBy }) => {
     await client.query('COMMIT');
 
     // Update Redis tracking
+    if (orderItems) {
+      const rollbackPromises = orderItems.map(item => 
+        menuCache.rollbackStock(item.itemid, item.quantity)
+      );
+      await Promise.all(rollbackPromises);
+      logger.info(`Đã hoàn kho Redis cho ${orderItems.length} món của đơn hàng ${orderExternalId}`);
+    }
     const activeOrderKey = `${ACTIVE_ORDER_PREFIX}${orderId}`;
     await redisClient.hSet(activeOrderKey, 'status', 'cancelled');
     await redisClient.hSet(activeOrderKey, 'cancelledAt', new Date().toISOString());

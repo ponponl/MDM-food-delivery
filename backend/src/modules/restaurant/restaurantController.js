@@ -118,13 +118,24 @@ export const getByPublicId = async (req, res) => {
         if (restaurantData.menu && restaurantData.menu.length > 0 && isRedisReady()) {
             const stockKeys = restaurantData.menu.map(item => `stock:item:${item.itemId || item._id}`);
             const redisStocks = await redisClient.mGet(stockKeys);
+            const pipeline = redisClient.multi();
+            let hasMissingStock = false;
             restaurantData.menu = restaurantData.menu.map((item, index) => {
                 const liveStock = redisStocks[index];
+                const itemId = item.itemId || item._id;
+                if (liveStock === null) {
+                    pipeline.set(`stock:item:${itemId}`, item.stock);
+                    hasMissingStock = true;
+                    return item; 
+                }
                 return {
                     ...item,
                     stock: liveStock !== null ? parseInt(liveStock, 10) : item.stock 
                 };
             });
+            if (hasMissingStock) {
+                await pipeline.exec();
+            }
         }
 
         res.status(200).json(restaurantData);
@@ -258,7 +269,7 @@ export const updateRestaurantInfo = async (req, res) => {
         const result = await restaurantService.updateRestaurantDetails(
             publicId, 
             req.body, 
-            req.file
+            req.files
         );
 
         if (!result) return res.status(404).json({ message: "Không tìm thấy nhà hàng" });

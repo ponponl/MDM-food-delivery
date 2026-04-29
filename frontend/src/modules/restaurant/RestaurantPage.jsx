@@ -183,7 +183,7 @@ export default function RestaurantPage() {
         <div className={styles.restaurantPage}>
             <main className={styles.mainContent}>
                 <section className={styles.heroSection}>
-                    <img src={restaurant.background?.[0] || restaurant.images?.[0]} alt={restaurant.name} className={styles.heroBgImg} />
+                    <img src={restaurant.background?.[0] || restaurant.images?.[0] || '/src/assets/home-banner.png'} alt={restaurant.name} className={styles.heroBgImg} />
                     <div className={styles.heroOverlay}>
                         <div className={styles.heroInfo}>
                             <h1 className={styles.heroTitle}>{restaurant.name}</h1>

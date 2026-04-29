@@ -31,6 +31,7 @@ const restaurantSchema = new mongoose.Schema({
     },
     phone: String,
     images: [String],
+    background: [String],
     menu: [menuItemSchema],
     openTime: String,
     closeTime: String,

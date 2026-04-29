@@ -62,21 +62,32 @@ export const getRestaurantsByPublicIds = async (publicIds = [], { includeMenu = 
     return restaurants;
 };
 
-export const updateRestaurantDetails = async (publicId, rawBody, file) => {
+export const updateRestaurantDetails = async (publicId, rawBody, files) => {
     const currentRestaurant = await repo.findByPublicId(publicId);
     if (!currentRestaurant) return null;
-    const imageUrl = file ? file.path : null;
+    const newImageUrl = files?.image?.[0]?.path;
+    const newBackgroundUrl = files?.background?.[0]?.path;
 
-    if (imageUrl && currentRestaurant.images && currentRestaurant.images.length > 0) {
-        try {
-            const deletePromises = currentRestaurant.images.map(oldUrl => {
-                const cloudinaryPublicId = getPublicIdFromUrl(oldUrl);
-                return cloudinary.uploader.destroy(cloudinaryPublicId); 
-            });
-            await Promise.all(deletePromises);
-        } catch (error) {
-            console.error("Lỗi khi xóa ảnh cũ trên Cloudinary:", error);
-        }
+    // if (imageUrl && currentRestaurant.images && currentRestaurant.images.length > 0) {
+    //     try {
+    //         const deletePromises = currentRestaurant.images.map(oldUrl => {
+    //             const cloudinaryPublicId = getPublicIdFromUrl(oldUrl);
+    //             return cloudinary.uploader.destroy(cloudinaryPublicId); 
+    //         });
+    //         await Promise.all(deletePromises);
+    //     } catch (error) {
+    //         console.error("Lỗi khi xóa ảnh cũ trên Cloudinary:", error);
+    //     }
+    // }
+
+    if (newImageUrl && currentRestaurant.images?.length > 0) {
+        const oldPublicId = getPublicIdFromUrl(currentRestaurant.images[0]);
+        await cloudinary.uploader.destroy(oldPublicId);
+    }
+
+    if (newBackgroundUrl && currentRestaurant.background?.length > 0) {
+        const oldBackId = getPublicIdFromUrl(currentRestaurant.background[0]);
+        await cloudinary.uploader.destroy(oldBackId);
     }
 
     let addressData = rawBody.address;
@@ -91,7 +102,9 @@ export const updateRestaurantDetails = async (publicId, rawBody, file) => {
         closeTime: rawBody.closeTime,
         address: addressData
     };
-    if (imageUrl) updateData.images = [imageUrl];
+    // if (imageUrl) updateData.images = [imageUrl];
+    if (newImageUrl) updateData.images = [newImageUrl];
+    if (newBackgroundUrl) updateData.background = [newBackgroundUrl];
     const updatedRestaurant = await repo.updateInfo(publicId, updateData);
     if (updatedRestaurant) {
         await invalidateRestaurantCache(publicId, { includeInfo: true, includeMenu: false });
