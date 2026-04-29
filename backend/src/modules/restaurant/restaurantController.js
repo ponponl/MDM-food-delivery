@@ -2,6 +2,11 @@ import * as restaurantService from './restaurantService.js'
 import * as categoryService from '../category/categoryService.js'
 import redisClient from '../../config/redis.js';
 import {
+    attachInventoryToMenuItems,
+    getBusinessDate,
+    resolveRestaurantTimezone
+} from '../inventory/inventoryService.js';
+import {
     cacheRestaurantInfo,
     cacheRestaurantMenu,
     cacheRestaurantSummary,
@@ -115,27 +120,16 @@ export const getByPublicId = async (req, res) => {
             }
         }
 
-        if (restaurantData.menu && restaurantData.menu.length > 0 && isRedisReady()) {
-            const stockKeys = restaurantData.menu.map(item => `stock:item:${item.itemId || item._id}`);
-            const redisStocks = await redisClient.mGet(stockKeys);
-            const pipeline = redisClient.multi();
-            let hasMissingStock = false;
-            restaurantData.menu = restaurantData.menu.map((item, index) => {
-                const liveStock = redisStocks[index];
-                const itemId = item.itemId || item._id;
-                if (liveStock === null) {
-                    pipeline.set(`stock:item:${itemId}`, item.stock);
-                    hasMissingStock = true;
-                    return item; 
-                }
-                return {
-                    ...item,
-                    stock: liveStock !== null ? parseInt(liveStock, 10) : item.stock 
-                };
+        if (restaurantData.menu && restaurantData.menu.length > 0) {
+            const restaurantMeta = await restaurantService.getRestaurantByPublicId(publicId, { includeMenu: false });
+            const timezone = resolveRestaurantTimezone(restaurantMeta);
+            const businessDate = getBusinessDate(timezone);
+
+            restaurantData.menu = await attachInventoryToMenuItems({
+                menuItems: restaurantData.menu,
+                restaurantId: restaurantMeta?._id,
+                businessDate
             });
-            if (hasMissingStock) {
-                await pipeline.exec();
-            }
         }
 
         res.status(200).json(restaurantData);

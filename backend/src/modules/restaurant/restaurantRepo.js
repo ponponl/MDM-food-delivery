@@ -88,6 +88,19 @@ export class RestaurantRepository {
         return await query;
     }
 
+    async findById(restaurantId, { includeMenu = false } = {}) {
+        if (!restaurantId) {
+            return null;
+        }
+
+        const query = Restaurant.findById(restaurantId);
+        if (!includeMenu) {
+            query.select('-menu');
+        }
+
+        return await query;
+    }
+
     async findByPublicIds(publicIds = [], { includeMenu = false } = {}) {
         const ids = Array.isArray(publicIds)
             ? publicIds.filter(Boolean)

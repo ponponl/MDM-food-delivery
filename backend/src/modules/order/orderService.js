@@ -3,7 +3,14 @@ import redisClient from '../../config/redis.js';
 import logger from '../../config/logger.js';
 import * as cartService from '../cart/cartService.js';
 import * as menuService from '../menu/menuService.js';
-import { menuCache } from '../menu/menuCache.js';
+import {
+  getBusinessDate,
+  resolveRestaurantTimezone,
+  reserveInventoryForItem,
+  rollbackInventoryForItem,
+  getRemainingQuantity,
+  getRestaurantByPublicId
+} from '../inventory/inventoryService.js';
 import { OrderRepository } from './orderRepo.js';
 import { RestaurantRepository } from '../restaurant/restaurantRepo.js'; 
 import { ShipperRepository } from '../tracking/shipperRepo.js';
@@ -39,7 +46,7 @@ export const createOrder = async ({
   itemKeys = null
 }) => {
   const client = await pgPool.connect();
-  const deductedRedisItems = [];
+  const reservedInventory = [];
 
   try {
     await client.query('BEGIN');
@@ -119,6 +126,10 @@ export const createOrder = async ({
     const itemIds = [...new Set(cartItems.map((item) => item._id || item.itemId))];
     const menuItems = await menuService.getMenuItems(itemIds);
 
+    const restaurantMeta = await getRestaurantByPublicId(targetRestaurantId);
+    const timezone = resolveRestaurantTimezone(restaurantMeta);
+    const businessDate = getBusinessDate(timezone);
+
     let totalPrice = 0;
     let totalItems = 0;
     const orderItems = [];
@@ -135,22 +146,22 @@ export const createOrder = async ({
         throw new Error('ITEM_UNAVAILABLE');
       }
 
-      // const qty = parseInt(cartItem.quantity);
-      // if (!Number.isFinite(qty) || qty <= 0) {
-      //   throw new Error('INVALID_QUANTITY');
-      // }
+      const reserveResult = await reserveInventoryForItem({
+        menuItem,
+        quantity: qty,
+        businessDate
+      });
 
-      // if (typeof menuItem?.stock === 'number' && menuItem.stock < qty) {
-      //   throw new Error('ITEM_OUT_OF_STOCK');
-      // }
-
-      const result = await menuCache.deductStock(itemId, qty);
-      
-      if (!result.success) {
-        throw new Error(`ITEM_OUT_OF_STOCK: ${cartItem.name} chỉ còn ${result.remaining} món`);
+      if (!reserveResult.success) {
+        throw new Error('ITEM_OUT_OF_STOCK');
       }
 
-      deductedRedisItems.push({ itemId, qty });
+      reservedInventory.push({
+        menuItemId: itemId,
+        restaurantId: menuItem.restaurantId,
+        businessDate,
+        quantity: qty
+      });
 
       const currentPrice = typeof menuItem?.price === 'number' ? menuItem.price : 0;
       const snapshotPrice = typeof cartItem.priceSnapshot === 'number'
@@ -270,15 +281,20 @@ export const createOrder = async ({
     } catch (pgError) {
       logger.error('Postgres Rollback failed:', pgError.message);
     }
-    if (deductedRedisItems.length > 0) {
+    if (reservedInventory.length > 0) {
       try {
-        const rollbackPromises = deductedRedisItems.map(item => 
-          menuCache.rollbackStock(item.itemId, item.qty)
+        const rollbackPromises = reservedInventory.map((item) =>
+          rollbackInventoryForItem({
+            menuItemId: item.menuItemId,
+            restaurantId: item.restaurantId,
+            businessDate: item.businessDate,
+            quantity: item.quantity
+          })
         );
         await Promise.all(rollbackPromises);
-        logger.info(`Rolled back ${deductedRedisItems.length} items to Redis`);
-      } catch (redisError) {
-        logger.error('Redis Rollback failed (Data Inconsistency!):', redisError.message);
+        logger.info(`Rolled back ${reservedInventory.length} inventory reservations`);
+      } catch (rollbackError) {
+        logger.error('Inventory rollback failed (Data Inconsistency!):', rollbackError.message);
       }
     }
 
@@ -346,6 +362,10 @@ export const previewOrder = async ({
   const itemIds = [...new Set(cartItems.map((item) => item._id || item.itemId))];
   const menuItems = await menuService.getMenuItems(itemIds);
 
+  const restaurantMeta = await getRestaurantByPublicId(targetRestaurantId);
+  const timezone = resolveRestaurantTimezone(restaurantMeta);
+  const businessDate = getBusinessDate(timezone);
+
   let totalPrice = 0;
   const previewItems = [];
   const priceUpdates = [];
@@ -364,7 +384,12 @@ export const previewOrder = async ({
       throw new Error('INVALID_QUANTITY');
     }
 
-    if (typeof menuItem?.stock === 'number' && menuItem.stock < qty) {
+    const inventory = await getRemainingQuantity({
+      menuItem,
+      businessDate
+    });
+
+    if (typeof inventory.remainingQuantity === 'number' && inventory.remainingQuantity < qty) {
       throw new Error('ITEM_OUT_OF_STOCK');
     }
 
@@ -668,6 +693,14 @@ export const cancelOrder = async (orderExternalId, { reason, cancelledBy }) => {
     const orderId = updated.id;
     const orderItems = await orderRepository.getOrderItemsOnly(client, orderId);
 
+    const orderSnapshot = await orderRepository.getOrderDetailByExternalId(orderExternalId);
+    const restaurantMeta = await getRestaurantByPublicId(orderSnapshot?.restaurantId);
+    const timezone = resolveRestaurantTimezone(restaurantMeta);
+    const businessDate = getBusinessDate(
+      timezone,
+      orderSnapshot?.createdAt ? new Date(orderSnapshot.createdAt) : new Date()
+    );
+
     // Update payment status
     await orderRepository.updatePaymentStatus(client, {
       orderId,
@@ -677,12 +710,17 @@ export const cancelOrder = async (orderExternalId, { reason, cancelledBy }) => {
     await client.query('COMMIT');
 
     // Update Redis tracking
-    if (orderItems) {
-      const rollbackPromises = orderItems.map(item => 
-        menuCache.rollbackStock(item.itemid, item.quantity)
+    if (orderItems && restaurantMeta?._id) {
+      const rollbackPromises = orderItems.map((item) =>
+        rollbackInventoryForItem({
+          menuItemId: item.itemid,
+          restaurantId: restaurantMeta._id,
+          businessDate,
+          quantity: item.quantity
+        })
       );
       await Promise.all(rollbackPromises);
-      logger.info(`Đã hoàn kho Redis cho ${orderItems.length} món của đơn hàng ${orderExternalId}`);
+      logger.info(`Đã hoàn kho cho ${orderItems.length} món của đơn hàng ${orderExternalId}`);
     }
     const activeOrderKey = `${ACTIVE_ORDER_PREFIX}${orderId}`;
     await redisClient.hSet(activeOrderKey, 'status', 'cancelled');

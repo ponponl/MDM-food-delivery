@@ -2,9 +2,16 @@ import { v2 as cloudinary } from 'cloudinary';
 import logger from '../../config/logger.js';
 import { MenuRepository } from './menuRepo.js';
 import { invalidateRestaurantCache } from '../restaurant/restaurantCache.js';
-import { menuCache } from './menuCache.js';
+import {
+  attachInventoryToMenuItems,
+  getMenuItemWithInventory,
+  getBusinessDate,
+  resolveRestaurantTimezone
+} from '../inventory/inventoryService.js';
+import { RestaurantRepository } from '../restaurant/restaurantRepo.js';
 
 const menuRepo = new MenuRepository();
+const restaurantRepo = new RestaurantRepository();
 
 const getPublicIdFromUrl = (url) => {
   const parts = url.split('/');
@@ -14,24 +21,24 @@ const getPublicIdFromUrl = (url) => {
 };
 
 export const getMenuItem = async (itemId) => {
-  return await menuRepo.findMenuItemById(itemId);
+  const menuItem = await menuRepo.findMenuItemById(itemId);
+  if (!menuItem) return null;
+  return await getMenuItemWithInventory(menuItem);
 };
 
 export const getRestaurantMenu = async (publicId) => {
   const menu = await menuRepo.findRestaurantMenu(publicId);
   if (!menu || menu.length === 0) return [];
 
-  const enrichedMenu = await Promise.all(
-    menu.map(async (item) => {
-      const liveStock = await menuCache.getCurrentStock(item.itemId);
+  const restaurant = await restaurantRepo.findByPublicId(publicId, { includeMenu: false });
+  const timezone = resolveRestaurantTimezone(restaurant);
+  const businessDate = getBusinessDate(timezone);
 
-      return {
-        ...item,
-        stock: liveStock !== null ? liveStock : item.stock
-      };
-    })
-  );
-  return enrichedMenu;
+  return await attachInventoryToMenuItems({
+    menuItems: menu,
+    restaurantId: restaurant?._id || menu?.[0]?.restaurantId,
+    businessDate
+  });
 };
 
 export const addDish = async (publicId, body, file) => {
@@ -44,12 +51,6 @@ export const addDish = async (publicId, body, file) => {
     available: body.available === 'true' || true
   };
   const updated = await menuRepo.addMenuItem(publicId, dishData);
-  const newDish = updated.menu[updated.menu.length - 1];
-  await menuCache.initStock(newDish._id, dishData.stock);
-  // if (updated && updated.menu) {
-  //   const newDish = updated.menu[updated.menu.length - 1];
-  //   await menuCache.setItemStock(newDish._id || newDish.itemId, dishData.stock);
-  // }
   await invalidateRestaurantCache(publicId, { includeMenu: true });
   return updated;
 };
@@ -67,9 +68,6 @@ export const updateDish = async (publicId, itemId, body, file) => {
   if (imageUrl) updateData.images = [imageUrl];
 
   const updated = await menuRepo.updateMenuItem(publicId, itemId, updateData);
-  if (updateData.stock !== undefined) {
-    await menuCache.setItemStock(itemId, updateData.stock);
-  }
   await invalidateRestaurantCache(publicId, { includeMenu: true });
   return updated;
 };

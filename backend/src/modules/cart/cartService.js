@@ -140,7 +140,10 @@ export const addItemToCart = async (
       : 0;
     const nextQty = existingQty + quantity;
 
-    if (typeof item.stock === 'number' && item.stock < nextQty) {
+    const availableQty = Number.isFinite(item?.remainingQuantity)
+      ? item.remainingQuantity
+      : item?.stock;
+    if (typeof availableQty === 'number' && availableQty < nextQty) {
       throw new Error('ITEM_OUT_OF_STOCK');
     }
 
@@ -207,7 +210,10 @@ export const updateItemQuantity = async (
       throw new Error('ITEM_UNAVAILABLE');
     }
 
-    if (typeof item.stock === 'number' && item.stock < quantity) {
+    const availableQty = Number.isFinite(item?.remainingQuantity)
+      ? item.remainingQuantity
+      : item?.stock;
+    if (typeof availableQty === 'number' && availableQty < quantity) {
       throw new Error('ITEM_OUT_OF_STOCK');
     }
 

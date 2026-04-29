@@ -33,6 +33,10 @@ const restaurantSchema = new mongoose.Schema({
     images: [String],
     background: [String],
     menu: [menuItemSchema],
+    timezone: {
+        type: String,
+        default: 'Asia/Ho_Chi_Minh'
+    },
     openTime: String,
     closeTime: String,
     totalReview: Number,
