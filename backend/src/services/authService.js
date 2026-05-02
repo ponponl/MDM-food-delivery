@@ -1,8 +1,8 @@
 import bcrypt from 'bcrypt';
-import pool from '../config/postgres.js';
 import Restaurant from '../modules/restaurant/restaurantModel.js';
 import { AppError } from '../middlewares/errorHandler.js';
 import { CATEGORY_MAP } from '../modules/restaurant/restaurantRepo.js';
+import { authRepository } from '../repositories/authRepository.js';
 
 class AuthService {
     async registerMerchant(payload) {
@@ -12,11 +12,8 @@ class AuthService {
             throw new AppError('Vui lòng cung cấp đầy đủ thông tin yêu cầu', 400);
         }
 
-        const existingAccount = await pool.query(
-            'SELECT id FROM accounts WHERE username = $1 OR email = $2',
-            [username, email]
-        );
-        if (existingAccount.rows.length > 0) {
+        const existingAccounts = await authRepository.findAccountByUsernameOrEmail(username, email);
+        if (existingAccounts.length > 0) {
             throw new AppError('Username hoặc Email đã được sử dụng', 400);
         }
 
@@ -26,13 +23,13 @@ class AuthService {
         let accountId = null;
 
         try {
-            const accountResult = await pool.query(
-                `INSERT INTO accounts (username, email, password, role) 
-                 VALUES ($1, $2, $3, $4) RETURNING id`,
-                [username, email, hashedPassword, 'merchant']
-            );
+            const account = await authRepository.createMerchantAccount({
+                username,
+                email,
+                password: hashedPassword
+            });
             
-            accountId = accountResult.rows[0].id;
+            accountId = account.id;
 
             const mappedType = CATEGORY_MAP[type.toLowerCase()] || type;
             const publicId = Math.random().toString(36).substring(2, 10); 
@@ -58,16 +55,13 @@ class AuthService {
 
             await newRestaurant.save();
 
-            await pool.query(
-                `UPDATE accounts SET restaurant_public_id = $1 WHERE id = $2`,
-                [publicId, accountId]
-            );
+            await authRepository.updateAccountRestaurantPublicId(accountId, publicId);
 
             return accountId;
 
         } catch (error) {
             if (accountId) {
-                await pool.query('DELETE FROM accounts WHERE id = $1', [accountId]);
+                await authRepository.deleteAccountById(accountId);
             }
             throw new AppError(`Đăng ký nhà hàng thất bại: ${error.message}`, 500);
         }
@@ -78,12 +72,8 @@ class AuthService {
             throw new AppError('Vui lòng cung cấp username và password', 400);
         }
 
-        const result = await pool.query(
-            "SELECT * FROM accounts WHERE username = $1 AND role = 'merchant'",
-            [username]
-        );
+        const user = await authRepository.findAccountByUsernameAndRole(username, 'merchant');
 
-        const user = result.rows[0];
         if (!user) {
             throw new AppError("Tên đăng nhập hoặc mật khẩu không đúng", 401);
         }
@@ -108,12 +98,8 @@ class AuthService {
             throw new AppError('Merchant account id is required', 400);
         }
 
-        const result = await pool.query(
-            "SELECT * FROM accounts WHERE id = $1 AND role = 'merchant'",
-            [accountId]
-        );
+        const user = await authRepository.findAccountByIdAndRole(accountId, 'merchant');
 
-        const user = result.rows[0];
         if (!user) {
             throw new AppError('Merchant account not found', 404);
         }

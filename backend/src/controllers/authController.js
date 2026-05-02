@@ -39,7 +39,7 @@ class AuthController {
         delete sanitizedUser.user_id;
 
         res
-            .cookie('accessToken', tokens.accessToken, cookieOptions(15 * 60 * 1000))
+            .cookie('accessToken', tokens.accessToken, cookieOptions(12 * 60 * 60 * 1000))
             .cookie('refreshToken', tokens.refreshToken, cookieOptions(7 * 24 * 60 * 60 * 1000))
             .status(200).json({
                 status: 'success',

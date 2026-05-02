@@ -229,7 +229,10 @@ export class OrderRepository {
       .map((status) => (typeof status === 'string' ? status.toLowerCase() : status));
     const result = await client.query(
       `UPDATE orders
-       SET status = $1, driverId = COALESCE($4, driverId)
+       SET 
+         status = $1::text::order_status, 
+         driverId = COALESCE($4, driverId),
+         completed_at = CASE WHEN $1::text = 'completed' THEN NOW() ELSE completed_at END
        WHERE externalId = $2 AND LOWER(status::text) = ANY($3)
        RETURNING id, status`,
       [toStatus, orderExternalId, statusList, driverId || null]

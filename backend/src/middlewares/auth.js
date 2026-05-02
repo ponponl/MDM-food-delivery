@@ -6,7 +6,7 @@ export const refreshTokenStore = new Set();
 
 export const generateTokens = (payload) => {
     const accessToken = jwt.sign(payload, config.jwt.secret, {
-        expiresIn: config.jwt.expires || '15m'
+        expiresIn: config.jwt.expires || '12h'
     });
 
     const refreshToken = jwt.sign(payload, config.jwt.refreshSecret, {
@@ -18,7 +18,7 @@ export const generateTokens = (payload) => {
     return {
         accessToken,
         refreshToken,
-        expiresIn: config.jwt.expires || '15m'
+        expiresIn: config.jwt.expires || '12h'
     };
 };
 

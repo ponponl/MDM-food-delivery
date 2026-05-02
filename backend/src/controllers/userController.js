@@ -37,7 +37,7 @@ class UserController {
         });
 
         res
-            .cookie('accessToken', tokens.accessToken, buildCookieOptions(15 * 60 * 1000))
+            .cookie('accessToken', tokens.accessToken, buildCookieOptions(12 * 60 * 60 * 1000))
             .cookie('refreshToken', tokens.refreshToken, buildCookieOptions(7 * 24 * 60 * 60 * 1000))
             .status(201).json({
             status: 'success',
@@ -70,7 +70,7 @@ class UserController {
         });
 
         res
-            .cookie('accessToken', tokens.accessToken, buildCookieOptions(15 * 60 * 1000))
+            .cookie('accessToken', tokens.accessToken, buildCookieOptions(12 * 60 * 60 * 1000))
             .cookie('refreshToken', tokens.refreshToken, buildCookieOptions(7 * 24 * 60 * 60 * 1000))
             .status(200).json({
             status: 'success',
@@ -133,7 +133,7 @@ class UserController {
         delete user.password;
 
         res
-            .cookie('accessToken', tokens.accessToken, buildCookieOptions(15 * 60 * 1000))
+            .cookie('accessToken', tokens.accessToken, buildCookieOptions(12 * 60 * 60 * 1000))
             .cookie('refreshToken', tokens.refreshToken, buildCookieOptions(7 * 24 * 60 * 60 * 1000))
             .status(200).json({
                 status: 'success',

@@ -24,7 +24,8 @@ export const mapOrderDetailRow = (row) => {
             name: row.username,
             phone: row.userphone
         },
-        createdAt: row.created_at
+        createdAt: row.created_at,
+        completedAt: row.completed_at
     };
 };
 
@@ -36,7 +37,8 @@ export const mapOrderSummaryRow = (row) => ({
     status: row.status,
     totalPrice: parseFloat(row.totalprice),
     totalItems: row.totalitem ?? null,
-    createdAt: row.created_at
+    createdAt: row.created_at,
+    completedAt: row.completed_at
 });
 
 export const buildOrdersPagination = (rows, limit, offset) => {
