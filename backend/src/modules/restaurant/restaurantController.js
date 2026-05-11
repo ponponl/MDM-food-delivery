@@ -17,6 +17,13 @@ import {
     isRedisReady
 } from './restaurantCache.js';
 
+const stripMenuField = (restaurant) => {
+    if (!restaurant) return restaurant;
+    const payload = restaurant?.toObject ? restaurant.toObject() : restaurant;
+    if ('menu' in payload) delete payload.menu;
+    return payload;
+};
+
 export const getRestaurant = async (req, res) => {
     try {
         const { name, category, limit } = req.query;
@@ -25,7 +32,8 @@ export const getRestaurant = async (req, res) => {
         const data = (name || category)
             ? await restaurantService.searchRestaurants({ name, category })
             : await restaurantService.getAllRestaurants(parsedLimit);
-        res.status(200).json(data);
+        const cleaned = Array.isArray(data) ? data.map(stripMenuField) : data;
+        res.status(200).json(cleaned);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -150,12 +158,18 @@ export const getSummary = async (req, res) => {
 
         const categories = await categoryService.getAllCategories();
         const summary = await restaurantService.getRestaurantsSummary(categories, 5);
+        const cleanedSummary = Object.fromEntries(
+            Object.entries(summary || {}).map(([key, items]) => [
+                key,
+                Array.isArray(items) ? items.map(stripMenuField) : items
+            ])
+        );
 
         if (isRedisReady()) {
-            await cacheRestaurantSummary(summary);
+            await cacheRestaurantSummary(cleanedSummary);
         }
 
-        res.status(200).json(summary);
+        res.status(200).json(cleanedSummary);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
