@@ -2,6 +2,7 @@ import { messageQueue } from '../../config/queue.js';
 import pgPool from '../../config/postgres.js';
 import { OrderRepository } from './orderRepo.js';
 import {RestaurantRepository} from '../restaurant/restaurantRepo.js';
+import { getRestaurantMenu } from '../menu/menuService.js';
 
 const restaurantRepo = new RestaurantRepository();
 const orderRepository = new OrderRepository();
@@ -10,15 +11,19 @@ export const generateOrders = async (req, res, next) => {
     try {
       const { restaurantId, numberOfOrders = 50, daysInPast = 30 } = req.body;
 
-      const restaurant = await restaurantRepo.findByPublicId(restaurantId, { includeMenu: true });
-      
-      if (!restaurant || !restaurant.menu || restaurant.menu.length === 0) {
+      const restaurant = await restaurantRepo.findByPublicId(restaurantId, { includeMenu: false });
+      if (!restaurant) {
         return res.status(400).json({ 
           message: 'The restaurant does not exist or it does not have any items' 
         });
       }
 
-      const menu = restaurant.menu; 
+      const menu = await getRestaurantMenu(restaurantId);
+      if (!menu || menu.length === 0) {
+        return res.status(400).json({ 
+          message: 'The restaurant does not exist or it does not have any items' 
+        });
+      }
       let totalGeneratedRevenue = 0;
 
       for (let i = 0; i < numberOfOrders; i++) {
@@ -27,7 +32,7 @@ export const generateOrders = async (req, res, next) => {
         pastDate.setDate(pastDate.getDate() - randomDaysAgo);
         pastDate.setHours(Math.floor(Math.random() * 24), Math.floor(Math.random() * 60));
 
-        const maxItems = Math.min(5, restaurant.menu.length);
+        const maxItems = Math.min(5, menu.length);
 
         const numItems = Math.floor(Math.random() * maxItems) + 1;
         const orderItems = [];
@@ -41,7 +46,7 @@ export const generateOrders = async (req, res, next) => {
             name: randomDish.name,
             price: randomDish.price,
             quantity: quantity,
-            product_id: randomDish._id || randomDish.id 
+            product_id: randomDish.itemId || randomDish._id || randomDish.id 
           });
 
           orderTotalPrice += (randomDish.price * quantity);

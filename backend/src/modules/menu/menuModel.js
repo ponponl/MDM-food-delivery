@@ -1,13 +1,33 @@
 import mongoose from 'mongoose';
 
-const menuItemSchema = new mongoose.Schema({
-  name: String,
-  price: Number,
-  description: String,
-  images: [String],
-  category: String,
-  available: { type: Boolean, default: true },
-  stock: { type: Number, default: 0 }
-});
+const menuSchema = new mongoose.Schema(
+  {
+    restaurantId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Restaurant'
+    },
+    restaurantPublicId: String,
+    restaurantName: String,
+    name: String,
+    price: Number,
+    category: String,
+    available: { type: Boolean, default: true },
+    stock: { type: Number, default: 0 },
+    description: String,
+    images: [String],
+    totalRatings: { type: Number, default: 0 },
+    countRatings: { type: Number, default: 0 },
+    totalReviews: { type: Number, default: 0 }
+  },
+  {
+    timestamps: true,
+    toJSON: { versionKey: false },
+    toObject: { versionKey: false }
+  }
+);
 
-export default menuItemSchema;
+menuSchema.index({ restaurantId: 1 });
+menuSchema.index({ restaurantPublicId: 1 });
+menuSchema.index({ name: 'text', category: 'text' });
+
+export default mongoose.model('Menu', menuSchema, 'menu');

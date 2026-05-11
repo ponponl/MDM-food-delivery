@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import Restaurant from '../modules/restaurant/restaurantModel.js';
+import Menu from '../modules/menu/menuModel.js';
 import redisClient from '../config/redis.js';
 
 cron.schedule('*/5 * * * *', async () => {
@@ -9,9 +9,9 @@ cron.schedule('*/5 * * * *', async () => {
     const itemId = key.split(':')[2];
     const currentStock = await redisClient.get(key);
 
-    await Restaurant.updateOne(
-      { "menu._id": itemId },
-      { $set: { "menu.$.stock": parseInt(currentStock) } }
+    await Menu.updateOne(
+      { _id: itemId },
+      { $set: { stock: parseInt(currentStock) } }
     );
   }
   console.log("Đã đồng bộ tồn kho từ Redis về MongoDB");

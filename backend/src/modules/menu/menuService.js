@@ -1,5 +1,4 @@
 import { v2 as cloudinary } from 'cloudinary';
-import logger from '../../config/logger.js';
 import { MenuRepository } from './menuRepo.js';
 import { invalidateRestaurantCache } from '../restaurant/restaurantCache.js';
 import {
@@ -43,16 +42,28 @@ export const getRestaurantMenu = async (publicId) => {
 
 export const addDish = async (publicId, body, file) => {
   const imageUrl = file ? file.path : null;
+  const restaurant = await restaurantRepo.findByPublicId(publicId, { includeMenu: false });
+  if (!restaurant) return null;
+
+  const available = body.available === undefined
+    ? true
+    : body.available === 'true' || body.available === true;
+
   const dishData = {
     ...body,
+    restaurantId: restaurant._id,
+    restaurantPublicId: restaurant.publicId,
+    restaurantName: restaurant.name,
     price: Number(body.price),
     stock: Number(body.stock),
     images: imageUrl ? [imageUrl] : [],
-    available: body.available === 'true' || true
+    available
   };
-  const updated = await menuRepo.addMenuItem(publicId, dishData);
+
+  await menuRepo.addMenuItem(dishData);
   await invalidateRestaurantCache(publicId, { includeMenu: true });
-  return updated;
+  const menu = await getRestaurantMenu(publicId);
+  return { menu };
 };
 
 export const updateDish = async (publicId, itemId, body, file) => {
@@ -64,12 +75,23 @@ export const updateDish = async (publicId, itemId, body, file) => {
       await Promise.all(deletePromises);
     }
   }
-  const updateData = { ...body, price: Number(body.price), stock: Number(body.stock), available: body.available === 'true' };
+  const available = body.available === undefined
+    ? undefined
+    : body.available === 'true' || body.available === true;
+
+  const updateData = {
+    ...body,
+    price: Number(body.price),
+    stock: Number(body.stock),
+    ...(available !== undefined ? { available } : {})
+  };
   if (imageUrl) updateData.images = [imageUrl];
 
   const updated = await menuRepo.updateMenuItem(publicId, itemId, updateData);
+  if (!updated) return null;
   await invalidateRestaurantCache(publicId, { includeMenu: true });
-  return updated;
+  const menu = await getRestaurantMenu(publicId);
+  return { menu };
 };
 
 export const deleteDish = async (publicId, itemId) => {
@@ -78,9 +100,11 @@ export const deleteDish = async (publicId, itemId) => {
     const deletePromises = dish.images.map(img => cloudinary.uploader.destroy(getPublicIdFromUrl(img)));
     await Promise.all(deletePromises);
   }
-  const updated = await menuRepo.deleteMenuItem(publicId, itemId);
+  const deleted = await menuRepo.deleteMenuItem(publicId, itemId);
+  if (!deleted) return null;
   await invalidateRestaurantCache(publicId, { includeMenu: true });
-  return updated;
+  const menu = await getRestaurantMenu(publicId);
+  return { menu };
 };
 
 // Các hàm khác giữ nguyên logic cũ

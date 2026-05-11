@@ -1,8 +1,7 @@
 import mongoose from 'mongoose';
-import logger from '../../config/logger.js';
-import Restaurant from '../restaurant/restaurantModel.js';
+import Menu from './menuModel.js';
 
-const normalizeMenuItem = (menuItem, restaurantId, restaurantName) => {
+const normalizeMenuItem = (menuItem) => {
   if (!menuItem) return null;
   const stock = Number.isFinite(menuItem.stock) ? menuItem.stock : 0;
   const price = typeof menuItem.price === 'number' ? menuItem.price : 0;
@@ -17,8 +16,9 @@ const normalizeMenuItem = (menuItem, restaurantId, restaurantName) => {
     category: menuItem.category,
     available,
     stock,
-    restaurantId: restaurantId?.toString?.() ?? restaurantId,
-    restaurantName: restaurantName || null
+    restaurantId: menuItem.restaurantId?.toString?.() ?? menuItem.restaurantId,
+    restaurantPublicId: menuItem.restaurantPublicId || null,
+    restaurantName: menuItem.restaurantName || null
   };
 };
 
@@ -27,13 +27,9 @@ export class MenuRepository {
     const itemObjectId = mongoose.Types.ObjectId.isValid(itemId) ? new mongoose.Types.ObjectId(itemId) : null;
     if (!itemObjectId) return null;
 
-    const result = await Restaurant.findOne(
-      { 'menu._id': itemObjectId },
-      { 'menu.$': 1, _id: 1, name: 1 }
-    ).lean();
-
-    if (!result?.menu?.length) return null;
-    return normalizeMenuItem(result.menu[0], result._id, result.name);
+    const result = await Menu.findById(itemObjectId).lean();
+    if (!result) return null;
+    return normalizeMenuItem(result);
   }
 
   async findMenuItemsByIds(itemIds) {
@@ -41,14 +37,9 @@ export class MenuRepository {
     const objectIds = itemIds.map(id => (mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : null)).filter(Boolean);
 
     if (objectIds.length > 0) {
-      const results = await Restaurant.aggregate([
-        { $match: { 'menu._id': { $in: objectIds } } },
-        { $unwind: '$menu' },
-        { $match: { 'menu._id': { $in: objectIds } } },
-        { $project: { _id: 1, name: 1, menu: 1 } }
-      ]);
+      const results = await Menu.find({ _id: { $in: objectIds } }).lean();
       for (const res of results) {
-        const normalized = normalizeMenuItem(res.menu, res._id, res.name);
+        const normalized = normalizeMenuItem(res);
         if (normalized?.itemId) items[normalized.itemId] = normalized;
       }
     }
@@ -56,34 +47,28 @@ export class MenuRepository {
   }
 
   async findMenuItem(publicId, itemId) {
-    const restaurant = await Restaurant.findOne({ publicId, "menu._id": itemId }, { "menu.$": 1 }).lean();
-    return restaurant?.menu?.[0] || null;
+    return await Menu.findOne({ _id: itemId, restaurantPublicId: publicId }).lean();
   }
 
   async findRestaurantMenu(publicId) {
-    const restaurant = await Restaurant.findOne({ publicId }).lean();
-    if (!restaurant) return [];
-    return (restaurant.menu || []).map(item => normalizeMenuItem(item, restaurant._id, restaurant.name));
+    const items = await Menu.find({ restaurantPublicId: publicId }).lean();
+    if (!items || items.length === 0) return [];
+    return items.map(item => normalizeMenuItem(item));
   }
 
-  async addMenuItem(publicId, itemData) {
-    return await Restaurant.findOneAndUpdate({ publicId }, { $push: { menu: itemData } }, { new: true, runValidators: true });
+  async addMenuItem(itemData) {
+    return await Menu.create(itemData);
   }
 
   async updateMenuItem(publicId, itemId, updateData) {
-    return await Restaurant.findOneAndUpdate(
-      { publicId, "menu._id": itemId },
-      { $set: { 
-          "menu.$.name": updateData.name, "menu.$.price": updateData.price,
-          "menu.$.description": updateData.description, "menu.$.category": updateData.category,
-          "menu.$.stock": updateData.stock, "menu.$.available": updateData.available,
-          ...(updateData.images && { "menu.$.images": updateData.images })
-      }},
-      { new: true }
+    return await Menu.findOneAndUpdate(
+      { _id: itemId, restaurantPublicId: publicId },
+      { $set: updateData },
+      { new: true, runValidators: true }
     );
   }
 
   async deleteMenuItem(publicId, itemId) {
-    return await Restaurant.findOneAndUpdate({ publicId }, { $pull: { menu: { _id: itemId } } }, { new: true });
+    return await Menu.findOneAndDelete({ _id: itemId, restaurantPublicId: publicId });
   }
 }

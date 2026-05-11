@@ -1,4 +1,5 @@
 import Restaurant from './restaurantModel.js'
+import Menu from '../menu/menuModel.js';
 
 export const CATEGORY_MAP = {
     'burger': 'Burger',
@@ -80,11 +81,6 @@ export class RestaurantRepository {
 
     async findByPublicId(publicId, { includeMenu = true } = {}) {
         const query = Restaurant.findOne({ publicId });
-
-        if (!includeMenu) {
-            query.select('-menu');
-        }
-
         return await query;
     }
 
@@ -93,12 +89,7 @@ export class RestaurantRepository {
             return null;
         }
 
-        const query = Restaurant.findById(restaurantId);
-        if (!includeMenu) {
-            query.select('-menu');
-        }
-
-        return await query;
+        return await Restaurant.findById(restaurantId);
     }
 
     async findByPublicIds(publicIds = [], { includeMenu = false } = {}) {
@@ -110,13 +101,7 @@ export class RestaurantRepository {
             return [];
         }
 
-        const query = Restaurant.find({ publicId: { $in: ids } });
-
-        if (!includeMenu) {
-            query.select('-menu');
-        }
-
-        return await query.lean();
+        return await Restaurant.find({ publicId: { $in: ids } }).lean();
     }
 
     async search(query, limit = 20) {
@@ -126,16 +111,34 @@ export class RestaurantRepository {
 
         const searchRegex = new RegExp(escapeRegex(query.trim()), 'i');
 
-        return await Restaurant.find(
+        const baseMatches = await Restaurant.find(
             {
                 $or: [
                     { name: searchRegex },
-                    { type: searchRegex },
-                    { 'menu.name': searchRegex },
-                    { 'menu.category': searchRegex }
+                    { type: searchRegex }
                 ]
             }
-        ).limit(limit);
+        );
+
+        const menuRestaurantIds = await Menu.distinct('restaurantId', {
+            restaurantId: { $ne: null },
+            $or: [
+                { name: searchRegex },
+                { category: searchRegex }
+            ]
+        });
+
+        const menuMatches = menuRestaurantIds.length > 0
+            ? await Restaurant.find({ _id: { $in: menuRestaurantIds } })
+            : [];
+
+        const merged = new Map();
+        [...baseMatches, ...menuMatches].forEach((item) => {
+            if (!item?._id) return;
+            merged.set(String(item._id), item);
+        });
+
+        return Array.from(merged.values()).slice(0, limit);
     }
 
     async findNearest(lng, lat, maxDistance = 5000) { // maxDistance tính bằng mét (ví dụ 10km)

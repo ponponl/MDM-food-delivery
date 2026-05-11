@@ -1,8 +1,10 @@
 import { v2 as cloudinary } from 'cloudinary';
 import {RestaurantRepository} from './restaurantRepo.js';
 import { invalidateRestaurantCache } from './restaurantCache.js';
+import { MenuRepository } from '../menu/menuRepo.js';
 
 const repo = new RestaurantRepository();
+const menuRepo = new MenuRepository();
 
 const getPublicIdFromUrl = (url) => {
   const parts = url.split('/');
@@ -23,11 +25,15 @@ export const searchRestaurants = async ({ name, category } = {}) => {
 };
 
 export const getRestaurantByPublicId = async (publicId, { includeMenu = true } = {}) => {
-    const restaurant = await repo.findByPublicId(publicId, { includeMenu });
+    const restaurant = await repo.findByPublicId(publicId, { includeMenu: false });
     if (!restaurant) {
         throw new Error('Restaurant not found');
     }
-    return restaurant;
+    if (!includeMenu) return restaurant;
+
+    const payload = restaurant?.toObject ? restaurant.toObject() : restaurant;
+    const menu = await menuRepo.findRestaurantMenu(publicId);
+    return { ...payload, menu };
 }
 
 export const getRestaurantsSummary = async (categories = [], limit = 5) => {
@@ -35,15 +41,7 @@ export const getRestaurantsSummary = async (categories = [], limit = 5) => {
         categories.map(async (category) => {
             const items = await repo.findByCategoryLimited(category.slug, limit);
             const normalizedItems = (items || []).map((item) => {
-                const payload = item?.toObject ? item.toObject() : item;
-                const avgRating = Number.isFinite(Number(payload?.avgRating)) ? Number(payload.avgRating) : 0;
-                const totalReview = Number.isFinite(Number(payload?.totalReview)) ? Number(payload.totalReview) : 0;
-
-                return {
-                    ...payload,
-                    avgRating,
-                    totalReview
-                };
+                return item?.toObject ? item.toObject() : item;
             });
 
             return [category.slug, normalizedItems];
@@ -63,7 +61,7 @@ export const getRestaurantsByPublicIds = async (publicIds = [], { includeMenu = 
 };
 
 export const updateRestaurantDetails = async (publicId, rawBody, files) => {
-    const currentRestaurant = await repo.findByPublicId(publicId);
+    const currentRestaurant = await repo.findByPublicId(publicId, { includeMenu: false });
     if (!currentRestaurant) return null;
     const newImageUrl = files?.image?.[0]?.path;
     const newBackgroundUrl = files?.background?.[0]?.path;

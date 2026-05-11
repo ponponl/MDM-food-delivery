@@ -5,6 +5,7 @@ export const addDish = async (req, res) => {
     const { publicId } = req.body;
     if (!publicId) return res.status(400).json({ message: "Thiếu publicId nhà hàng." });
     const result = await menuService.addDish(publicId, req.body, req.file);
+    if (!result) return res.status(404).json({ message: "Nhà hàng không tồn tại." });
     res.status(201).json({ message: "Thêm thành công", menu: result.menu });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -17,6 +18,7 @@ export const updateDish = async (req, res) => {
     const { itemId } = req.params;
     if (!publicId) return res.status(400).json({ message: "Thiếu publicId nhà hàng." });
     const result = await menuService.updateDish(publicId, itemId, req.body, req.file);
+    if (!result) return res.status(404).json({ message: "Món ăn không tồn tại." });
     res.status(200).json({ message: "Cập nhật thành công", menu: result.menu});
   } catch (error) {
     res.status(500).json({ message: error.message });

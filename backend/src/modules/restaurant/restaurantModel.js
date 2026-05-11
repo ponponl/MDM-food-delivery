@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import menuItemSchema from '../menu/menuModel.js';
 
 const restaurantSchema = new mongoose.Schema({
     publicId: String,
@@ -32,15 +31,12 @@ const restaurantSchema = new mongoose.Schema({
     phone: String,
     images: [String],
     background: [String],
-    menu: [menuItemSchema],
     timezone: {
         type: String,
         default: 'Asia/Ho_Chi_Minh'
     },
     openTime: String,
-    closeTime: String,
-    totalReview: Number,
-    avgRating: Number
+    closeTime: String
 }, {
     toJSON: {
         versionKey: false,

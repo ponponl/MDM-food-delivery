@@ -48,9 +48,7 @@ class AuthService {
                     location: address.location
                 },
                 openTime,
-                closeTime,
-                totalReview: 0,
-                avgRating: 0.0
+                closeTime
             });
 
             await newRestaurant.save();
