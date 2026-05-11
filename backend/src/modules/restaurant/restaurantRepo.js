@@ -162,4 +162,14 @@ export class RestaurantRepository {
             { new: true, runValidators: true }
         );
     }
+
+    async incrementRestaurantRating(restaurantId, rating) {
+        if (!restaurantId) return null;
+        const ratingValue = Number(rating);
+        if (!Number.isFinite(ratingValue)) return null;
+        return await Restaurant.updateOne(
+            { _id: restaurantId },
+            { $inc: { totalReview: ratingValue, ratingCount: 1 } }
+        );
+    }
 }

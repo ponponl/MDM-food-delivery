@@ -15,9 +15,8 @@ const menuSchema = new mongoose.Schema(
     stock: { type: Number, default: 0 },
     description: String,
     images: [String],
-    totalRatings: { type: Number, default: 0 },
-    countRatings: { type: Number, default: 0 },
-    totalReviews: { type: Number, default: 0 }
+    totalReview: { type: Number, default: 0 },
+    ratingCount: { type: Number, default: 0 }
   },
   {
     timestamps: true,

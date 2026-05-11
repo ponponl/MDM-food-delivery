@@ -33,22 +33,43 @@ const OrderReviewPage = () => {
             const restRes = await restaurantApi.getById(order.restaurantId);
             const restaurant = restRes?.data || restRes;
             const menuItems = restaurant?.menu || restaurant?.items || [];
+
+            order.restaurantInfo = {
+              name: restaurant?.name || order.restaurantName || 'Nhà hàng',
+              image:
+                (Array.isArray(restaurant?.images) && restaurant.images[0]) ||
+                order.restaurantImageUrl ||
+                null
+            };
             
             const menuItemMap = {};
             menuItems.forEach(item => {
-              menuItemMap[item._id] = item;
+              const key = item?.itemId || item?._id || item?.id;
+              if (key) {
+                menuItemMap[String(key)] = item;
+              }
             });
             
             order.items = (order.items || []).map(item => {
-              const menuItem = menuItemMap[item.itemId];
+              const key = item?.itemId || item?.id || item?._id;
+              const menuItem = key ? menuItemMap[String(key)] : null;
               return {
                 ...item,
-                name: menuItem?.name || item.name || `Món ăn (Mã: ${item.itemId})`,
-                image: menuItem?.image || menuItem?.images?.[0] || item.image || null,
+                name: menuItem?.name || item.itemName || item.name || `Món ăn (Mã: ${item.itemId})`,
+                image:
+                  menuItem?.image ||
+                  menuItem?.images?.[0] ||
+                  item.itemImageUrl ||
+                  item.image ||
+                  null,
               };
             });
           } catch (err) {
              console.warn('Lỗi lấy thông tin nhà hàng', err);
+             order.restaurantInfo = {
+               name: order.restaurantName || 'Nhà hàng',
+               image: order.restaurantImageUrl || null
+             };
           }
           
           setOrderData(order);
@@ -203,6 +224,34 @@ const OrderReviewPage = () => {
 
       <div className={styles.section}>
         <h2 className={styles.sectionTitle}>Nhà hàng</h2>
+        <div className={styles.restaurantInfoRow}>
+          <div className={styles.restaurantImage}>
+            {orderData.restaurantInfo?.image ? (
+              <img
+                src={orderData.restaurantInfo.image}
+                alt={orderData.restaurantInfo.name}
+              />
+            ) : (
+              <span
+                style={{
+                  display: 'flex',
+                  width: '100%',
+                  height: '100%',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#aaa'
+                }}
+              >
+                <ImageIcon size={24} />
+              </span>
+            )}
+          </div>
+          <div className={styles.restaurantMeta}>
+            <div className={styles.restaurantName}>
+              {orderData.restaurantInfo?.name || 'Nhà hàng'}
+            </div>
+          </div>
+        </div>
         <div className={styles.ratingContainer} style={{ marginBottom: 15 }}>
           {[1, 2, 3, 4, 5].map((star) => {
             const isActive = (hoveredRestaurantStars || restaurantReview.rating) >= star;

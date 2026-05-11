@@ -39,6 +39,28 @@
     overflow: hidden;
 }
 
+.ratingRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    font-size: 0.82rem;
+    color: #6b7280;
+}
+
+.ratingValue {
+    font-weight: 600;
+    color: #111827;
+}
+
+.ratingStar {
+    color: #f59e0b;
+}
+
+.ratingCount {
+    color: #6b7280;
+}
+
 .price {
     font-size: 1rem;
     font-weight: 600;

@@ -36,7 +36,9 @@ const restaurantSchema = new mongoose.Schema({
         default: 'Asia/Ho_Chi_Minh'
     },
     openTime: String,
-    closeTime: String
+    closeTime: String,
+    totalReview: { type: Number, default: 0 },
+    ratingCount: { type: Number, default: 0 }
 }, {
     toJSON: {
         versionKey: false,

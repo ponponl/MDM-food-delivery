@@ -171,12 +171,12 @@ export default function RestaurantPage() {
     //     return `${day}/${month}/${year} ${hours}:${minutes}`;
     // };
 
-    const totalReviews = Number.isFinite(Number(restaurant?.totalReview))
-        ? Number(restaurant.totalReview)
-        : 0;
-    const avgRatingValue = Number.isFinite(Number(restaurant?.avgRating))
-        ? Number(restaurant.avgRating)
-        : 0;
+    const totalReviews = Number.isFinite(Number(restaurant?.ratingCount))
+        ? Number(restaurant.ratingCount)
+        : (Number.isFinite(Number(restaurant?.totalReview)) ? Number(restaurant.totalReview) : 0);
+    const avgRatingValue = Number.isFinite(Number(restaurant?.rating))
+        ? Number(restaurant.rating)
+        : (Number.isFinite(Number(restaurant?.avgRating)) ? Number(restaurant.avgRating) : 0);
     const displayRating = totalReviews > 0 ? avgRatingValue.toFixed(1) : '0';
 
     return (

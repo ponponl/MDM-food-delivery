@@ -6,6 +6,13 @@ const normalizeMenuItem = (menuItem) => {
   const stock = Number.isFinite(menuItem.stock) ? menuItem.stock : 0;
   const price = typeof menuItem.price === 'number' ? menuItem.price : 0;
   const available = menuItem.available === true;
+  const totalReview = Number.isFinite(menuItem.totalReview)
+    ? menuItem.totalReview
+    : (Number.isFinite(menuItem.totalRatings) ? menuItem.totalRatings : 0);
+  const ratingCount = Number.isFinite(menuItem.ratingCount)
+    ? menuItem.ratingCount
+    : (Number.isFinite(menuItem.countRatings) ? menuItem.countRatings : 0);
+  const rating = ratingCount > 0 ? totalReview / ratingCount : 0;
 
   return {
     itemId: menuItem._id?.toString?.() ?? menuItem._id,
@@ -16,6 +23,9 @@ const normalizeMenuItem = (menuItem) => {
     category: menuItem.category,
     available,
     stock,
+    totalReview,
+    ratingCount,
+    rating,
     restaurantId: menuItem.restaurantId?.toString?.() ?? menuItem.restaurantId,
     restaurantPublicId: menuItem.restaurantPublicId || null,
     restaurantName: menuItem.restaurantName || null
@@ -70,5 +80,18 @@ export class MenuRepository {
 
   async deleteMenuItem(publicId, itemId) {
     return await Menu.findOneAndDelete({ _id: itemId, restaurantPublicId: publicId });
+  }
+
+  async incrementMenuRating(itemId, rating) {
+    const itemObjectId = mongoose.Types.ObjectId.isValid(itemId)
+      ? new mongoose.Types.ObjectId(itemId)
+      : null;
+    if (!itemObjectId) return null;
+    const ratingValue = Number(rating);
+    if (!Number.isFinite(ratingValue)) return null;
+    return await Menu.updateOne(
+      { _id: itemObjectId },
+      { $inc: { totalReview: ratingValue, ratingCount: 1 } }
+    );
   }
 }

@@ -1,7 +1,10 @@
 import { ReviewRepository } from './reviewRepo.js';
-import { getRestaurantByPublicId } from '../restaurant/restaurantService.js';
+import { MenuRepository } from '../menu/menuRepo.js';
+import { RestaurantRepository } from '../restaurant/restaurantRepo.js';
+import { invalidateRestaurantCache, invalidateSummaryCache } from '../restaurant/restaurantCache.js';
 
-const reviewRepo = new ReviewRepository();
+const menuRepo = new MenuRepository();
+const restaurantRepo = new RestaurantRepository();
 
 class ReviewService {
   constructor() {
@@ -17,7 +20,7 @@ class ReviewService {
 
     if (!/^[a-fA-F0-9]{24}$/.test(restaurantId)) {
       try {
-        const restaurant = await getRestaurantByPublicId(restaurantId);
+        const restaurant = await restaurantRepo.findByPublicId(restaurantId, { includeMenu: false });
         if (restaurant && restaurant._id) {
           resolvedId = restaurant._id.toString();
         }
@@ -34,7 +37,7 @@ class ReviewService {
     return await this.reviewRepo.trackItemView(String(userId), String(itemId));
   }
 
-async createFullReview(userId, payload) {
+  async createFullReview(userId, payload) {
     const { orderId, orderExternalId, restaurantReview, itemReviews } = payload;
     const resolvedOrderId = orderId || orderExternalId;
 
@@ -42,7 +45,7 @@ async createFullReview(userId, payload) {
       throw new Error('Thiếu mã đơn hàng.');
     }
 
-    const order = await reviewRepo.findOrderById(resolvedOrderId);
+    const order = await this.reviewRepo.findOrderById(resolvedOrderId);
     if (!order) throw new Error('Không tìm thấy đơn hàng.');
 
     if (String(order.userid) !== String(userId)) {
@@ -65,12 +68,42 @@ async createFullReview(userId, payload) {
       throw new Error('Đã quá thời hạn 7 ngày để thực hiện đánh giá.');
     }
 
-    const result = await reviewRepo.createReviewTransaction(
-      order.id, 
-      order.restaurantid, 
-      itemReviews, 
+    const restaurant = await restaurantRepo.findByPublicId(order.restaurantid, { includeMenu: false });
+    if (!restaurant?._id) {
+      throw new Error('Không tìm thấy nhà hàng để đánh giá.');
+    }
+
+    const hasExisting = await this.reviewRepo.hasReviewForOrder(order.id, userId);
+    if (hasExisting) {
+      throw new Error('Bạn đã đánh giá đơn hàng này rồi.');
+    }
+
+    const result = await this.reviewRepo.createReviews({
+      userId,
+      orderId: order.id,
+      restaurantId: restaurant._id,
+      itemReviews,
       restaurantReview
-    );
+    });
+
+    const updateTasks = [];
+
+    if (restaurantReview?.rating > 0) {
+      updateTasks.push(restaurantRepo.incrementRestaurantRating(restaurant._id, restaurantReview.rating));
+    }
+
+    if (Array.isArray(itemReviews) && itemReviews.length > 0) {
+      for (const item of itemReviews) {
+        if (!item?.itemId || item.rating <= 0) continue;
+        updateTasks.push(menuRepo.incrementMenuRating(item.itemId, item.rating));
+      }
+    }
+
+    if (updateTasks.length > 0) {
+      await Promise.all(updateTasks);
+      await invalidateRestaurantCache(order.restaurantid, { includeInfo: true, includeMenu: true });
+      await invalidateSummaryCache();
+    }
 
     this.reviewRepo.trackItemRatings(userId, itemReviews).catch(err => console.error(err));
 

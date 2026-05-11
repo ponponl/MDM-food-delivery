@@ -1,25 +1,54 @@
+import mongoose from 'mongoose';
 import pgPool from '../../config/postgres.js';
 import neo4jDriver from '../../config/neo4j.js';
+import Review from './reviewModel.js';
+
+const normalizeReview = (review) => {
+  if (!review) return null;
+  return {
+    rating: review.rating,
+    comment: review.comment,
+    created_at: review.createdAt,
+    imageUrls: review.imageUrls || [],
+    user_id: review.userId,
+    user_name: review.userName,
+    restaurantId: review.restaurantId,
+    menuId: review.menuId,
+    targetType: review.targetType
+  };
+};
 
 export class ReviewRepository {
   async findReviewsByItemId(itemId) {
-    const query = `
-      SELECT rating, comment, created_at 
-      FROM item_reviews
-      WHERE itemid = $1
-    `;
-    const result = await pgPool.query(query, [itemId]);
-    return result.rows;
+    const itemObjectId = mongoose.Types.ObjectId.isValid(itemId)
+      ? new mongoose.Types.ObjectId(itemId)
+      : null;
+    if (!itemObjectId) return [];
+
+    const reviews = await Review.find({
+      targetType: 'menu',
+      menuId: itemObjectId
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return (reviews || []).map(normalizeReview).filter(Boolean);
   }
 
   async findReviewsByRestaurantId(restaurantId) {
-    const query = `
-      SELECT rating, comment, created_at 
-      FROM restaurant_reviews
-      WHERE restaurantid = $1
-    `;
-    const result = await pgPool.query(query, [restaurantId]);
-    return result.rows;
+    const restaurantObjectId = mongoose.Types.ObjectId.isValid(restaurantId)
+      ? new mongoose.Types.ObjectId(restaurantId)
+      : null;
+    if (!restaurantObjectId) return [];
+
+    const reviews = await Review.find({
+      targetType: 'restaurant',
+      restaurantId: restaurantObjectId
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return (reviews || []).map(normalizeReview).filter(Boolean);
   }
 
   async trackItemView(userId, itemId) {
@@ -68,61 +97,84 @@ export class ReviewRepository {
       await session.close();
     }
   }
-  
-async findOrderById(orderId) {
-  const query = `
-    SELECT id, userid, restaurantid, status, completed_at
-    FROM orders
-    WHERE 
-      (CASE 
-        WHEN $1 ~ '^[0-9]+$' THEN id = $1::bigint 
-        ELSE FALSE 
-      END)
-      OR 
-      (CASE 
-        WHEN $1 ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' 
-        THEN externalid = $1::uuid 
-        ELSE FALSE 
-      END)
-  `;
-  
-  const result = await pgPool.query(query, [String(orderId)]);
-  return result.rows[0];
-}
+  async findOrderById(orderId) {
+    const query = `
+      SELECT id, userid, restaurantid, status, completed_at
+      FROM orders
+      WHERE 
+        (CASE 
+          WHEN $1 ~ '^[0-9]+$' THEN id = $1::bigint 
+          ELSE FALSE 
+        END)
+        OR 
+        (CASE 
+          WHEN $1 ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' 
+          THEN externalid = $1::uuid 
+          ELSE FALSE 
+        END)
+    `;
 
-async createReviewTransaction(orderId, restaurantId, itemReviews, restaurantReview) {
-  const client = await pgPool.connect();
-  try {
-    await client.query('BEGIN');
+    const result = await pgPool.query(query, [String(orderId)]);
+    return result.rows[0];
+  }
 
-    if (restaurantReview) {
-      await client.query(
-        `INSERT INTO restaurant_reviews (orderid, restaurantid, rating, comment, created_at)
-         VALUES ($1, $2, $3, $4, NOW())`,
-        [orderId, restaurantId, restaurantReview.rating, restaurantReview.comment]
-      );
+  async hasReviewForOrder(orderId, userId) {
+    if (!orderId || !userId) return false;
+    const existing = await Review.findOne({
+      orderId: String(orderId),
+      userId: String(userId)
+    })
+      .select({ _id: 1 })
+      .lean();
+    return Boolean(existing);
+  }
+
+  async createReviews({
+    userId,
+    orderId,
+    restaurantId,
+    itemReviews,
+    restaurantReview
+  }) {
+    const docs = [];
+
+    const restaurantRating = Number(restaurantReview?.rating);
+    if (Number.isFinite(restaurantRating)) {
+      docs.push({
+        userId: String(userId),
+        targetType: 'restaurant',
+        restaurantId,
+        menuId: null,
+        orderId: String(orderId),
+        rating: restaurantRating,
+        comment: restaurantReview.comment || '',
+        imageUrls: restaurantReview.imageUrls || [],
+        createdAt: new Date()
+      });
     }
 
-    if (itemReviews && itemReviews.length > 0) {
+    if (Array.isArray(itemReviews) && itemReviews.length > 0) {
       for (const item of itemReviews) {
-        await client.query(
-          `INSERT INTO item_reviews (orderid, itemid, rating, comment, created_at)
-           VALUES ($1, $2, $3, $4, NOW())`,
-          [orderId, item.itemId, item.rating, item.comment]
-        );
+        if (!item?.itemId) continue;
+        if (!mongoose.Types.ObjectId.isValid(item.itemId)) continue;
+        const itemRating = Number(item.rating);
+        if (!Number.isFinite(itemRating)) continue;
+
+        docs.push({
+          userId: String(userId),
+          targetType: 'menu',
+          restaurantId,
+          menuId: new mongoose.Types.ObjectId(item.itemId),
+          orderId: String(orderId),
+          rating: itemRating,
+          comment: item.comment || '',
+          imageUrls: item.imageUrls || [],
+          createdAt: new Date()
+        });
       }
     }
 
-    await client.query('COMMIT');
-    return true;
-  } catch (error) {
-    await client.query('ROLLBACK');
-    if (error.code === '23505') {
-      throw new Error('Bạn đã đánh giá đơn hàng này rồi.');
-    }
-    throw error;
-  } finally {
-    client.release();
+    if (docs.length === 0) return [];
+    return await Review.insertMany(docs);
   }
-}
 }

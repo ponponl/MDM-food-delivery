@@ -117,8 +117,8 @@ export default function CategoryPage() {
                                     key={index} 
                                     image={displayImage} 
                                     title={item.name} 
-                                    rating={item.avgRating ?? 0} 
-                                    ratingQuantity={item.totalReview ?? 0} 
+                                    rating={item.rating ?? item.avgRating ?? 0} 
+                                    ratingQuantity={item.ratingCount ?? item.totalReview ?? 0} 
                                     distance={5} 
                                     deliveryTime={6} 
                                     fee={15} 

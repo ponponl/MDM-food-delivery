@@ -9,8 +9,6 @@
 
 .mainContent {
     flex: 1;
-    margin-left: var(--sidebar-width);
-    margin-top: var(--header-height);
     padding: 1rem;
     scroll-behavior: smooth;
 }
@@ -70,20 +68,13 @@
     background: rgba(0, 0, 0, 0.25);
     color: #ffffff;
     cursor: pointer;
-    font-weight: 700;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: Lexend, sans-serif;
 }
 
 .heroRatingBtn:hover {
     background: rgba(0, 0, 0, 0.45);
-}
-
-.heroRatingValue {
-    font-size: 1rem;
-}
-
-.heroRatingCount {
-    font-size: 0.95rem;
-    opacity: 0.85;
 }
 
 .twoColumnLayout {

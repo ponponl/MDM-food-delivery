@@ -6,6 +6,25 @@ import { MenuRepository } from '../menu/menuRepo.js';
 const repo = new RestaurantRepository();
 const menuRepo = new MenuRepository();
 
+const computeRating = (totalReview, ratingCount) => {
+    const total = Number.isFinite(totalReview) ? totalReview : 0;
+    const count = Number.isFinite(ratingCount) ? ratingCount : 0;
+    return count > 0 ? total / count : 0;
+};
+
+const normalizeRestaurant = (restaurant) => {
+    if (!restaurant) return restaurant;
+    const payload = restaurant?.toObject ? restaurant.toObject() : restaurant;
+    const totalReview = Number.isFinite(payload.totalReview) ? payload.totalReview : 0;
+    const ratingCount = Number.isFinite(payload.ratingCount) ? payload.ratingCount : 0;
+    return {
+        ...payload,
+        totalReview,
+        ratingCount,
+        rating: computeRating(totalReview, ratingCount)
+    };
+};
+
 const getPublicIdFromUrl = (url) => {
   const parts = url.split('/');
   const fileNameWithExtension = parts[parts.length - 1];
@@ -16,12 +35,12 @@ const getPublicIdFromUrl = (url) => {
 
 export const getAllRestaurants = async (limit) => {
     const restaurants = await repo.findAll(limit);
-    return restaurants;
+    return (restaurants || []).map(normalizeRestaurant);
 };
 
 export const searchRestaurants = async ({ name, category } = {}) => {
     const restaurants = await repo.findByFilters({ name, category });
-    return restaurants;
+    return (restaurants || []).map(normalizeRestaurant);
 };
 
 export const getRestaurantByPublicId = async (publicId, { includeMenu = true } = {}) => {
@@ -29,9 +48,9 @@ export const getRestaurantByPublicId = async (publicId, { includeMenu = true } =
     if (!restaurant) {
         throw new Error('Restaurant not found');
     }
-    if (!includeMenu) return restaurant;
+    if (!includeMenu) return normalizeRestaurant(restaurant);
 
-    const payload = restaurant?.toObject ? restaurant.toObject() : restaurant;
+    const payload = normalizeRestaurant(restaurant);
     const menu = await menuRepo.findRestaurantMenu(publicId);
     return { ...payload, menu };
 }
@@ -40,9 +59,7 @@ export const getRestaurantsSummary = async (categories = [], limit = 5) => {
     const summaryEntries = await Promise.all(
         categories.map(async (category) => {
             const items = await repo.findByCategoryLimited(category.slug, limit);
-            const normalizedItems = (items || []).map((item) => {
-                return item?.toObject ? item.toObject() : item;
-            });
+            const normalizedItems = (items || []).map(normalizeRestaurant);
 
             return [category.slug, normalizedItems];
         })
@@ -52,12 +69,13 @@ export const getRestaurantsSummary = async (categories = [], limit = 5) => {
 };
 
 export const getNearestRestaurants = async (lng, lat, maxDistance) => {
-    return await repo.findNearest(lng, lat, maxDistance);
+    const restaurants = await repo.findNearest(lng, lat, maxDistance);
+    return (restaurants || []).map(normalizeRestaurant);
 };
 
 export const getRestaurantsByPublicIds = async (publicIds = [], { includeMenu = false } = {}) => {
     const restaurants = await repo.findByPublicIds(publicIds, { includeMenu });
-    return restaurants;
+    return (restaurants || []).map(normalizeRestaurant);
 };
 
 export const updateRestaurantDetails = async (publicId, rawBody, files) => {

@@ -3,10 +3,11 @@
     border: 0;
     padding: 0;
     min-width: 180px;
+    width: var(--sidebar-width, 180px);
     height: 100vh;
     border-right: 1px solid rgb(223, 220, 220);
     position: fixed;
-    top: 64px;
+    top: var(--header-height, 64px);
     z-index: 1000;
 }
 
