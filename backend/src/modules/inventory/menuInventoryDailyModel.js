@@ -4,13 +4,11 @@ const menuInventoryDailySchema = new mongoose.Schema(
   {
     menuItemId: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      index: true
+      required: true
     },
     restaurantId: {
       type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      index: true
+      required: true
     },
     date: {
       type: String,
