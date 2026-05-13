@@ -6,7 +6,7 @@ const MenuItemsList = ({ groupedMenu, onAddToCart }) => {
     const navigate = useNavigate();
 
     const handleItemClick = (item) => {
-        navigate(`/food/${item._id}`, { state: { foodItem: item } });
+        navigate(`/food/${item.itemId}`, { state: { foodItem: item } });
     };
 
     return (

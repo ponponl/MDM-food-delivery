@@ -108,7 +108,6 @@ export default function CategoryPage() {
                     <div className={styles.menuItems}>
                         <div className={styles.menuCard}>
                             {restaurants.slice(0, 5).map((item, index) => {
-                                console.log("Dữ liệu của 1 nhà hàng:", item);
                                 const displayImage = (Array.isArray(item.images) && item.images.length > 0)
                                     ? item.images[0]
                                     : burger;

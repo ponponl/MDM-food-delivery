@@ -21,7 +21,7 @@ const FoodReviewPage = () => {
         const response = await reviewApi.getReviewsByItemId(id);
         const data = response?.data || response || [];
         setReviews(data);
-        const itemId = foodItem?._id;
+        const itemId = foodItem.itemId;
         if (user && (user.id || user.user_id) && !hasTracked.current) {
           hasTracked.current = true;
           reviewApi.trackItemView({ itemId }).catch(err => console.error("Tracking error", err));
