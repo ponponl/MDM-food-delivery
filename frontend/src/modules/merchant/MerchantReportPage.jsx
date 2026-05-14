@@ -8,6 +8,7 @@ import orderApi from '../../api/orderApi';
 const MerchantReportPage = () => {
     const { user, loading: authLoading } = useAuth();
     const [data, setData] = useState([]);
+    const [kpiData, setKpiData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [timeFrame, setTimeFrame] = useState('week7');
@@ -68,6 +69,13 @@ const MerchantReportPage = () => {
             ...(monthResponse?.data || [])
           ];
           setData(combinedData);
+
+          const kpiResponse = await orderApi.getKpiStats({
+            restaurantId: restaurantId
+          });
+          if (kpiResponse?.data) {
+            setKpiData(kpiResponse.data);
+          }
         } catch (err) {
           console.error('Error fetching revenue stats:', err);
           setError(err?.response?.data?.message || 'Lỗi khi tải dữ liệu thống kê');
@@ -102,53 +110,9 @@ const MerchantReportPage = () => {
 
     const currentYear = today.getFullYear();
 
-    const todayRevenue = useMemo(() => {
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    const todayString = `${year}-${month}-${day}`;
-
-    return data
-      .filter((item) => item.granularity === 'DAY' && item.time_value === todayString)
-      .reduce((sum, item) => sum + Number(item.total_revenue || 0), 0);
-  }, [data, today]);
-
-    const monthOrders = useMemo(() => {
-      return data
-        .filter(
-          (item) =>
-            item.granularity === 'MONTH' &&
-            new Date(item.time_value).getMonth() === currentMonth &&
-            new Date(item.time_value).getFullYear() === currentYear
-        )
-        .reduce((sum, item) => sum + Number(item.total_orders || 0), 0);
-    }, [data, currentMonth, currentYear]);
-
-    const revenueGrowth = useMemo(() => {
-      const currentMonthRevenue = data
-        .filter(
-          (item) =>
-            item.granularity === 'MONTH' &&
-            new Date(item.time_value).getMonth() === currentMonth &&
-            new Date(item.time_value).getFullYear() === currentYear
-        )
-        .reduce((sum, item) => sum + Number(item.total_orders || 0), 0);
-
-      const lastMonthDate = new Date(currentYear, currentMonth - 1);
-      const lastMonthRevenue = data
-        .filter(
-          (item) =>
-            item.granularity === 'MONTH' &&
-            new Date(item.time_value).getMonth() === lastMonthDate.getMonth() &&
-            new Date(item.time_value).getFullYear() === lastMonthDate.getFullYear()
-        )
-        .reduce((sum, item) => sum + Number(item.total_orders || 0), 0);
-
-      if (lastMonthRevenue === 0) {
-        return currentMonthRevenue > 0 ? 100 : 0;
-      }
-      return (((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100).toFixed(1);
-    }, [data, currentMonth, currentYear]);
+    const todayRevenue = kpiData?.todayRevenue || 0;
+    const monthOrders = kpiData?.monthOrders || 0;
+    const revenueGrowth = kpiData?.revenueGrowth || 0;
 
     const chartData = useMemo(() => {
       let filteredData = [];
@@ -306,7 +270,7 @@ const MerchantReportPage = () => {
                   icon={TrendingUp}
                   title="Tăng Trưởng Doanh Thu"
                   value={`${revenueGrowth}%`}
-                  subtitle="so với tháng trước"
+                  subtitle={`Tháng trước: ${formatVND(kpiData?.lastMonthRevenue || 0)}`}
                   bgColor={revenueGrowth >= 0 ? styles.bgBlue : styles.bgRed}
                 />
               </div>

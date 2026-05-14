@@ -68,6 +68,9 @@ const orderApi = {
     }),
   getRevenueStats: (params) => {
     return axiosClient.get('/orders/stats/revenue', { params: params });
+  },
+  getKpiStats: (params) => {
+    return axiosClient.get('/orders/stats/kpi', { params: params });
   }
 };
 
