@@ -1,35 +1,87 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit3, Trash2, Box, Tag, UtensilsCrossed, CookingPot, Loader2, Settings2, LayoutGrid } from 'lucide-react';
+import { Plus, Edit3, Trash2, Box, Tag, UtensilsCrossed, CookingPot, Loader2, Settings2, LayoutGrid, Eye } from 'lucide-react';
 import AddDishCard from '../../components/addDishCard/AddDishCard.jsx';
+import AddCustomizationGroup from '../../components/addCustomizationGroup/AddCustomizationGroup.jsx';
 import { useAuth } from '../../context/AuthContext'; 
 import menuApi from '../../api/menuApi';
 import styles from './MerchantMenuPage.module.css';
 import toast from 'react-hot-toast';
 
+const mockCustomGroups = [
+    {
+        _id: "cg1",
+        groupName: "Topping Burger",
+        isRequired: false,
+        options: [
+            { label: "Thêm Phô mai lát", extraPrice: 10000, available: true },
+            { label: "Thêm Thịt xông khói", extraPrice: 15000, available: true },
+            { label: "Thêm Trứng ốp la", extraPrice: 5000, available: false } // Hết hàng
+        ]
+    },
+    {
+        _id: "cg2",
+        groupName: "Size Pizza",
+        isRequired: true, // Bắt buộc chọn
+        options: [
+            { label: "Size M (9 inch)", extraPrice: 0, available: true },
+            { label: "Size L (12 inch)", extraPrice: 50000, available: true }
+        ]
+    },
+    {
+        _id: "cg3",
+        groupName: "Mức Đường & Đá",
+        isRequired: true,
+        options: [
+            { label: "100% Đường - 100% Đá", extraPrice: 0, available: true },
+            { label: "50% Đường - Ít Đá", extraPrice: 0, available: true },
+            { label: "Không Đường - Không Đá", extraPrice: 0, available: true }
+        ]
+    },
+    {
+        _id: "cg4",
+        groupName: "Mức Đường & Đá",
+        isRequired: true,
+        options: [
+            { label: "100% Đường - 100% Đá", extraPrice: 0, available: true },
+            { label: "50% Đường - Ít Đá", extraPrice: 0, available: true },
+            { label: "Không Đường - Không Đá", extraPrice: 0, available: true }
+        ]
+    },
+    {
+        _id: "cg5",
+        groupName: "Mức Đường & Đá",
+        isRequired: true,
+        options: [
+            { label: "100% Đường - 100% Đá", extraPrice: 0, available: true },
+            { label: "50% Đường - Ít Đá", extraPrice: 0, available: true },
+            { label: "Không Đường - Không Đá", extraPrice: 0, available: true }
+        ]
+    },
+    {
+        _id: "cg6",
+        groupName: "Mức Đường & Đá",
+        isRequired: true,
+        options: [
+            { label: "100% Đường - 100% Đá", extraPrice: 0, available: true },
+            { label: "50% Đường - Ít Đá", extraPrice: 0, available: true },
+            { label: "Không Đường - Không Đá", extraPrice: 0, available: true }
+        ]
+    }
+];
+
 const MerchantMenu = () => {
-    // const [menu, setMenu] = useState([
-    //     {
-    //         _id: '67d4f1010000000000000031',
-    //         name: "Cơm Chiên Bò Lúc Lắc",
-    //         price: 55000,
-    //         category: "Cơm",
-    //         available: true,
-    //         stock: 300,
-    //         description: "Cơm chiên với bò lúc lắc truyền thống",
-    //         images: ["https://down-cvs-vn.img.susercontent.com/vn-11134517-7ras8-m0hnvcmb3i7..."]
-    //     },
-    //     { _id: '2', name: "Cơm Gà Hải Nam", price: 45000, category: "Cơm", available: true, stock: 50, description: "Gà ta luộc thơm ngon", images: ["https://images.unsplash.com/photo-1567033984534-da488820464c?q=80&w=1974&auto=format&fit=crop"] },
-    // ]);
     const [activeTab, setActiveTab] = useState('menu');
     const { user, loading: authLoading } = useAuth(); 
     const publicId = user?.restaurantInfo.publicId || '';
     const [menu, setMenu] = useState([]);
-    const [customGroups, setCustomGroups] = useState([]);
+    const [customGroups, setCustomGroups] = useState(mockCustomGroups);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
     const [isActionLoading, setIsActionLoading] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [isInitialLoading, setIsInitialLoading] = useState(true);
+    const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
+    const [editingGroup, setEditingGroup] = useState(null);
 
     // if (authLoading || isInitialLoading) {
     //     return (
@@ -41,6 +93,16 @@ const MerchantMenu = () => {
     // }
 
     const formatCurrency = (value) => `${Number(value || 0).toLocaleString('vi-VN')}đ`;
+
+    const fetchCustomGroups = async () => {
+        try {
+            // Giả sử API: menuApi.getCustomizationGroups(publicId)
+            //const response = await menuApi.getCustomizationGroups(publicId);
+            setCustomGroups(response || []);
+        } catch (err) {
+            console.error("Lỗi khi tải nhóm tùy chỉnh:", err);
+        }
+    };
 
     const fetchMenu = async () => {
         if (!publicId) return;
@@ -58,6 +120,7 @@ const MerchantMenu = () => {
 
     useEffect(() => {
         fetchMenu();
+        fetchCustomGroups();
     }, [publicId]);
 
     const groupedMenu = menu.reduce((acc, item) => {
@@ -97,6 +160,22 @@ const MerchantMenu = () => {
         }
     };
 
+    const handleAddGroup = () => {
+        setEditingGroup(null);
+        setIsGroupModalOpen(true);
+    };
+
+
+    const handleEditGroup = (group) => {
+        setEditingGroup(group); // Truyền dữ liệu nhóm vào state
+        setIsGroupModalOpen(true);
+    };
+
+    const handleAddDish = () => {
+        setEditingItem(null); 
+        setIsModalOpen(true);
+    };
+
     // const renderSkeletons = () => (
     //     <div className={styles.menuContent}>
     //         <div className={styles.categoryHeader}>
@@ -125,6 +204,32 @@ const MerchantMenu = () => {
     //         </div>
     //     </div>
     // );
+
+    const handleDeleteGroup = async (groupId) => {
+        if (!window.confirm("Xóa nhóm này sẽ ảnh hưởng đến các món đang liên kết. Tiếp tục?")) return;
+        // Thực hiện xóa qua API...
+    };
+
+    const handleGroupSubmit = async (formData) => {
+        try {
+            setIsActionLoading(true); // Bắt đầu xoay icon loading (truyền vào prop isUploading)
+            
+            if (editingGroup) {
+                //await customizationApi.update(editingGroup._id, formData);
+                toast.success("Cập nhật thành công!");
+            } else {
+                //await customizationApi.create(formData);
+                toast.success("Tạo nhóm mới thành công!");
+            }
+            
+            setIsGroupModalOpen(false); // Đóng modal
+            fetchCustomGroups(); // Reload dữ liệu cho Tab Nhóm tùy chỉnh
+        } catch (err) {
+            toast.error("Lỗi hệ thống, vui lòng thử lại");
+        } finally {
+            setIsActionLoading(false); // Dừng xoay icon
+        }
+    };
 
     const renderSkeletons = () => (
         <div className={styles.compactGrid}>
@@ -286,7 +391,7 @@ const MerchantMenu = () => {
                             </button>
                         </div>
                     </div>
-                    <button className={styles.addBtn} onClick={() => {setEditingItem(null); setIsModalOpen(true);}}>
+                    <button className={styles.addBtn} onClick={() => {activeTab === 'menu' ? handleAddDish(): handleAddGroup()}}>
                         <Plus size={20} /> {activeTab === 'menu' ? 'Thêm món mới' : 'Thêm nhóm mới'}
                     </button>
                 </div>
@@ -344,7 +449,7 @@ const MerchantMenu = () => {
                                                     </div>
                                                     <p className={styles.descriptionText}>{item.description}</p>
                                                     <div className={styles.metaRow}>
-                                                        <div className={styles.stockInfo}>Kho: {item.stock}</div>
+                                                        <div className={styles.stockInfo}>Kho: {item.remainingQuantity !== undefined ? item.remainingQuantity : item.stock}</div>
                                                         <div className={styles.cardActions}>
                                                             <button className={styles.actionBtn} onClick={() => {setEditingItem(item); setIsModalOpen(true);}}>
                                                                 <Edit3 size={16} />
@@ -372,7 +477,7 @@ const MerchantMenu = () => {
                                 </p>
                                 <button 
                                     className={styles.addFirstBtn} 
-                                    onClick={() => {setEditingItem(null); setIsModalOpen(true);}}
+                                    onClick={() => handleAddDish()}
                                 >
                                     <Plus size={20} /> Thêm món ăn đầu tiên
                                 </button>
@@ -395,8 +500,11 @@ const MerchantMenu = () => {
                                             <div className={styles.metaRow}>
                                                 <span className={styles.stockInfo}>{group.isRequired ? 'Bắt buộc' : 'Tùy chọn'}</span>
                                                 <div className={styles.cardActions}>
-                                                    <button className={styles.actionBtn}><Edit3 size={16} /></button>
-                                                    <button className={`${styles.actionBtn} ${styles.deleteBtn}`}><Trash2 size={16} /></button>
+                                                    <button className={styles.actionBtn} onClick={() => handleEditGroup(group)}><Eye size={16} /></button>
+                                                    <button className={styles.actionBtn} onClick={() => handleEditGroup(group)}><Edit3 size={16} /></button>
+                                                    <button className={`${styles.actionBtn} ${styles.deleteBtn}`} onClick={() => handleDeleteGroup(group._id)}>
+                                                        <Trash2 size={16} />
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -414,7 +522,7 @@ const MerchantMenu = () => {
                                 </p>
                                 <button 
                                     className={styles.addFirstBtn} 
-                                    onClick={() => {setEditingItem(null); setIsModalOpen(true);}}
+                                    onClick={() => handleAddGroup()}
                                 >
                                     <Plus size={20} /> Thêm tùy chỉnh
                                 </button>
@@ -431,6 +539,14 @@ const MerchantMenu = () => {
                 editingItem={editingItem}
                 isUploading={isActionLoading}
                 availableGroups={customGroups}
+            />
+
+            <AddCustomizationGroup 
+                isOpen={isGroupModalOpen}
+                onClose={() => setIsGroupModalOpen(false)}
+                onSubmit={handleGroupSubmit}
+                editingGroup={editingGroup}
+                isUploading={isActionLoading}
             />
         </div>
     );

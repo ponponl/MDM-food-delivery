@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, UploadCloud, Loader2, Plus, Trash2, ChevronRight } from 'lucide-react';
+import { X, UploadCloud, Loader2, Plus, Trash2, ChevronRight, Share2, Zap } from 'lucide-react';
 import styles from './AddDishCard.module.css';
 import toast from 'react-hot-toast';
 
@@ -159,7 +159,8 @@ const SUGGESTIONS = {
     ]
 };
 
-const DishModal = ({ isOpen, onClose, onSubmit, editingItem, isUploading }) => {
+
+const DishModal = ({ isOpen, onClose, onSubmit, editingItem, isUploading, availableGroups }) => {
     const [formData, setFormData] = useState({
         name: '', price: '', stock: '', category: CATEGORIES[0].value, description: '', image: null, available: true, customization: []
     });
@@ -196,9 +197,11 @@ const DishModal = ({ isOpen, onClose, onSubmit, editingItem, isUploading }) => {
         }
     };
 
-    const addCustomGroup = (suggestion = null) => {
-        const newGroup = suggestion || { groupName: '', isRequired: false, options: [{ label: '', extraPrice: 0 }] };
-        setFormData({ ...formData, customization: [...formData.customization, newGroup] });
+    const addCustomGroup = (group) => {
+        setFormData(prev => ({
+            ...prev,
+            customization: [...prev.customization, group]
+        }));
     };
 
     const removeCustomGroup = (index) => {
@@ -241,6 +244,13 @@ const DishModal = ({ isOpen, onClose, onSubmit, editingItem, isUploading }) => {
         }
     };
 
+    const removeCustomGroupByName = (groupName) => {
+        setFormData(prev => ({
+            ...prev,
+            customization: prev.customization.filter(g => g.groupName !== groupName)
+        }));
+    };
+
     const handleFormSubmit = (e) => {
         e.preventDefault();
         // Kiểm tra logic nếu là thêm mới thì bắt buộc có ảnh
@@ -257,6 +267,20 @@ const DishModal = ({ isOpen, onClose, onSubmit, editingItem, isUploading }) => {
         data.append('customization', JSON.stringify(formData.customization));
 
         onSubmit(data);
+    };
+
+    const handlePromote = async (opt, gIdx, oIdx) => {
+        if (!window.confirm(`Nâng cấp "${opt.label}" thành một món lẻ trong thực đơn để quản lý kho riêng?`)) return;
+        try {
+            // Logic: Gọi API tạo Dish mới từ data của opt
+            // await menuApi.promoteOptionToDish({ name: opt.label, price: opt.extraPrice });
+            toast.success("Đã nâng cấp thành món ăn lẻ! Hãy vào Tab Thực đơn để cập nhật ảnh.");
+            
+            // Cập nhật trạng thái option trong UI
+            updateOption(gIdx, oIdx, 'isLinked', true);
+        } catch (err) {
+            toast.error("Không thể nâng cấp món");
+        }
     };
 
     if (!isOpen) return null;
@@ -323,58 +347,44 @@ const DishModal = ({ isOpen, onClose, onSubmit, editingItem, isUploading }) => {
                     {/* CỘT PHẢI: CUSTOMIZATION */}
                     <div className={styles.customSide}>
                         <div className={styles.customHeader}>
-                            <h3>Tùy chỉnh (Topping, Size...)</h3>
-                            <button type="button" className={styles.btnAddGroup} onClick={() => addCustomGroup()}>
-                                <Plus size={16} /> Thêm nhóm
-                            </button>
+                            <h3>Liên kết tùy chỉnh</h3>
+                            <span className={styles.itemCountBadge}>
+                                {formData.customization.length} nhóm đã chọn
+                            </span>
                         </div>
 
-                        {/* Gợi ý nhanh */}
-                        {SUGGESTIONS[formData.category] && formData.customization.length === 0 && (
-                            <div className={styles.suggestionBox}>
-                                <label>Gợi ý cho {formData.category}:</label>
-                                <div className={styles.suggestionChips}>
-                                    {SUGGESTIONS[formData.category].map((s, idx) => (
-                                        <button key={idx} type="button" onClick={() => addCustomGroup(s)}>+ {s.groupName}</button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
+                        {/* Phần chọn nhóm dùng chung (Dùng style chip có sẵn) */}
                         <div className={styles.customScrollArea}>
-                            {formData.customization.map((group, gIdx) => (
-                                <div key={gIdx} className={styles.customGroupCard}>
-                                    <div className={styles.groupHeader}>
-                                        <input 
-                                            className={styles.groupNameInput}
-                                            placeholder="Tên nhóm (VD: Chọn Size)" 
-                                            value={group.groupName}
-                                            onChange={(e) => updateGroup(gIdx, 'groupName', e.target.value)}
-                                        />
-                                        <label className={styles.checkboxLabel}>
-                                            <input type="checkbox" checked={group.isRequired} onChange={(e) => updateGroup(gIdx, 'isRequired', e.target.checked)} />
-                                            Bắt buộc
-                                        </label>
-                                        <button type="button" onClick={() => removeCustomGroup(gIdx)} className={styles.btnDelete}><Trash2 size={20}/></button>
-                                    </div>
-
-                                    {group.options.map((opt, oIdx) => (
-                                        <div key={oIdx} className={styles.optionRow}>
-                                            <input placeholder="Tên lựa chọn" value={opt.label} onChange={(e) => updateOption(gIdx, oIdx, 'label', e.target.value)} />
-                                            <input type="number" placeholder="+0đ" value={opt.extraPrice} onChange={(e) => updateOption(gIdx, oIdx, 'extraPrice', e.target.value)} />
-                                            <button type="button"
-                                                className={`${styles.toggleOptBtn} ${opt.available ? styles.optIn : styles.optOut}`}
-                                                onClick={() => updateOption(gIdx, oIdx, 'available', !opt.available)}
-                                                title={opt.available ? "Đang có hàng" : "Hết hàng"}
-                                            >
-                                                {opt.available ? 'Đang bán' : 'Hết hàng'}
-                                            </button>
-                                            <button type="button" onClick={() => removeOption(gIdx, oIdx) } className={styles.btnDelete}><Trash2 size={18}/></button>
+                            {/* Danh sách Toggle các nhóm dùng chung */}
+                            <div className={styles.linkedGroupsList}>
+                                <label className={styles.sectionLabel}>Chọn nhóm áp dụng cho món này:</label>
+                                
+                                {availableGroups.map((group) => {
+                                    const isLinked = formData.customization.some(g => g.groupName === group.groupName);
+                                    
+                                    return (
+                                        <div key={group._id} className={`${styles.groupToggleCard} ${isLinked ? styles.cardSelected : ''}`}>
+                                            <div className={styles.groupInfo}>
+                                                {/* Dùng class mới DishNameSmall */}
+                                                <h4 className={styles.dishNameSmall}>{group.groupName}</h4> 
+                                                {/* Dùng class mới descriptionTextSmall */}
+                                                <p className={styles.descriptionTextSmall}>
+                                                    {group.options.map(opt => opt.label).join(', ')}
+                                                </p>
+                                            </div>
+                                            
+                                            <label className={styles.switch}>
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={isLinked} 
+                                                    onChange={() => isLinked ? removeCustomGroupByName(group.groupName) : addCustomGroup(group)} 
+                                                />
+                                                <span className={styles.slider}></span>
+                                            </label>
                                         </div>
-                                    ))}
-                                    <button type="button" className={styles.btnAddOpt} onClick={() => addOption(gIdx)}>+ Thêm lựa chọn</button>
-                                </div>
-                            ))}
+                                    );
+                                })}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -482,3 +492,47 @@ export default DishModal;
                     </div>
                 </form>
             </div> */}
+
+
+
+{/* <div className={styles.customScrollArea}>
+                            <div className={styles.suggestionBox}>
+                                <label>Gợi ý nhóm phù hợp:</label>
+                                <div className={styles.suggestionChips}>
+                                    {SUGGESTIONS[formData.category]
+                                        ?.filter(s => !formData.customization.some(existing => existing.groupName === s.groupName))
+                                        .map((s, idx) => (
+                                            <button key={idx} type="button" onClick={() => addCustomGroup(s)}>
+                                                + {s.groupName}
+                                            </button>
+                                        ))
+                                    }
+                                </div>
+                            </div>
+                            <div className={styles.linkedGroupsList}>
+                                {formData.customization.map((group, gIdx) => (
+                                    <div key={gIdx} className={styles.customGroupCard}>
+                                        <div className={styles.groupHeader}>
+                                            <div className={styles.groupInfo}>
+                                                <h4 className={styles.dishName}>{group.groupName}</h4>
+                                                <p className={styles.descriptionText}>
+                                                    {group.options.map(opt => opt.label).join(', ')}
+                                                </p>
+                                            </div>
+                                            <button 
+                                                type="button" 
+                                                onClick={() => removeCustomGroup(gIdx)} 
+                                                className={styles.btnDelete}
+                                            >
+                                                <X size={18}/>
+                                            </button>
+                                        </div>
+                                        <div className={styles.metaRow}>
+                                            <span className={styles.stockInfo}>
+                                                {group.isRequired ? 'Bắt buộc' : 'Tùy chọn'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div> */}

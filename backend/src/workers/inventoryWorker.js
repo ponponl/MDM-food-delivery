@@ -1,18 +1,24 @@
 import cron from 'node-cron';
-import Menu from '../modules/menu/menuModel.js';
-import redisClient from '../config/redis.js';
+import MenuInventoryDaily from '../modules/inventory/menuInventoryDailyModel.js';
+import { getBusinessDate } from '../modules/inventory/inventoryService.js';
+import { setRemainingInventoryCache } from '../modules/inventory/inventoryCache.js';
 
 cron.schedule('*/5 * * * *', async () => {
-  const keys = await redisClient.keys('stock:*');
-  
-  for (const key of keys) {
-    const itemId = key.split(':')[2];
-    const currentStock = await redisClient.get(key);
+  const businessDate = getBusinessDate();
+  const inventories = await MenuInventoryDaily.find({ date: businessDate }).lean();
 
-    await Menu.updateOne(
-      { _id: itemId },
-      { $set: { stock: parseInt(currentStock) } }
-    );
+  for (const inventory of inventories) {
+    const totalQuantity = Number(inventory.totalQuantity) || 0;
+    const soldQuantity = Number(inventory.soldQuantity) || 0;
+    const remainingQuantity = Math.max(0, totalQuantity - soldQuantity);
+
+    await setRemainingInventoryCache({
+      restaurantId: inventory.restaurantId,
+      businessDate: inventory.date,
+      menuItemId: inventory.menuItemId,
+      remainingQuantity,
+      totalQuantity,
+      soldQuantity
+    });
   }
-  console.log("Đã đồng bộ tồn kho từ Redis về MongoDB");
 });

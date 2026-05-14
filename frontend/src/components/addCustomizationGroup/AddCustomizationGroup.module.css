@@ -1,0 +1,294 @@
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modalBody {
+    background: white;
+    width: 100%;
+    max-width: 900px;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.modalHeader h3 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #111827;
+    margin: 0;
+}
+
+.btnClose {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btnClose:hover {
+    background-color: #f3f4f6;
+    color: #4b5563;
+}
+
+.mainForm {
+    padding: 32px;
+}
+
+.formSection {
+    margin-bottom: 24px;
+}
+
+.formGroup {
+    margin-bottom: 20px;
+}
+
+.formGroup label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #4b5563;
+    margin-bottom: 8px;
+}
+
+.formGroup input[type="text"] {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    transition: border-color 0.2s;
+}
+
+.formGroup input:focus {
+    outline: none;
+    border-color: #f97316;
+}
+
+.checkboxLabel {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    margin-bottom: 4px !important;
+}
+
+.checkboxLabel input {
+    width: 18px;
+    height: 18px;
+    accent-color: #f97316;
+}
+
+.helperText {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin: 0;
+    padding-left: 28px;
+}
+
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.sectionHeader label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #4b5563;
+}
+
+.btnAddOption {
+    background: #fff7ed;
+    color: #ea580c;
+    border: 1px dashed #fdba74;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+}
+
+.btnAddOption:hover {
+    background: #ffedd5;
+}
+
+.optionsScrollArea {
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.optionRow {
+    display: grid;
+    /* Cột 1: Tên (tự giãn), Cột 2: Giá (150px), Cột 3: Toggle (100px), Cột 4: Xóa (40px) */
+    grid-template-columns: 1fr 150px 100px 40px; 
+    gap: 16px; /* Tăng khoảng cách giữa các ô */
+    margin-bottom: 16px;
+    align-items: center;
+    background: #ffffff;
+    padding: 8px; /* Thêm chút padding cho mỗi dòng */
+    border-radius: 12px;
+}
+
+.optInputGroup {
+    flex: 1;
+}
+
+.optInputGroup input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.optPriceGroup {
+    width: 100%;
+    position: relative;
+}
+
+.optPriceGroup input {
+    width: 100%;
+    padding: 10px 30px 10px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    text-align: right;
+}
+
+.currency {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 0.85rem;
+}
+
+.btnDeleteOpt {
+    background: #fee2e2;
+    color: #dc2626;
+    border: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.btnDeleteOpt:hover {
+    background: #fecaca;
+}
+
+.modalFooter {
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btnCancel {
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    font-weight: 600;
+    color: #4b5563;
+    cursor: pointer;
+}
+
+.btnSave {
+    padding: 10px 24px;
+    border-radius: 10px;
+    border: none;
+    background: #f97316;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btnSave:hover {
+    background: #ea580c;
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Điều chỉnh grid để chứa thêm nút Toggle */
+.optionRow {
+    display: grid;
+    grid-template-columns: 1fr 100px 70px 40px; /* Tăng thêm cột 70px cho nút */
+    gap: 10px;
+    margin-bottom: 12px;
+    align-items: center;
+}
+
+/* Tận dụng style từ AddDishCard sang */
+.toggleOptBtn {
+    width: 100%;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 0;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+}
+
+.optIn {
+    background-color: #f3f4f6; /* Xám nhạt khi còn hàng */
+    color: #6b7280;
+}
+
+.optOut {
+    background-color: #fee2e2; /* Đỏ nhạt khi hết hàng */
+    color: #ef4444;
+    border: 1px solid #fecaca;
+}
+
+.toggleOptBtn:hover {
+    filter: brightness(0.95);
+}
+
+/* Các style khác giữ nguyên, chỉ đảm bảo các input không bị bóp méo */
+.optInputGroup input, .optPriceGroup input {
+    width: 100%;
+}

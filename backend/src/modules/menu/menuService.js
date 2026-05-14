@@ -7,6 +7,7 @@ import {
   getBusinessDate,
   resolveRestaurantTimezone
 } from '../inventory/inventoryService.js';
+import { invalidateRemainingInventoryCache } from '../inventory/inventoryCache.js';
 import { RestaurantRepository } from '../restaurant/restaurantRepo.js';
 
 const menuRepo = new MenuRepository();
@@ -60,7 +61,15 @@ export const addDish = async (publicId, body, file) => {
     available
   };
 
-  await menuRepo.addMenuItem(dishData);
+  const created = await menuRepo.addMenuItem(dishData);
+  if (created?._id && restaurant?._id) {
+    const businessDate = getBusinessDate(resolveRestaurantTimezone(restaurant));
+    await invalidateRemainingInventoryCache({
+      restaurantId: restaurant._id,
+      businessDate,
+      menuItemIds: [created._id]
+    });
+  }
   await invalidateRestaurantCache(publicId, { includeMenu: true });
   const menu = await getRestaurantMenu(publicId);
   return { menu };
@@ -89,6 +98,14 @@ export const updateDish = async (publicId, itemId, body, file) => {
 
   const updated = await menuRepo.updateMenuItem(publicId, itemId, updateData);
   if (!updated) return null;
+  if (restaurant?._id) {
+    const businessDate = getBusinessDate(resolveRestaurantTimezone(restaurant));
+    await invalidateRemainingInventoryCache({
+      restaurantId: restaurant._id,
+      businessDate,
+      menuItemIds: [itemId]
+    });
+  }
   await invalidateRestaurantCache(publicId, { includeMenu: true });
   const menu = await getRestaurantMenu(publicId);
   return { menu };
@@ -102,6 +119,14 @@ export const deleteDish = async (publicId, itemId) => {
   }
   const deleted = await menuRepo.deleteMenuItem(publicId, itemId);
   if (!deleted) return null;
+  if (restaurant?._id) {
+    const businessDate = getBusinessDate(resolveRestaurantTimezone(restaurant));
+    await invalidateRemainingInventoryCache({
+      restaurantId: restaurant._id,
+      businessDate,
+      menuItemIds: [itemId]
+    });
+  }
   await invalidateRestaurantCache(publicId, { includeMenu: true });
   const menu = await getRestaurantMenu(publicId);
   return { menu };
