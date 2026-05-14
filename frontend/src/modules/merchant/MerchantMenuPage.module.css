@@ -17,6 +17,61 @@
   margin-bottom: 32px;
 }
 
+.tabContainer {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    background-color: #f3f4f6; 
+    padding: 4px;
+    border-radius: 10px;
+    width: fit-content;
+    border: 1px solid #e5e7eb;
+}
+
+.tabBtn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: #6b7280; 
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.tabBtn:hover {
+    color: #374151;
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+.tabActive {
+    background-color: white; 
+    color: #f97316; 
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.tabBtn svg {
+    transition: transform 0.2s ease;
+}
+
+.tabActive svg {
+    color: #f97316;
+    transform: scale(1.1);
+}
+
+@keyframes fadeInTab {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.mainContent {
+    animation: fadeInTab 0.3s ease-out;
+}
+
 .title {
   font-size: 30px;
   font-weight: 700;
@@ -49,6 +104,7 @@
   background-color: #ea580c;
   transform: translateY(-2px);
 }
+
 
 /* Category Sections */
 .categorySection {
@@ -361,4 +417,41 @@
   width: 32px;
   height: 32px;
   border-radius: 6px;
+}
+
+.skeletonCard {
+    pointer-events: none;
+    background: #f9fafb;
+}
+
+.skeletonImage {
+    width: 100%;
+    height: 140px;
+    background: #e5e7eb;
+    border-radius: 12px;
+    animation: shimmer 1.5s infinite linear;
+}
+
+.skeletonTitle {
+    height: 20px;
+    width: 60%;
+    background: #e5e7eb;
+    margin: 12px 0;
+    border-radius: 4px;
+    animation: shimmer 1.5s infinite linear;
+}
+
+.skeletonText {
+    height: 14px;
+    width: 90%;
+    background: #f3f4f6;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    animation: shimmer 1.5s infinite linear;
+}
+
+@keyframes shimmer {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
 }

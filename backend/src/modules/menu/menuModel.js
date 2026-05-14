@@ -16,7 +16,20 @@ const menuSchema = new mongoose.Schema(
     description: String,
     images: [String],
     totalReview: { type: Number, default: 0 },
-    ratingCount: { type: Number, default: 0 }
+    ratingCount: { type: Number, default: 0 },
+    customization: [
+      {
+        groupName: String, 
+        isRequired: { type: Boolean, default: false },
+        options: [
+          {
+            label: String,
+            extraPrice: { type: Number, default: 0 },
+            available: { type: Boolean, default: true }
+          }
+        ]
+      }
+    ],
   },
   {
     timestamps: true,
