@@ -10,6 +10,7 @@ import recommendationRoute from '../modules/recommendation/recommendationRoute.j
 import trackingRoutes from './tracking.route.js';
 import menuRoute from '../modules/menu/menuRoute.js';
 import authRoute from './authRoute.js';
+import customizationRoute from '../modules/customizationGroups/customizationGroupsRoute.js'
 const router = express.Router();
 
 router.use('/auth', authRoute);
@@ -23,5 +24,6 @@ router.use('/reviews', reviewRoute);
 router.use('/recommendations', recommendationRoute);
 router.use('/tracking', trackingRoutes);
 router.use('/menu', menuRoute);
+router.use('/customization', customizationRoute);
 
 export default router;

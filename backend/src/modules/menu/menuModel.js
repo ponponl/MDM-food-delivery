@@ -19,6 +19,7 @@ const menuSchema = new mongoose.Schema(
     ratingCount: { type: Number, default: 0 },
     customization: [
       {
+        groupId: { type: mongoose.Schema.Types.ObjectId, ref: 'CustomizationGroup' },
         groupName: String, 
         isRequired: { type: Boolean, default: false },
         options: [
@@ -41,5 +42,6 @@ const menuSchema = new mongoose.Schema(
 menuSchema.index({ restaurantId: 1 });
 menuSchema.index({ restaurantPublicId: 1 });
 menuSchema.index({ name: 'text', category: 'text' });
+menuSchema.index({ "customization.groupId": 1 });
 
 export default mongoose.model('Menu', menuSchema, 'menu');

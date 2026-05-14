@@ -4,6 +4,7 @@ import AddDishCard from '../../components/addDishCard/AddDishCard.jsx';
 import AddCustomizationGroup from '../../components/addCustomizationGroup/AddCustomizationGroup.jsx';
 import { useAuth } from '../../context/AuthContext'; 
 import menuApi from '../../api/menuApi';
+import customizationApi from '../../api/customizationGroupsApi';
 import styles from './MerchantMenuPage.module.css';
 import toast from 'react-hot-toast';
 
@@ -74,7 +75,7 @@ const MerchantMenu = () => {
     const { user, loading: authLoading } = useAuth(); 
     const publicId = user?.restaurantInfo.publicId || '';
     const [menu, setMenu] = useState([]);
-    const [customGroups, setCustomGroups] = useState(mockCustomGroups);
+    const [customGroups, setCustomGroups] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState(null);
     const [isActionLoading, setIsActionLoading] = useState(false);
@@ -95,9 +96,13 @@ const MerchantMenu = () => {
     const formatCurrency = (value) => `${Number(value || 0).toLocaleString('vi-VN')}đ`;
 
     const fetchCustomGroups = async () => {
+        if (!publicId) {
+            console.warn("Chưa có publicId, bỏ qua gọi API");
+            return;
+        }
         try {
             // Giả sử API: menuApi.getCustomizationGroups(publicId)
-            //const response = await menuApi.getCustomizationGroups(publicId);
+            const response = await customizationApi.getGroupsByRestaurant(publicId);
             setCustomGroups(response || []);
         } catch (err) {
             console.error("Lỗi khi tải nhóm tùy chỉnh:", err);
@@ -206,24 +211,32 @@ const MerchantMenu = () => {
     // );
 
     const handleDeleteGroup = async (groupId) => {
-        if (!window.confirm("Xóa nhóm này sẽ ảnh hưởng đến các món đang liên kết. Tiếp tục?")) return;
-        // Thực hiện xóa qua API...
+        if (!window.confirm("Xóa nhóm này sẽ gỡ bỏ tùy chỉnh khỏi các món đang liên kết. Tiếp tục?")) return;
+        try {
+            await customizationApi.delete(groupId, publicId);
+            toast.success("Đã xóa nhóm tùy chỉnh");
+            fetchCustomGroups();
+            fetchMenu();
+        } catch (err) {
+            toast.error("Không thể xóa nhóm");
+        }
     };
 
     const handleGroupSubmit = async (formData) => {
         try {
-            setIsActionLoading(true); // Bắt đầu xoay icon loading (truyền vào prop isUploading)
-            
+            setIsActionLoading(true); 
+            const payload = { ...formData, publicId };
             if (editingGroup) {
-                //await customizationApi.update(editingGroup._id, formData);
+                await customizationApi.update(editingGroup._id, { ...payload, applyToAll: true });
                 toast.success("Cập nhật thành công!");
             } else {
-                //await customizationApi.create(formData);
+                await customizationApi.create(payload);
                 toast.success("Tạo nhóm mới thành công!");
             }
             
             setIsGroupModalOpen(false); // Đóng modal
             fetchCustomGroups(); // Reload dữ liệu cho Tab Nhóm tùy chỉnh
+            fetchMenu();
         } catch (err) {
             toast.error("Lỗi hệ thống, vui lòng thử lại");
         } finally {

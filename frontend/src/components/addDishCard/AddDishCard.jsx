@@ -360,7 +360,7 @@ const DishModal = ({ isOpen, onClose, onSubmit, editingItem, isUploading, availa
                                 <label className={styles.sectionLabel}>Chọn nhóm áp dụng cho món này:</label>
                                 
                                 {availableGroups.map((group) => {
-                                    const isLinked = formData.customization.some(g => g.groupName === group.groupName);
+                                    const isLinked = formData.customization.some(g => (g.groupId || g._id) === group._id);
                                     
                                     return (
                                         <div key={group._id} className={`${styles.groupToggleCard} ${isLinked ? styles.cardSelected : ''}`}>

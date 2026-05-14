@@ -28,7 +28,8 @@ const normalizeMenuItem = (menuItem) => {
     rating,
     restaurantId: menuItem.restaurantId?.toString?.() ?? menuItem.restaurantId,
     restaurantPublicId: menuItem.restaurantPublicId || null,
-    restaurantName: menuItem.restaurantName || null
+    restaurantName: menuItem.restaurantName || null,
+    customization: menuItem.customization || []
   };
 };
 
@@ -92,6 +93,35 @@ export class MenuRepository {
     return await Menu.updateOne(
       { _id: itemObjectId },
       { $inc: { totalReview: ratingValue, ratingCount: 1 } }
+    );
+  }
+
+  async updateManyByGroupId(groupId, groupData) {
+    return await Menu.updateMany(
+      { "customization.groupId": groupId },
+      { 
+        $set: { 
+          "customization.$.groupName": groupData.groupName,
+          "customization.$.isRequired": groupData.isRequired,
+          "customization.$.options": groupData.options
+        } 
+      }
+    );
+  }
+
+  async findAffectedRestaurantsByGroupId(groupId) {
+    const results = await Menu.distinct('restaurantPublicId', { "customization.groupId": groupId });
+    return results;
+  }
+
+  async pullCustomizationByGroupId(groupId) {
+    return await Menu.updateMany(
+      {},
+      { 
+        $pull: { 
+          customization: { groupId: groupId } 
+        } 
+      }
     );
   }
 }
