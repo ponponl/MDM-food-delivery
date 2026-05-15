@@ -19,29 +19,36 @@ Dựa trên phân tích đặc điểm dữ liệu, nhóm thống nhất kiến 
 | **Restaurant & Menu** | **MongoDB** | Cấu trúc JSON linh hoạt cho danh sách món ăn, giá và trạng thái thay đổi thường xuyên. |
 | **Cart & Status** | **Redis** | Lưu trữ Key-Value trên RAM để truy xuất nhanh giỏ hàng tạm thời và trạng thái đơn hàng thời gian thực. |
 | **Recommendations** | **Neo4j** | Truy vấn quan hệ (Graph) giữa User - Restaurant để gợi ý món ăn dựa trên hành vi người dùng. |
+| **Tracking (Location)** | **Cassandra** | Ghi nhận luồng dữ liệu liên tục (Time-series) về vị trí Shipper và lịch sử di chuyển của đơn hàng. |
+
+> **Lưu ý:** Ngoài ra, hệ thống còn sử dụng **Cloudinary** để lưu trữ và quản lý hình ảnh (avatar, món ăn, nhà hàng).
 
 ---
 
 ## 2. Công nghệ sử dụng
 * **Frontend:** React (Vite), Axios, React Router.
 * **Backend:** Node.js, Express.js.
-* **Database Drivers:** `pg` (Postgres), `mongoose` (MongoDB), `redis`, `neo4j-driver`.
-* **Cơ sở hạ tầng:** Docker & Docker Compose.
+* **Database Drivers:** `pg` (Postgres), `mongoose` (MongoDB), `redis`, `neo4j-driver`, `cassandra-driver`.
+* **Cơ sở hạ tầng & Dịch vụ Cloud:** 
+  * Docker & Docker Compose (cho một số cơ sở dữ liệu khi chạy local).
+  * Hỗ trợ kết nối Cloud Database: NeonDB (PostgreSQL), MongoDB Atlas, Redis Labs, AuraDB (Neo4j), Astra DB (Cassandra).
+  * Cloudinary (Image Hosting).
 
 ---
 
 ## 3. Hướng dẫn cài đặt cho thành viên
 
-### Bước 1: Khởi chạy môi trường Database (Docker)
-Tại thư mục gốc của dự án, chạy lệnh sau để khởi động đồng thời 4 loại cơ sở dữ liệu:
+### Bước 1: Khởi chạy môi trường Database (Docker - Tùy chọn)
+Nếu bạn không sử dụng Cloud Database mà muốn chạy local (cho Postgres, Mongo, Redis, Neo4j), tại thư mục gốc của dự án, chạy lệnh sau:
 ```bash
 docker-compose up -d
 ```
+*(Lưu ý: Cassandra hiện được cấu hình sử dụng Astra DB trên Cloud, cần đảm bảo có file `secure-connect-foodly.zip` trong thư mục `backend/src/config/` để kết nối).*
 
 ### Bước 2: Thiết lập Backend
 1. Truy cập folder: `cd backend`
 2. Cài đặt thư viện: `npm install`
-3. Tạo file `.env` từ mẫu `.env.example` và điền các chuỗi kết nối (URI/URL).
+3. Tạo file `.env` từ mẫu `.env.example` và điền các chuỗi kết nối (URI/URL của Cloud DB hoặc Local DB).
 4. Khởi động server: `npm run dev`
 
 ### Bước 3: Thiết lập Frontend
@@ -55,8 +62,8 @@ docker-compose up -d
 ```text
 ├── backend/
 │   ├── src/
-│   │   ├── configs/       # Cấu hình kết nối Postgres, Mongo, Redis, Neo4j
-│   │   ├── modules/       # Các chức năng demo cho từng loại CSDL
+│   │   ├── config/        # Cấu hình kết nối Postgres, Mongo, Redis, Neo4j, Cassandra, Cloudinary
+│   │   ├── modules/       # Các chức năng (users, orders, menu, tracking...)
 │   │   └── server.js      # Điểm khởi chạy chính (Entry point)
 │   └── .env.example
 ├── frontend/
@@ -64,7 +71,7 @@ docker-compose up -d
 │   │   ├── api/           # Các hàm gọi API (Axios)
 │   │   ├── components/    # Thành phần UI dùng chung
 │   │   └── pages/         # Các màn hình chính (Menu, Cart, Orders...)
-├── docker-compose.yml     # Quản lý container cho 4 Database
+├── docker-compose.yml     # Quản lý container cho các Database local
 └── README.md
 ```
 
@@ -75,5 +82,4 @@ docker-compose up -d
 1. **Branching:** Mỗi thành viên tạo nhánh riêng khi thực hiện chức năng (ví dụ: `feat/mongodb-menu`).
 2. **Pull Requests:** Khi hoàn thành, tạo PR vào nhánh `develop` để các thành viên khác review.
 3. **Environment:** Luôn cập nhật file `.env.example` nếu có biến môi trường mới.
-
 
