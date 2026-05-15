@@ -164,9 +164,14 @@ export const createOrder = async ({
       });
 
       const currentPrice = typeof menuItem?.price === 'number' ? menuItem.price : 0;
-      const snapshotPrice = typeof cartItem.priceSnapshot === 'number'
+      const hasSnapshotPrice = typeof cartItem.priceSnapshot === 'number';
+      const fallbackBasePrice = typeof cartItem.price === 'number' ? cartItem.price : currentPrice;
+      const optionsExtraPrice = Array.isArray(cartItem.options)
+        ? cartItem.options.reduce((sum, opt) => sum + (Number(opt?.extraPrice) || 0), 0)
+        : 0;
+      const snapshotPrice = hasSnapshotPrice
         ? cartItem.priceSnapshot
-        : (typeof cartItem.price === 'number' ? cartItem.price : currentPrice);
+        : fallbackBasePrice + optionsExtraPrice;
 
       if (snapshotPrice !== currentPrice) {
         priceUpdates.push({
@@ -184,9 +189,9 @@ export const createOrder = async ({
 
       // const orderSnapshotPrice = Number.isFinite(currentPrice) ? currentPrice : snapshotPrice;
       const orderSnapshotPrice = snapshotPrice;
-      // const subtotal = orderSnapshotPrice * qty;
+      const subtotal = orderSnapshotPrice * qty;
 
-      totalPrice += orderSnapshotPrice;
+      totalPrice += subtotal;
       totalItems += qty;
       orderItems.push({
         itemId,
