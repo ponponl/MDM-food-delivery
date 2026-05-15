@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  # PostgreSQL - Database quan hệ
+  postgres:
+    image: postgres:15-alpine
+    container_name: mdm_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Cassandra - NoSQL database
+  cassandra:
+    image: cassandra:4.1
+    container_name: mdm_cassandra
+    environment:
+      CASSANDRA_CLUSTER_NAME: MDM_Cluster
+      CASSANDRA_SEEDS: cassandra
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD-SHELL", "cqlsh -e 'select cluster_name from system.local'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # MongoDB - Document database
+  mongodb:
+    image: mongo:7.0
+    container_name: mdm_mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Redis - Cache/In-memory database
+  redis:
+    image: redis:7-alpine
+    container_name: mdm_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Neo4j - Graph database
+  neo4j:
+    image: neo4j:5.15-community
+    container_name: mdm_neo4j
+    environment:
+      NEO4J_AUTH: neo4j/password123
+      NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+    ports:
+      - "7687:7687"
+      - "7474:7474"
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "password123", "RETURN 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # Python benchmark runner
+  benchmarks:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mdm_benchmarks
+    depends_on:
+      postgres:
+        condition: service_healthy
+      cassandra:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    volumes:
+      - ./cassandra:/app/cassandra
+      - ./mongodb:/app/mongodb
+      - ./redis:/app/redis
+      - ./graph:/app/graph
+    working_dir: /app
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres_data:
+  cassandra_data:
+  mongodb_data:
+  redis_data:
+  neo4j_data:

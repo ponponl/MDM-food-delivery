@@ -10,6 +10,12 @@ router.post('/', orderController.createOrder);
 // Preview order pricing
 router.post('/preview', orderController.previewOrder);
 
+// Revenue report 
+router.get('/stats/revenue', orderController.getRevenueStats);
+
+// KPI report 
+router.get('/stats/kpi', orderController.getKpiStats);
+
 // Get restaurant orders (list)
 router.get('/restaurant', orderController.getRestaurantOrders);
 
@@ -30,9 +36,6 @@ router.patch('/:orderExternalId/complete', orderController.completeOrder);
 
 // Update order status - Cancel
 router.patch('/:orderExternalId/cancel', orderController.cancelOrder);
-
-// Revenue report
-router.get('/stats/revenue', orderController.getRevenueStats);
 
 
 // CHỈ DÙNG CHO ADMIN/DEV 

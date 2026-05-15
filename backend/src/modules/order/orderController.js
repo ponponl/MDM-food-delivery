@@ -462,7 +462,7 @@ export const getRevenueStats = async (req, res, next) => {
     let params = [];
 
     if (!restaurantId) {
-      return res.status(400).json({ status: 'error', message: 'Thiếu restaurantId rồi m ơi!' });
+      return res.status(400).json({ status: 'error', message: 'Thiếu restaurantId' });
     }
 
     if (exactDate && granularity === 'DAY') {
@@ -510,6 +510,103 @@ export const getRevenueStats = async (req, res, next) => {
 
   } catch (error) {
     console.error('Lỗi lấy thống kê:', error);
+    next(error);
+  }
+};
+
+export const getKpiStats = async (req, res, next) => {
+  try {
+    const { restaurantId } = req.query;
+
+    if (!restaurantId) {
+      return res.status(400).json({ status: 'error', message: 'Thiếu restaurantId' });
+    }
+
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const lastYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+
+    // Format: YYYY-MM-DD cho ngày hôm nay
+    const todayString = moment(today).format('YYYY-MM-DD');
+    const currentMonthString = moment(today).format('YYYY-MM');
+    const lastMonthString = moment(new Date(lastYear, lastMonth)).format('YYYY-MM');
+
+    // 1. Lấy doanh thu hôm nay (DAY granularity)
+    const todayQuery = `
+      SELECT total_revenue FROM foodly_tracking.restaurant_revenue_stats
+      WHERE restaurant_id = ? AND granularity = 'DAY' 
+        AND time_partition = ? AND time_value = ?
+    `;
+    const todayPartition = todayString.substring(0, 7);
+    const todayResult = await cassandraClient.execute(
+      todayQuery,
+      [restaurantId, todayPartition, todayString],
+      { prepare: true }
+    );
+    const todayRevenue = todayResult.rows.length > 0 
+      ? Number(todayResult.rows[0].total_revenue || 0)
+      : 0;
+
+    // 2. Lấy dữ liệu tháng hiện tại (MONTH granularity)
+    const currentMonthQuery = `
+      SELECT total_orders, total_revenue FROM foodly_tracking.restaurant_revenue_stats
+      WHERE restaurant_id = ? AND granularity = 'MONTH' 
+        AND time_partition = ? AND time_value = ?
+    `;
+    const currentMonthPartition = currentYear.toString();
+    const currentMonthResult = await cassandraClient.execute(
+      currentMonthQuery,
+      [restaurantId, currentMonthPartition, currentMonthString],
+      { prepare: true }
+    );
+    const monthOrders = currentMonthResult.rows.length > 0
+      ? Number(currentMonthResult.rows[0].total_orders || 0)
+      : 0;
+    const currentMonthRevenue = currentMonthResult.rows.length > 0
+      ? Number(currentMonthResult.rows[0].total_revenue || 0)
+      : 0;
+
+    // 3. Lấy dữ liệu tháng trước để tính tăng trưởng
+    const lastMonthQuery = `
+      SELECT total_revenue FROM foodly_tracking.restaurant_revenue_stats
+      WHERE restaurant_id = ? AND granularity = 'MONTH' 
+        AND time_partition = ? AND time_value = ?
+    `;
+    const lastMonthPartition = lastYear.toString();
+    const lastMonthResult = await cassandraClient.execute(
+      lastMonthQuery,
+      [restaurantId, lastMonthPartition, lastMonthString],
+      { prepare: true }
+    );
+    const lastMonthRevenue = lastMonthResult.rows.length > 0
+      ? Number(lastMonthResult.rows[0].total_revenue || 0)
+      : 0;
+
+    // 4. Tính % tăng trưởng
+    let revenueGrowth = 0;
+    if (lastMonthRevenue === 0) {
+      revenueGrowth = currentMonthRevenue > 0 ? 100 : 0;
+    } else {
+      revenueGrowth = parseFloat(
+        (((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100).toFixed(1)
+      );
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        todayRevenue: todayRevenue,
+        monthOrders: monthOrders,
+        revenueGrowth: revenueGrowth,
+        currentMonthRevenue: currentMonthRevenue,
+        lastMonthRevenue: lastMonthRevenue
+      }
+    });
+
+  } catch (error) {
+    console.error('Lỗi lấy KPI stats:', error);
     next(error);
   }
 };
