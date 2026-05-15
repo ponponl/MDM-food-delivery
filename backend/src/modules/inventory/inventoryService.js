@@ -1,6 +1,12 @@
 import { InventoryRepository } from './inventoryRepo.js';
 import { RestaurantRepository } from '../restaurant/restaurantRepo.js';
 import logger from '../../config/logger.js';
+import {
+  getRemainingInventoryCache,
+  getRemainingInventoryCacheBulk,
+  invalidateRemainingInventoryCache,
+  setRemainingInventoryCache
+} from './inventoryCache.js';
 
 const inventoryRepo = new InventoryRepository();
 const restaurantRepo = new RestaurantRepository();
@@ -34,6 +40,53 @@ export const getBusinessDate = (timeZone, baseDate = new Date()) => {
 const parseNumberOrDefault = (value, fallback = 0) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const buildRemainingPayload = (inventoryDoc, fallbackTotal) => {
+  const totalQuantity = inventoryDoc
+    ? parseNumberOrDefault(inventoryDoc.totalQuantity, 0)
+    : parseNumberOrDefault(fallbackTotal, 0);
+  const soldQuantity = inventoryDoc
+    ? parseNumberOrDefault(inventoryDoc.soldQuantity, 0)
+    : 0;
+  const remainingQuantity = Math.max(0, totalQuantity - soldQuantity);
+
+  return {
+    remainingQuantity,
+    totalQuantity,
+    soldQuantity
+  };
+};
+
+const refreshRemainingCache = async ({
+  menuItemId,
+  restaurantId,
+  businessDate,
+  fallbackTotal
+}) => {
+  const inventoryDoc = await inventoryRepo.findDailyInventory({
+    menuItemId,
+    restaurantId,
+    date: businessDate
+  });
+
+  if (!inventoryDoc) {
+    await invalidateRemainingInventoryCache({
+      restaurantId,
+      businessDate,
+      menuItemIds: [menuItemId]
+    });
+    return buildRemainingPayload(null, fallbackTotal);
+  }
+
+  const payload = buildRemainingPayload(inventoryDoc, fallbackTotal);
+  await setRemainingInventoryCache({
+    restaurantId,
+    businessDate,
+    menuItemId,
+    ...payload
+  });
+  return payload;
 };
 
 const buildInventoryPayload = (menuItem, inventoryDoc) => {
@@ -80,14 +133,41 @@ export const attachInventoryToMenuItems = async ({
     menuItemIds
   });
 
+  const cachedMap = await getRemainingInventoryCacheBulk({
+    restaurantId,
+    businessDate,
+    menuItemIds
+  });
+
   const inventoryMap = new Map(
     (inventories || []).map((doc) => [String(doc.menuItemId), doc])
   );
 
   return menuItems.map((item) => {
     const itemId = item?.itemId || item?._id;
-    const inventoryDoc = itemId ? inventoryMap.get(String(itemId)) : null;
-    return buildInventoryPayload(item, inventoryDoc || null);
+    if (!itemId) return buildInventoryPayload(item, null);
+
+    const cached = cachedMap.get(String(itemId));
+    if (cached) {
+      return {
+        ...item,
+        totalQuantity: cached.totalQuantity,
+        soldQuantity: cached.soldQuantity,
+        remainingQuantity: cached.remainingQuantity
+      };
+    }
+
+    const inventoryDoc = inventoryMap.get(String(itemId)) || null;
+    const payload = buildInventoryPayload(item, inventoryDoc);
+    setRemainingInventoryCache({
+      restaurantId,
+      businessDate,
+      menuItemId: itemId,
+      remainingQuantity: payload.remainingQuantity,
+      totalQuantity: payload.totalQuantity,
+      soldQuantity: payload.soldQuantity
+    });
+    return payload;
   });
 };
 
@@ -142,24 +222,23 @@ export const reserveInventoryForItem = async ({
   });
 
   if (reserved) {
+    await refreshRemainingCache({
+      menuItemId,
+      restaurantId,
+      businessDate,
+      fallbackTotal: totalQuantity
+    });
     return { success: true, remaining: null };
   }
 
-  const inventoryDoc = await inventoryRepo.findDailyInventory({
+  const payload = await refreshRemainingCache({
     menuItemId,
     restaurantId,
-    date: businessDate
+    businessDate,
+    fallbackTotal: totalQuantity
   });
 
-  const remaining = inventoryDoc
-    ? Math.max(
-        0,
-        parseNumberOrDefault(inventoryDoc.totalQuantity, 0) -
-          parseNumberOrDefault(inventoryDoc.soldQuantity, 0)
-      )
-    : Math.max(0, totalQuantity);
-
-  return { success: false, remaining };
+  return { success: false, remaining: payload.remainingQuantity };
 };
 
 export const rollbackInventoryForItem = async ({
@@ -172,12 +251,29 @@ export const rollbackInventoryForItem = async ({
     return false;
   }
 
-  return await inventoryRepo.rollbackStockAtomic({
+  const rolledBack = await inventoryRepo.rollbackStockAtomic({
     menuItemId,
     restaurantId,
     date: businessDate,
     quantity
   });
+
+  if (rolledBack) {
+    await refreshRemainingCache({
+      menuItemId,
+      restaurantId,
+      businessDate,
+      fallbackTotal: 0
+    });
+  } else {
+    await invalidateRemainingInventoryCache({
+      restaurantId,
+      businessDate,
+      menuItemIds: [menuItemId]
+    });
+  }
+
+  return rolledBack;
 };
 
 export const getRemainingQuantity = async ({
@@ -200,6 +296,16 @@ export const getRemainingQuantity = async ({
     };
   }
 
+  const cached = await getRemainingInventoryCache({
+    restaurantId,
+    businessDate,
+    menuItemId
+  });
+
+  if (cached) {
+    return cached;
+  }
+
   const inventoryDoc = await inventoryRepo.findDailyInventory({
     menuItemId,
     restaurantId,
@@ -207,22 +313,24 @@ export const getRemainingQuantity = async ({
   });
 
   if (!inventoryDoc) {
-    return {
-      remainingQuantity: totalQuantity,
-      totalQuantity,
-      soldQuantity: 0
-    };
+    const payload = buildRemainingPayload(null, totalQuantity);
+    await setRemainingInventoryCache({
+      restaurantId,
+      businessDate,
+      menuItemId,
+      ...payload
+    });
+    return payload;
   }
 
-  const dailyTotal = parseNumberOrDefault(inventoryDoc.totalQuantity, totalQuantity);
-  const soldQuantity = parseNumberOrDefault(inventoryDoc.soldQuantity, 0);
-  const remainingQuantity = Math.max(0, dailyTotal - soldQuantity);
-
-  return {
-    remainingQuantity,
-    totalQuantity: dailyTotal,
-    soldQuantity
-  };
+  const payload = buildRemainingPayload(inventoryDoc, totalQuantity);
+  await setRemainingInventoryCache({
+    restaurantId,
+    businessDate,
+    menuItemId,
+    ...payload
+  });
+  return payload;
 };
 
 export const getRestaurantByPublicId = async (publicId) => {
