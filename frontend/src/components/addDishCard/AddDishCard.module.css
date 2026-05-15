@@ -12,13 +12,13 @@
 .modalBody {
     background: white;
     width: 100%;
-    max-width: 480px;
+    max-width: 1200px;
     border-radius: 20px;
     padding: 24px;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
-.modalHeader {
+.modalHeader, .customHeader {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -26,6 +26,227 @@
 }
 
 .modalHeader h3 { font-size: 1.25rem; font-weight: 800; color: #111827; }
+
+.modalContentWrapper {
+    display: grid;
+    grid-template-columns: 32rem 1fr; 
+    gap: 0;
+    height: 550px;
+    overflow: hidden;
+}
+
+.mainFormSide {
+    padding: 24px;
+    border-right: 1px solid #f3f4f6;
+    /* overflow-y: auto; */
+    height: 100%;
+    overflow: hidden;
+}
+
+.customSide {
+    padding: 32px; 
+    background-color: #f9fafb; 
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.scrollContainer {
+    padding: 24px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+/* .customHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+} */
+
+.customHeader h4 { margin: 0; font-size: 1rem; color: #111827; }
+
+.customScrollArea {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.customScrollArea::-webkit-scrollbar {
+    width: 6px;
+}
+
+.customScrollArea::-webkit-scrollbar-thumb {
+    background-color: #e5e7eb;
+    border-radius: 10px;
+}
+
+.customGroupCard {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 16px;
+    transition: all 0.2s ease;
+}
+
+.customGroupCard:focus-within {
+    border-color: #f97316;
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.08); 
+}
+
+.groupHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.groupNameInput {
+    flex: 1;
+    font-size: 0.95rem;
+    font-weight: 700;
+    border: none !important;
+    padding: 8px !important;
+    color: #111827;
+    background: transparent;
+}
+
+.groupNameInput::placeholder {
+    color: #9ca3af;
+    font-weight: 500;
+}
+
+.checkboxLabel {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.optionRow {
+    display: grid;
+    grid-template-columns: 1fr 100px 90px 30px;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.optionRow input {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    transition: border-color 0.2s;
+}
+
+.optionRow input:focus {
+    border-color: #f97316;
+    outline: none;
+}
+
+.toggleOptBtn {
+    width: 100%;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 0;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+}
+
+.optIn {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+.optOut {
+    background-color: #f3f4f6;
+    color: #6b7280;
+}
+
+.optIn:hover {
+    background-color: #bbf7d0;
+}
+
+.btnDeleteOpt {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btnDeleteOpt:hover {
+    color: #ef4444;
+}
+
+.btnAddOpt {
+    background: #fdf2f0;
+    border: 1px dashed #d1d5db;
+    width: 100%;
+    padding: 6px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    color: #6b7280;
+}
+
+.customHeader button {
+    background: #fff;
+    border: 1px solid #f97316;
+    color: #f97316;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.customHeader button:hover {
+    background-color: #f97316; 
+    border: 1px solid #f97316;
+    color: white;
+}
+
+.suggestionBox span { font-size: 12px; color: #6b7280; }
+
+.suggestionChips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.suggestionChips button {
+    background: #fff;
+    border: 1px solid #f97316; 
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-size: 14px;
+    color: #f97316;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 5px;
+}
+
+.suggestionChips button:hover {
+    background: #f97316;
+    box-shadow: 0 0 0 3px #ffffff, 0 0 0 4px #e5e7eb;
+    color: white;
+}
 
 .uploadLabel {
     display: block;
@@ -54,7 +275,7 @@
     gap: 8px;
 }
 
-.formGroup { 
+.formGroup, .suggestionBox { 
     margin-bottom: 15px; 
 }
 
@@ -82,7 +303,17 @@
     display: flex; 
     justify-content: flex-end; 
     gap: 12px; 
-    margin-top: 24px; }
+    margin-top: 24px; 
+}
+
+.modalFooter {
+    padding: 16px 24px;
+    background: white;
+    border-top: 1px solid #f3f4f6;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
 
 .btnSave {
     background-color: #f97316; 
@@ -99,7 +330,15 @@
     border: 1px solid #ddd; 
     padding: 10px 24px; 
     border-radius: 8px;
-    cursor: pointer; }
+    cursor: pointer; 
+}
+
+.btnDelete {
+    color: #ef4444;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
 
 .spin { 
     animation: spin 1s linear infinite; 
@@ -107,4 +346,88 @@
 
 @keyframes spin { 
     from { transform: rotate(0deg); } to { transform: rotate(360deg); } 
+}
+
+.groupToggleCard {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    transition: all 0.2s ease;
+}
+
+.cardSelected {
+    border-color: #f97316; 
+    background-color: #fff7ed;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 22px;
+}
+
+.switch input { opacity: 0; width: 0; height: 0; }
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #d1d5db;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px; width: 16px;
+    left: 3px; bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider { background-color: #f97316; }
+input:checked + .slider:before { transform: translateX(22px); }
+
+.sectionLabel {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #4b5563;
+    margin-bottom: 16px;
+}
+
+.groupInfo {
+    flex: 1;
+    padding-right: 12px;
+}
+
+.dishNameSmall {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 4px 0;
+}
+
+.descriptionTextSmall {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.4;
+}
+
+.linkedGroupsList {
+    display: flex;
+    flex-direction: column;
 }

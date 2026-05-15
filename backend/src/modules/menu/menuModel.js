@@ -16,7 +16,21 @@ const menuSchema = new mongoose.Schema(
     description: String,
     images: [String],
     totalReview: { type: Number, default: 0 },
-    ratingCount: { type: Number, default: 0 }
+    ratingCount: { type: Number, default: 0 },
+    customization: [
+      {
+        groupId: { type: mongoose.Schema.Types.ObjectId, ref: 'CustomizationGroup' },
+        groupName: String, 
+        isRequired: { type: Boolean, default: false },
+        options: [
+          {
+            label: String,
+            extraPrice: { type: Number, default: 0 },
+            available: { type: Boolean, default: true }
+          }
+        ]
+      }
+    ],
   },
   {
     timestamps: true,
@@ -28,5 +42,6 @@ const menuSchema = new mongoose.Schema(
 menuSchema.index({ restaurantId: 1 });
 menuSchema.index({ restaurantPublicId: 1 });
 menuSchema.index({ name: 'text', category: 'text' });
+menuSchema.index({ "customization.groupId": 1 });
 
 export default mongoose.model('Menu', menuSchema, 'menu');

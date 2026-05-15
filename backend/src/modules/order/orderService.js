@@ -182,10 +182,11 @@ export const createOrder = async ({
         });
       }
 
-      const orderSnapshotPrice = Number.isFinite(currentPrice) ? currentPrice : snapshotPrice;
-      const subtotal = orderSnapshotPrice * qty;
+      // const orderSnapshotPrice = Number.isFinite(currentPrice) ? currentPrice : snapshotPrice;
+      const orderSnapshotPrice = snapshotPrice;
+      // const subtotal = orderSnapshotPrice * qty;
 
-      totalPrice += subtotal;
+      totalPrice += orderSnapshotPrice;
       totalItems += qty;
       orderItems.push({
         itemId,
@@ -407,7 +408,7 @@ export const previewOrder = async ({
       });
     }
 
-    const subtotal = currentPrice * qty;
+    const subtotal = snapshotPrice * qty; 
     totalPrice += subtotal;
 
     previewItems.push({

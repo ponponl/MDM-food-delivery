@@ -379,3 +379,29 @@
     justify-content: flex-start;
   }
 }
+
+
+.itemTextContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding-left: 4px;
+}
+
+.itemOptions {
+  font-size: 0.8rem;
+  color: #6c4a3b; 
+  line-height: 1.2;
+}
+
+.optionTag {
+  display: inline;
+}
+
+.itemNote {
+  font-size: 0.75rem;
+  color: #ff6b35;
+  font-style: italic;
+  margin-top: 2px;
+}

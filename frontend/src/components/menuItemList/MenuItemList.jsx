@@ -1,12 +1,27 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate} from 'react-router-dom';
+import { useState } from 'react';
 import MenuCard from '../display/MenuCard';
 import styles from './MenuItemList.module.css';
+import OptionSelectionModal from '../optionSelectionModal/OptionSelectionModal';
 
 const MenuItemsList = ({ groupedMenu, onAddToCart }) => {
     const navigate = useNavigate();
 
     const handleItemClick = (item) => {
         navigate(`/food/${item.itemId}`, { state: { foodItem: item } });
+    };
+
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const handleOpenCustomization = (item) => {
+        setSelectedItem(item);
+        setIsModalOpen(true);
+    };
+
+    const handleConfirmCustomization = (finalItem) => {
+        onAddToCart?.(finalItem);
+        setIsModalOpen(false);
     };
 
     return (
@@ -35,7 +50,7 @@ const MenuItemsList = ({ groupedMenu, onAddToCart }) => {
 
                                     return (
                                         <div
-                                            key={item._id}
+                                            key={item.itemId}
                                             onClick={() => handleItemClick(item)}
                                             style={{ cursor: 'pointer' }}
                                         >
@@ -44,6 +59,7 @@ const MenuItemsList = ({ groupedMenu, onAddToCart }) => {
                                                 isUnavailable={isUnavailable}
                                                 statusLabel={statusLabel}
                                                 onAddToCart={onAddToCart}
+                                                onOpenCustomization={handleOpenCustomization}
                                             />
                                         </div>
                                     );
@@ -53,6 +69,12 @@ const MenuItemsList = ({ groupedMenu, onAddToCart }) => {
                     );
                 })()
             ))}
+            <OptionSelectionModal 
+                isOpen={isModalOpen}
+                item={selectedItem}
+                onClose={() => setIsModalOpen(false)}
+                onConfirm={handleConfirmCustomization}
+            />
         </div>
     );
 };

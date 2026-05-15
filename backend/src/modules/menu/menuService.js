@@ -46,12 +46,25 @@ export const addDish = async (publicId, body, file) => {
   const restaurant = await restaurantRepo.findByPublicId(publicId, { includeMenu: false });
   if (!restaurant) return null;
 
+  let customization = [];
+  if (body.customization) {
+    try {
+      customization = typeof body.customization === 'string' 
+        ? JSON.parse(body.customization) 
+        : body.customization;
+    } catch (e) {
+      console.error("Lỗi parse customization:", e);
+      customization = [];
+    }
+  }
+
   const available = body.available === undefined
     ? true
     : body.available === 'true' || body.available === true;
 
   const dishData = {
     ...body,
+    customization,
     restaurantId: restaurant._id,
     restaurantPublicId: restaurant.publicId,
     restaurantName: restaurant.name,
@@ -77,6 +90,8 @@ export const addDish = async (publicId, body, file) => {
 
 export const updateDish = async (publicId, itemId, body, file) => {
   const imageUrl = file ? file.path : null;
+  const restaurant = await restaurantRepo.findByPublicId(publicId, { includeMenu: false });
+  if (!restaurant) return null;
   if (imageUrl) {
     const currentDish = await menuRepo.findMenuItem(publicId, itemId);
     if (currentDish?.images?.length > 0) {
@@ -84,6 +99,17 @@ export const updateDish = async (publicId, itemId, body, file) => {
       await Promise.all(deletePromises);
     }
   }
+  let customization;
+  if (body.customization) {
+    try {
+      customization = typeof body.customization === 'string' 
+        ? JSON.parse(body.customization) 
+        : body.customization;
+    } catch (e) {
+      customization = undefined;
+    }
+  }
+
   const available = body.available === undefined
     ? undefined
     : body.available === 'true' || body.available === true;
@@ -92,10 +118,11 @@ export const updateDish = async (publicId, itemId, body, file) => {
     ...body,
     price: Number(body.price),
     stock: Number(body.stock),
-    ...(available !== undefined ? { available } : {})
+    ...(available !== undefined ? { available } : {}),
+    ...(customization ? { customization } : {})
   };
   if (imageUrl) updateData.images = [imageUrl];
-
+  
   const updated = await menuRepo.updateMenuItem(publicId, itemId, updateData);
   if (!updated) return null;
   if (restaurant?._id) {
@@ -112,6 +139,7 @@ export const updateDish = async (publicId, itemId, body, file) => {
 };
 
 export const deleteDish = async (publicId, itemId) => {
+  const restaurant = await restaurantRepo.findByPublicId(publicId, { includeMenu: false });
   const dish = await menuRepo.findMenuItem(publicId, itemId);
   if (dish?.images?.length > 0) {
     const deletePromises = dish.images.map(img => cloudinary.uploader.destroy(getPublicIdFromUrl(img)));

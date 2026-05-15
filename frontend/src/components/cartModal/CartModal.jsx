@@ -267,7 +267,19 @@ export default function CartModal({
                               ) : (
                                 <span className={styles.itemPlaceholder}>Ảnh</span>
                               )}
-                              <span className={styles.itemName}>{item.name}</span>
+                                <div className={styles.itemTextContent}>
+                                  <span className={styles.itemName}>{item.name}</span>
+                                    {item.options && item.options.length > 0 && (
+                                      <div className={styles.itemOptions}>
+                                        {item.options.map((opt, idx) => (
+                                          <span key={idx} className={styles.optionTag}>
+                                            {opt.label}{idx < item.options.length - 1 ? ', ' : ''}
+                                          </span>
+                                        ))}
+                                      </div>
+                                    )}
+                                    {item.note && <div className={styles.itemNote}>Lưu ý: {item.note}</div>}
+                                </div>
                             </span>
                           </label>
 
@@ -293,7 +305,7 @@ export default function CartModal({
 
                           <div className={styles.priceInfo}>
                             <div className={styles.priceRow}>
-                                <div className={styles.snapshotPrice}>{formatCurrency(item.snapshotPrice || item.price || 0)}</div>
+                                <div className={styles.snapshotPrice}>{formatCurrency(item.priceSnapshot || item.price || 0)}</div>
                                 <div className={styles.qtyText}>x {item.quantity}</div>
                               </div>
                             <div className={styles.itemPrice}>{formatCurrency(item.subtotal || 0)}</div>

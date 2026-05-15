@@ -135,6 +135,8 @@ export const addItemToCart = async (
     const normalizedOptions = normalizeOptionsForStorage(options);
     const itemImage = resolveItemImage(item);
     const existingItemRaw = await redisClient.hGet(cartKey, itemKey);
+    const totalExtraPrice = normalizedOptions.reduce((sum, opt) => sum + opt.extraPrice, 0);
+    const finalUnitPrice = (item.price || 0) + totalExtraPrice;
     const existingQty = existingItemRaw
       ? Number(JSON.parse(existingItemRaw)?.quantity) || 0
       : 0;
@@ -152,7 +154,7 @@ export const addItemToCart = async (
       itemId: item._id || itemId,
       name: item.name || `Item ${itemId}`,
       price: typeof item.price === 'number' ? item.price : 0,
-      priceSnapshot: typeof item.price === 'number' ? item.price : 0,
+      priceSnapshot: finalUnitPrice,
       priceCurrent: null,
       priceUpdated: false,
       quantity: nextQty,
@@ -220,13 +222,15 @@ export const updateItemQuantity = async (
     const itemKey = buildItemKey(itemId, options);
     const restaurantInfo = await resolveRestaurantInfo(restaurantPublicId, item.restaurantName);
     const normalizedOptions = normalizeOptionsForStorage(options);
+    const totalExtraPrice = normalizedOptions.reduce((sum, opt) => sum + (opt.extraPrice || 0), 0);
+    const finalUnitPrice = (item.price || 0) + totalExtraPrice;
     const itemImage = resolveItemImage(item);
     const itemJson = JSON.stringify({
       _id: item._id || itemId,
       itemId: item._id || itemId,
       name: item.name || `Item ${itemId}`,
       price: typeof item.price === 'number' ? item.price : 0,
-      priceSnapshot: typeof item.price === 'number' ? item.price : 0,
+      priceSnapshot: finalUnitPrice,
       priceCurrent: null,
       priceUpdated: false,
       quantity,
