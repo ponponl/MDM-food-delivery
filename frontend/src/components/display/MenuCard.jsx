@@ -1,7 +1,7 @@
 import { Plus, Star } from 'lucide-react';
 import styles from './MenuCard.module.css';
 
-const MenuCard = ({ item, isUnavailable, statusLabel, onAddToCart }) => {
+const MenuCard = ({ item, isUnavailable, statusLabel, onAddToCart, onOpenCustomization }) => {
     const ratingCount = Number.isFinite(Number(item?.ratingCount))
         ? Number(item.ratingCount)
         : (Number.isFinite(Number(item?.totalReview)) ? Number(item.totalReview) : 0);
@@ -9,6 +9,17 @@ const MenuCard = ({ item, isUnavailable, statusLabel, onAddToCart }) => {
         ? Number(item.rating)
         : (Number.isFinite(Number(item?.avgRating)) ? Number(item.avgRating) : 0);
     const displayRating = ratingCount > 0 ? ratingValue.toFixed(1) : '0.0';
+
+    const handleAddClick = (e) => {
+        e.stopPropagation();
+        const hasRequiredCustomization = item?.customization?.some(group => group.isRequired === true);
+
+        if (hasRequiredCustomization) {
+            onOpenCustomization?.(item);
+        } else {
+            onAddToCart?.(item);
+        }
+    };
 
     return (
         <div className={`${styles.foodCard} ${isUnavailable ? styles.unavailableCard : ''}`}>
@@ -46,10 +57,7 @@ const MenuCard = ({ item, isUnavailable, statusLabel, onAddToCart }) => {
                     className={styles.addBtn}
                     type="button"
                     aria-label={`Add ${item?.name} to cart`}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onAddToCart?.(item);
-                    }}
+                    onClick={handleAddClick}
                     disabled={isUnavailable}
                 >
                     <Plus size={18} strokeWidth={3} />

@@ -44,8 +44,12 @@
 .itemRow {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 5px;
-  font-size: 0.9rem;
+  align-items: flex-start; 
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f8f8f8;
+  flex-wrap: wrap; 
 }
 
 .totalRow {
@@ -140,4 +144,57 @@
   font-size: 0.75rem;
   margin-top: -8px;
   margin-bottom: 4px;
+}
+
+.itemMain {
+  display: flex;
+  align-items: flex-start; 
+  gap: 10px;
+  flex: 1;
+}
+
+.itemTextContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.itemOptionsList {
+  font-size: 0.8rem;
+  color: #6c4a3b; 
+  line-height: 1.2;
+  font-weight: 400;
+}
+
+.optionTag {
+  display: inline;
+  font-style: italic;
+}
+
+.itemName {
+  font-weight: 600;
+  color: #2b1a12;
+  display: block;
+}
+
+.itemPrice {
+  font-weight: 700;
+  color: #ff6b35;
+  text-align: right;
+  min-width: fit-content;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .itemRow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+
+  .itemPrice {
+    text-align: right;
+    margin-top: 4px;
+  }
 }

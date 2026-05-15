@@ -127,12 +127,20 @@ export default function RestaurantPage() {
         window.dispatchEvent(new CustomEvent('cart:updated', { detail: { deltaQty: optimisticDelta } }));
 
         try {
+            const flatOptions = item.selectedCustomizations 
+                ? item.selectedCustomizations.flatMap(group => 
+                    group.options.map(opt => ({
+                        groupName: group.groupName,
+                        label: opt.label,
+                        extraPrice: opt.extraPrice
+                    }))
+                ) : [];
             const response = await cartApi.addItem({
                 userExternalId,
                 itemId,
-                quantity: optimisticDelta,
+                quantity: item.quantity || optimisticDelta,
                 restaurantPublicId: publicId,
-                options: item?.options || [],
+                options: flatOptions || [],
                 note: null
             });
             const payload = response?.data ?? response;

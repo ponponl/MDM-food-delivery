@@ -22,24 +22,21 @@ const normalizeOptions = (options = []) => {
   if (!Array.isArray(options)) {
     return [];
   }
-
+  
   return options
-    .filter((option) => option && option.name)
-    .map((option) => ({
-      name: String(option.name),
-      value: option.value
-    }))
-    .sort((a, b) => {
-      const nameCompare = a.name.localeCompare(b.name);
-      if (nameCompare !== 0) return nameCompare;
-      return stableStringify(a.value).localeCompare(stableStringify(b.value));
-    });
+  .filter((opt) => opt && opt.label)
+  .map((opt) => ({
+    groupName: String(opt.groupName || 'Tùy chọn'),
+    label: String(opt.label),
+    extraPrice: Number(opt.extraPrice) || 0
+  }))
+  .sort((a, b) => a.label.localeCompare(b.label));
 };
 
 export const buildItemKey = (itemId, options = []) => {
   const normalizedOptions = normalizeOptions(options);
   const signature = normalizedOptions
-    .map((option) => `${option.name}:${stableStringify(option.value)}`)
+    .map((opt) => `${opt.groupName}:${opt.label}`)
     .join('|');
 
   const raw = `${itemId}|${signature}`;

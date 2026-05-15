@@ -144,13 +144,12 @@
 
 .optionRow {
     display: grid;
-    /* Cột 1: Tên (tự giãn), Cột 2: Giá (150px), Cột 3: Toggle (100px), Cột 4: Xóa (40px) */
     grid-template-columns: 1fr 150px 100px 40px; 
-    gap: 16px; /* Tăng khoảng cách giữa các ô */
+    gap: 16px; 
     margin-bottom: 16px;
     align-items: center;
     background: #ffffff;
-    padding: 8px; /* Thêm chút padding cho mỗi dòng */
+    padding: 8px; 
     border-radius: 12px;
 }
 
@@ -250,16 +249,14 @@
     to { transform: rotate(360deg); }
 }
 
-/* Điều chỉnh grid để chứa thêm nút Toggle */
 .optionRow {
     display: grid;
-    grid-template-columns: 1fr 100px 70px 40px; /* Tăng thêm cột 70px cho nút */
+    grid-template-columns: 1fr 100px 70px 40px; 
     gap: 10px;
     margin-bottom: 12px;
     align-items: center;
 }
 
-/* Tận dụng style từ AddDishCard sang */
 .toggleOptBtn {
     width: 100%;
     border: none;
@@ -274,12 +271,12 @@
 }
 
 .optIn {
-    background-color: #f3f4f6; /* Xám nhạt khi còn hàng */
+    background-color: #f3f4f6;
     color: #6b7280;
 }
 
 .optOut {
-    background-color: #fee2e2; /* Đỏ nhạt khi hết hàng */
+    background-color: #fee2e2;
     color: #ef4444;
     border: 1px solid #fecaca;
 }
@@ -288,7 +285,6 @@
     filter: brightness(0.95);
 }
 
-/* Các style khác giữ nguyên, chỉ đảm bảo các input không bị bóp méo */
 .optInputGroup input, .optPriceGroup input {
     width: 100%;
 }

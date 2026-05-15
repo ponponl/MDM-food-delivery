@@ -349,6 +349,15 @@ const MerchantOrderDetailPage = () => {
                   )}
                   <div className={styles.itemInfo}>
                     <h4>{item.name}</h4>
+                    {item.options && Array.isArray(item.options) && item.options.length > 0 && (
+                      <div className={styles.itemOptionsList}>
+                        {item.options.map((opt, optIdx) => (
+                          <span key={optIdx} className={styles.optionTag}>
+                            {opt.label}{optIdx < item.options.length - 1 ? ', ' : ''}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     <p>Số lượng: {item.quantity}</p>
                     {item.notes && <p className={styles.notes}>Ghi chú: {item.notes}</p>}
                   </div>

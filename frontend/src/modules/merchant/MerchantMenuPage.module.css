@@ -1,6 +1,6 @@
 .container {
   min-height: 100vh;
-  background: linear-gradient(to bottom right, #f9fafb, #f3f4f6); 
+  background: linear-gradient(to bottom right, #f9fafb, #f3f4f6);
   padding: 24px;
 }
 
@@ -9,7 +9,6 @@
   margin: 0 auto;
 }
 
-
 .header {
   display: flex;
   justify-content: space-between;
@@ -17,59 +16,9 @@
   margin-bottom: 32px;
 }
 
-.tabContainer {
-    display: flex;
-    gap: 8px;
-    margin-top: 12px;
-    background-color: #f3f4f6; 
-    padding: 4px;
-    border-radius: 10px;
-    width: fit-content;
-    border: 1px solid #e5e7eb;
-}
-
-.tabBtn {
-    padding: 8px 16px;
-    border-radius: 8px;
-    border: none;
-    background: transparent;
-    color: #6b7280; 
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.2s ease;
-}
-
-.tabBtn:hover {
-    color: #374151;
-    background-color: rgba(255, 255, 255, 0.5);
-}
-
-.tabActive {
-    background-color: white; 
-    color: #f97316; 
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.tabBtn svg {
-    transition: transform 0.2s ease;
-}
-
-.tabActive svg {
-    color: #f97316;
-    transform: scale(1.1);
-}
-
-@keyframes fadeInTab {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.mainContent {
-    animation: fadeInTab 0.3s ease-out;
+.headerInfo {
+  display: flex;
+  flex-direction: column;
 }
 
 .title {
@@ -85,8 +34,50 @@
   font-size: 14px;
 }
 
+.tabContainer {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  background-color: #f3f4f6;
+  padding: 4px;
+  border-radius: 10px;
+  width: fit-content;
+  border: 1px solid #e5e7eb;
+}
+
+.tabBtn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.tabBtn:hover {
+  color: #374151;
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+.tabActive {
+  background-color: white;
+  color: #f97316;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.tabActive svg {
+  color: #f97316;
+  transform: scale(1.1);
+}
+
 .addBtn {
-  background-color: #f97316; 
+  background-color: #f97316;
   color: white;
   border: none;
   padding: 10px 24px;
@@ -105,8 +96,10 @@
   transform: translateY(-2px);
 }
 
+.mainContent {
+  animation: fadeInTab 0.3s ease-out;
+}
 
-/* Category Sections */
 .categorySection {
   margin-bottom: 40px;
 }
@@ -146,7 +139,6 @@
   font-weight: 500;
 }
 
-/* Card Styles */
 .compactGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -217,6 +209,19 @@
   font-size: 15px;
 }
 
+.descriptionText {
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.5;
+  margin: 8px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 39px;
+}
+
 .metaRow {
   display: flex;
   justify-content: space-between;
@@ -263,19 +268,6 @@
   border-color: #fecaca;
 }
 
-.descriptionText {
-  font-size: 13px;
-  color: #6b7280;
-  line-height: 1.5;
-  margin: 8px 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2; 
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  min-height: 39px;
-}
-
 .emptyStateContainer {
   display: flex;
   flex-direction: column;
@@ -287,7 +279,6 @@
   border: 2px dashed #e5e7eb;
   text-align: center;
   margin-top: 20px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
 }
 
 .emptyIconWrapper {
@@ -335,7 +326,6 @@
 .addFirstBtn:hover {
   background-color: #ea580c;
   transform: translateY(-3px);
-  box-shadow: 0 15px 20px rgba(249, 115, 22, 0.3);
 }
 
 .skeleton {
@@ -350,25 +340,21 @@
   position: absolute;
   inset: 0;
   transform: translateX(-100%);
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.5),
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
   animation: shimmer 1.4s infinite;
 }
 
-@keyframes shimmer {
-  100% {
-    transform: translateX(100%);
-  }
+.skeletonCard {
+  pointer-events: none;
+  background: #f9fafb;
 }
 
 .skeletonImage {
   width: 100%;
   height: 160px;
+  background: #e5e7eb;
   border-radius: 12px 12px 0 0;
+  animation: shimmer 1.5s infinite linear;
 }
 
 .skeletonInfo {
@@ -419,39 +405,19 @@
   border-radius: 6px;
 }
 
-.skeletonCard {
-    pointer-events: none;
-    background: #f9fafb;
-}
-
-.skeletonImage {
-    width: 100%;
-    height: 140px;
-    background: #e5e7eb;
-    border-radius: 12px;
-    animation: shimmer 1.5s infinite linear;
-}
-
-.skeletonTitle {
-    height: 20px;
-    width: 60%;
-    background: #e5e7eb;
-    margin: 12px 0;
-    border-radius: 4px;
-    animation: shimmer 1.5s infinite linear;
-}
-
-.skeletonText {
-    height: 14px;
-    width: 90%;
-    background: #f3f4f6;
-    margin-bottom: 8px;
-    border-radius: 4px;
-    animation: shimmer 1.5s infinite linear;
+@keyframes fadeInTab {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes shimmer {
-    0% { opacity: 0.5; }
-    50% { opacity: 1; }
-    100% { opacity: 0.5; }
+  0% { opacity: 0.5; transform: translateX(-100%); }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; transform: translateX(100%); }
+}
+
+@media (max-width: 768px) {
+  .compactGrid {
+    grid-template-columns: 1fr;
+  }
 }

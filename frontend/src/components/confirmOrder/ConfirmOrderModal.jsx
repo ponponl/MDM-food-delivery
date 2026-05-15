@@ -150,10 +150,26 @@ export default function ConfirmOrderModal({
           <div className={styles.section}>
             <div className={styles.sectionTitle}>Món đã chọn</div>
             <div className={styles.itemList}>
-              {items?.map((item) => (
-                <div key={item.itemKey} className={styles.itemRow}>
-                  <span>{item.name} x{item.quantity}</span>
-                  <span className={styles.itemPrice}>{item.subtotal}</span>
+              {items.map((item, idx) => (
+                <div key={idx} className={styles.itemRow}>
+                  <div className={styles.itemMain}>
+                    <div className={styles.itemTextContent}>
+                      <span className={styles.itemName}>{item.itemName || item.name}</span>
+                      {item.options && item.options.length > 0 && (
+                        <div className={styles.itemOptionsList}>
+                          {item.options.map((opt, optIdx) => (
+                            <span key={optIdx} className={styles.optionTag}>
+                              {opt.label}{optIdx < item.options.length - 1 ? ', ' : ''}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <span className={styles.itemQty}>x{item.quantity}</span>
+                  </div>
+                  <span className={styles.itemPrice}>
+                    {(item.priceSnapshot || item.snapshotPrice || 0).toLocaleString('vi-VN')}đ
+                  </span>
                 </div>
               ))}
             </div>

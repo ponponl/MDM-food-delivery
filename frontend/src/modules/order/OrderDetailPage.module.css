@@ -353,6 +353,25 @@
   margin: 4px 0;
 }
 
+.itemOptionsList {
+  font-size: 0.85rem;
+  color: #666; 
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.optionTag {
+  display: inline;
+  font-style: italic;
+}
+
+.itemInfo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+}
+
 .notes {
   color: #1565c0;
   font-size: 11px;
